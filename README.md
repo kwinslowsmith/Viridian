@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Viridian — Mastery Tracker for Improv & K-12
+
+A pedagogically-sound mastery tracker built on Next.js, React, and TypeScript. Designed for teachers and students to track skill development, self-evaluation, and growth.
+
+## Project Structure
+
+```
+app/
+  modules/
+    improv/          # Improv mastery tracker (P1)
+      components/    # React components
+      hooks/         # Custom hooks (useClass, useWeek, etc.)
+    k12/             # K-12 humanities mastery tracker (P2)
+      components/
+      hooks/
+
+lib/
+  types/             # TypeScript types (Skills, Ratings, Feedback, etc.)
+  api/               # API client utilities
+  utils/             # Helper functions
+
+docs/
+  schema/            # Database schema design (Archon)
+  design/            # Wireframes and design system (Iris)
+  frontend/          # Component documentation (Sage)
+```
+
+## Team Roles
+
+- **Archon** (Systems Architect): Schema design, API architecture, data integrity
+- **Iris** (Designer): Wireframes, design system, interaction flows
+- **Sage** (Frontend Engineer): React components, state management, API integration
+
+## Key Features (P1)
+
+- Student self-evaluation (before teacher rates)
+- Teacher proficiency ratings (3-level: Approaching / Developing / Proficient)
+- Anchor standards (focused assessment per unit)
+- Feedback system (tied to skills, visible to students)
+- Assessment log (track how/when students were assessed)
+- Discrepancy detection (flag mismatches between student/teacher ratings)
+- Student revision tracking (with timestamps)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Documentation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Schema Design** → `docs/schema/`
+- **Design System & Wireframes** → `docs/design/`
+- **Component Architecture** → `docs/frontend/`
 
-## Learn More
+## Timeline
 
-To learn more about Next.js, take a look at the following resources:
+- **P1 (Improv):** June 2–16, 2026
+  - Working model due Friday June 5
+  - Polish & testing June 8–12
+  - Live pilot with MF Improv ~June 16
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **P2 (K-12 + Full Vision):** TBD (based on P1 feedback)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with ❤️ by Kyle, Archon, Iris, and Sage.
