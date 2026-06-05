@@ -2,44 +2,62 @@
 export type MasteryLevel = "approaching" | "developing" | "proficient";
 
 // Skill & Objectives
+export interface LevelDefinitions {
+  approaching: string;
+  developing: string;
+  proficient: string;
+}
+
 export interface Skill {
   id: string;
   name: string;
   category: string;
-  description: string;
+  description?: string;
   isAnchorForUnit: boolean;
-  levelDefinitions: {
-    approaching: string;
-    developing: string;
-    proficient: string;
-  };
+  levelDefinitions: LevelDefinitions;
+  classId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Objective {
   id: string;
   skillId: string;
   text: string;
-  description: string;
+  description?: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Class & Students
 export interface Class {
   id: string;
   name: string;
-  subtitle: string;
+  subtitle?: string;
   numWeeks: number;
   instructorId: string;
   pedagogicalContext: "improv" | "k12";
+  students?: Student[];
+  weeks?: Week[];
+  skills?: Skill[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Student {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   classId: string;
   enrollmentDate: string;
   status: "active" | "inactive";
+  studentRatings?: StudentRating[];
+  teacherRatings?: TeacherRating[];
+  feedback?: Feedback[];
+  assessmentLogs?: AssessmentLog[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Week
@@ -47,9 +65,15 @@ export interface Week {
   id: string;
   classId: string;
   weekNum: number;
-  title: string;
-  focusAreas: string[];
-  notes: string;
+  title?: string;
+  focusAreas?: string;
+  notes?: string;
+  studentRatings?: StudentRating[];
+  teacherRatings?: TeacherRating[];
+  feedback?: Feedback[];
+  assessmentLogs?: AssessmentLog[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Ratings
@@ -59,10 +83,14 @@ export interface StudentRating {
   skillId: string;
   weekId: string;
   level: MasteryLevel;
-  narrative: string; // Why student rated themselves here (optional)
-  evidence: string; // What work supports this rating (optional)
-  createdAt: Date;
-  revisedAt?: Date; // Timestamp if student revised after teacher feedback
+  narrative?: string;
+  evidence?: string;
+  createdAt: string;
+  revisedAt?: string;
+  updatedAt: string;
+  student?: Student;
+  skill?: Skill;
+  week?: Week;
 }
 
 export interface TeacherRating {
@@ -71,7 +99,11 @@ export interface TeacherRating {
   skillId: string;
   weekId: string;
   level: MasteryLevel;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt: string;
+  student?: Student;
+  skill?: Skill;
+  week?: Week;
 }
 
 // Feedback
@@ -81,8 +113,12 @@ export interface Feedback {
   skillId: string;
   weekId: string;
   instructorNote: string;
-  date: Date;
-  visible: boolean;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  student?: Student;
+  skill?: Skill;
+  week?: Week;
 }
 
 // Assessment Log
@@ -92,20 +128,26 @@ export interface AssessmentLog {
   skillId: string;
   weekId: string;
   method: string; // e.g., "verbal discussion", "written response", "performance"
-  date: Date;
+  date: string;
   context: string; // e.g., "Intervention Block", "Class Discussion"
-  notes: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  student?: Student;
+  skill?: Skill;
+  week?: Week;
 }
 
-// API Response Shapes
+// API Request/Response Shapes
 export interface WeekDetailResponse {
   week: Week;
   anchorSkills: Skill[];
   allSkills: Skill[];
-  studentRatings: Record<string, Record<string, StudentRating>>;
-  teacherRatings: Record<string, Record<string, TeacherRating>>;
+  students: Student[];
+  studentRatings: StudentRating[];
+  teacherRatings: TeacherRating[];
   feedback: Feedback[];
-  assessmentLog: AssessmentLog[];
+  assessmentLogs: AssessmentLog[];
 }
 
 export interface RatingsComparisonResponse {
@@ -118,4 +160,39 @@ export interface RatingsComparisonResponse {
     discrepancy: boolean;
     feedback: Feedback[];
   }[];
+}
+
+export interface CreateStudentRatingRequest {
+  skillId: string;
+  weekId: string;
+  level: MasteryLevel;
+  narrative?: string;
+  evidence?: string;
+}
+
+export interface UpdateStudentRatingRequest {
+  level?: MasteryLevel;
+  narrative?: string;
+  evidence?: string;
+}
+
+export interface CreateTeacherRatingRequest {
+  skillId: string;
+  weekId: string;
+  level: MasteryLevel;
+}
+
+export interface CreateFeedbackRequest {
+  skillId: string;
+  weekId: string;
+  instructorNote: string;
+}
+
+export interface CreateAssessmentLogRequest {
+  skillId: string;
+  weekId: string;
+  method: string;
+  date: string;
+  context: string;
+  notes?: string;
 }
