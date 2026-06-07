@@ -54,3 +54,44 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, category, description } = body;
+
+    if (!name || !category) {
+      return NextResponse.json(
+        { error: 'Missing required fields: name, category' },
+        { status: 400 }
+      );
+    }
+
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+
+    const skill = await prisma.improvSkill.create({
+      data: {
+        name,
+        slug,
+        category,
+        description: description || '',
+        categoryIcon: '◆',
+        categoryColor: '#D97706',
+        levelDefinitions: JSON.stringify({
+          approaching: 'Still developing this skill',
+          developing: 'Making progress on this skill',
+          proficient: 'Demonstrating proficiency in this skill',
+        }),
+        isActive: true,
+      },
+    });
+
+    return NextResponse.json(skill, { status: 201 });
+  } catch (error: any) {
+    console.error('Error creating skill:', error);
+    return NextResponse.json(
+      { error: 'Failed to create skill' },
+      { status: 500 }
+    );
+  }
+}

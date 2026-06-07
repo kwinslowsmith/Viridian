@@ -10,9 +10,9 @@ export const colors = {
   bg: "#F8F8F8",
   surface: "#FFFFFF",
   border: "#E5E5E5",
-  text: "#1A1A1A",
-  text2: "#666666",
-  text3: "#999999",
+  text: "#000000",
+  text2: "#000000",
+  text3: "#333333",
 
   // Mastery Levels
   approaching: {

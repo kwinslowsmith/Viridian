@@ -15,18 +15,195 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
-  role      String   @default("student") // "student", "instructor", "admin"
+  role      String   @default("student") // "student", "instructor", "admin" (legacy, use OrganizationRole now)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
+  organizationRoles OrganizationRole[]
   instructorClasses   ImprovClass[]
   improvEnrollments   ImprovEnrollment[]
   k12instructorClasses K12Class[]
   k12Enrollments      K12Enrollment[]
+  resourcesCreated    StandardResource[] @relation("CreatedBy")
+  teacherStandardAssignments TeacherStandardAssignment[]
 
   @@index([email])
+}
+
+// ============================================
+// ORGANIZATIONS (Multi-Tenant Support)
+// ============================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Match High School", "Improv Asylum", etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users             OrganizationRole[]
+  improvClasses     ImprovClass[]
+  k12Classes        K12Class[]
+  standardsDistributions StandardsDistribution[]
+  teacherStandardAssignments TeacherStandardAssignment[]
+
+  @@index([name])
+}
+
+model OrganizationRole {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  role String // "SuperAdmin" | "SchoolAdmin" | "GradeLeadAdmin" | "SchedulerAdmin" | "Teacher" | "Student"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([role])
+}
+
+// ============================================
+// STANDARDS & RESOURCES BANK
+// ============================================
+
+model StandardsBank {
+  id          String   @id @default(cuid())
+  name        String   // "AP US History 2024"
+  subject     String   // "History", "Science", "Math", etc.
+  gradeLevel  String   // "11", "9-12", etc.
+  description String?
+  source      String?  // "AP", "Common Core", "Custom", etc.
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  standards   Standard[]
+
+  @@index([subject])
+  @@index([gradeLevel])
+}
+
+model Standard {
+  id            String   @id @default(cuid())
+  standardsBankId String
+  standardsBank StandardsBank @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
+
+  code        String   // "2.1", "3.2", etc.
+  name        String   // "Causes of Conflict"
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  resources   StandardResource[]
+  exampleObjectives ExampleObjective[]
+  distributions StandardsDistribution[]
+  teacherAssignments TeacherStandardAssignment[]
+
+  @@unique([standardsBankId, code])
+  @@index([standardsBankId])
+}
+
+model ClassStandard {
+  id        String   @id @default(cuid())
+  classId   String
+  // Will be linked to ImprovClass or K12Class via polymorphic pattern
+
+  standardId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, standardId])
+  @@index([classId])
+}
+
+model ExampleObjective {
+  id          String   @id @default(cuid())
+  standardId  String
+  standard    Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  label       String   // "A", "B", "C", etc.
+  text        String   // "Identify 3+ causes"
+  description String?
+
+  sequenceNum Int      // Order
+
+  @@unique([standardId, label])
+  @@index([standardId])
+}
+
+model StandardResource {
+  id          String   @id @default(cuid())
+  standardId  String
+  standard    Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  type        String   // "material" | "assessment" | "tool"
+  title       String
+  description String?
+  url         String?  // For external resources
+  fileId      String?  // For uploaded files (Supabase/S3)
+  format      String?  // "pdf", "video", "article", "worksheet", etc.
+
+  objectiveLabels String? // Comma-separated: "A,B,C" (optional tagging to objectives)
+
+  createdById String   // userId of creator (Super-Admin or Teacher)
+  createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([standardId])
+  @@index([type])
+  @@index([createdById])
+}
+
+model StandardsDistribution {
+  id              String   @id @default(cuid())
+  standardId      String
+  standard        Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  status          String   @default("available") // "available" | "active" | "archived"
+
+  distributedBy   String   // userId (Kyle/Super-Admin)
+  distributedAt   DateTime @default(now())
+  activatedAt     DateTime?
+
+  @@unique([standardId, organizationId])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model TeacherStandardAssignment {
+  id              String   @id @default(cuid())
+  teacherId       String
+  teacher         User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  standardId      String
+  standard        Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  assignedBy      String   // userId (Org Admin)
+  assignedAt      DateTime @default(now())
+
+  @@unique([teacherId, standardId, organizationId])
+  @@index([organizationId])
+  @@index([teacherId])
 }
 
 // ============================================
@@ -37,6 +214,9 @@ model ImprovClass {
   id          String   @id @default(cuid())
   name        String   // "Musical Improv Level 2"
   subtitle    String?  // "The Anti-Hero's Journey"
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   instructorId String
   instructor   User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
@@ -243,6 +423,9 @@ model ImprovFeedback {
 model K12Class {
   id          String   @id @default(cuid())
   name        String   // "American Lit, Period 3"
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   instructorId String
   instructor   User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)

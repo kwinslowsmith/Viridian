@@ -1,129 +1,897 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { colors } from "@/app/modules/improv/design/colors";
+import { ClassList } from "@/app/modules/improv/components/ClassList";
+import { StudentDashboard } from "@/app/modules/improv/components/StudentDashboard";
+import type { Class } from "@/lib/types";
+
+function TeacherDashboard() {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const res = await fetch("/api/improv/classes");
+        if (!res.ok) throw new Error("Failed to fetch classes");
+        const data = await res.json();
+        setClasses(data.classes || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  return (
+    <ClassList
+      classes={classes}
+      onSelectClass={(classId) => console.log("Selected:", classId)}
+      isLoading={loading}
+    />
+  );
+}
+
+function StudentPicker() {
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [studentData, setStudentData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const res = await fetch("/api/improv/classes");
+        if (!res.ok) throw new Error("Failed to fetch classes");
+        const data = await res.json();
+
+        const allStudents = new Map();
+        data.classes?.forEach((cls: any) => {
+          cls.enrollments?.forEach((enrollment: any) => {
+            if (enrollment.student && !allStudents.has(enrollment.student.id)) {
+              allStudents.set(enrollment.student.id, enrollment.student);
+            }
+          });
+        });
+
+        const studentList = Array.from(allStudents.values());
+        setStudents(studentList);
+        if (studentList.length > 0) {
+          setSelectedId(studentList[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch students:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  useEffect(() => {
+    if (selectedId) {
+      const fetchStudentData = async () => {
+        try {
+          const res = await fetch(`/api/improv/student/${selectedId}/dashboard`);
+          if (!res.ok) throw new Error("Failed to fetch student data");
+          const data = await res.json();
+          setStudentData(data);
+        } catch (err) {
+          console.error("Failed to fetch student data:", err);
+        }
+      };
+      fetchStudentData();
+    }
+  }, [selectedId]);
+
+  if (loading) return <div style={{ color: colors.text }}>Loading students...</div>;
+  if (students.length === 0) return <div style={{ color: colors.text }}>No students found</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2 flex-wrap">
+        {students.map((student) => (
+          <button
+            key={student.id}
+            onClick={() => setSelectedId(student.id)}
+            className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+            style={{
+              backgroundColor: selectedId === student.id ? colors.teal.bg : colors.surface,
+              color: selectedId === student.id ? colors.teal.text : colors.text,
+              border: `1px solid ${selectedId === student.id ? colors.teal.border : colors.border}`,
+            }}
+          >
+            {student.name}
+          </button>
+        ))}
+      </div>
+      {studentData && (
+        <div>
+          {/* Hero Section */}
+          <div
+            className="rounded-xl p-8 mb-6 text-white relative overflow-hidden"
+            style={{
+              backgroundColor: colors.teal.bg,
+            }}
+          >
+            <div
+              className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-10"
+              style={{ backgroundColor: 'white' }}
+            />
+            <div className="relative z-10">
+              <p className="text-sm font-semibold mb-2" style={{ color: '#000' }}>Your Progress</p>
+              <h1
+                className="text-4xl font-bold mb-6"
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  color: '#000',
+                }}
+              >
+                {studentData.student?.name || 'Student'}
+              </h1>
+
+              <div className="flex items-center gap-8">
+                {/* Progress Ring */}
+                <div className="relative w-24 h-24 flex-shrink-0">
+                  <svg className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="48" cy="48" r="40" stroke="rgba(0,0,0,0.15)" strokeWidth="4" fill="none" />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="#000"
+                      strokeWidth="4"
+                      fill="none"
+                      strokeDasharray={`${(studentData.classes?.[0]?.progress?.proficient || 0) * 2.51} 251`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-bold" style={{ color: '#000' }}>{studentData.classes?.[0]?.progress?.proficient || 0}%</span>
+                    <span className="text-xs font-semibold" style={{ color: '#000' }}>Proficient</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex-1">
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold" style={{ color: '#000' }}>{studentData.classes?.[0]?.progress?.proficient || 0}</div>
+                    <div className="text-sm font-semibold" style={{ color: '#000' }}>Proficient Skills</div>
+                  </div>
+                  <div className="text-xs font-semibold flex items-center gap-2" style={{ color: '#000' }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#000' }}></span>
+                    Latest: {new Date().toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Classes */}
+          {studentData.classes?.map((classData: any, idx: number) => (
+            <div key={classData.class?.id} className="mb-6">
+              <h2 className="text-xl font-bold mb-4" style={{ color: colors.text }}>
+                {classData.class?.name}
+              </h2>
+
+              {/* Progress Summary */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div
+                  className="p-4 rounded-lg text-center"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <div className="text-2xl font-bold" style={{ color: '#4DAB7E' }}>
+                    {classData.progress?.proficient || 0}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: colors.text2 }}>Proficient</div>
+                </div>
+                <div
+                  className="p-4 rounded-lg text-center"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <div className="text-2xl font-bold" style={{ color: '#1D4ED8' }}>
+                    {classData.progress?.developing || 0}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: colors.text2 }}>Developing</div>
+                </div>
+                <div
+                  className="p-4 rounded-lg text-center"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <div className="text-2xl font-bold" style={{ color: '#EF9F27' }}>
+                    {classData.progress?.approaching || 0}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: colors.text2 }}>Approaching</div>
+                </div>
+              </div>
+
+              {/* Skills List */}
+              <div
+                className="rounded-lg overflow-hidden"
+                style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
+              >
+                <div
+                  className="px-4 py-3 border-b"
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                >
+                  <h3 className="font-semibold text-sm" style={{ color: colors.text }}>Skills</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  {classData.ratings?.teacher?.slice(0, 5).map((rating: any) => (
+                    <div key={rating.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0"
+                      style={{ borderColor: colors.border }}>
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        style={{
+                          backgroundColor:
+                            rating.level === 'proficient' ? '#E8F5EF' :
+                            rating.level === 'developing' ? '#DBEAFE' :
+                            '#FFF3E0',
+                          color:
+                            rating.level === 'proficient' ? '#0F4C35' :
+                            rating.level === 'developing' ? '#0C4A6E' :
+                            '#BA7517',
+                        }}
+                      >
+                        {rating.level === 'proficient' ? '✓' :
+                         rating.level === 'developing' ? '◐' :
+                         '◎'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium" style={{ color: colors.text }}>
+                          {rating.skill?.name}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: colors.text2 }}>
+                          {rating.level}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminDashboard() {
+  const [tab, setTab] = useState<"organizations" | "students" | "classes" | "skills">("organizations");
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Forms
+  const [newOrg, setNewOrg] = useState({ name: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", email: "" });
+  const [newClass, setNewClass] = useState({ name: "", startDate: "", numWeeks: 4, organizationId: "" });
+  const [newSkill, setNewSkill] = useState({ name: "", category: "foundation", description: "" });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [orgRes, classRes, skillRes] = await Promise.all([
+        fetch("/api/organizations"),
+        fetch("/api/improv/classes"),
+        fetch("/api/improv/skills"),
+      ]);
+      const orgData = await orgRes.json();
+      const classData = await classRes.json();
+      const skillData = await skillRes.json();
+
+      setOrganizations(orgData.organizations || []);
+      setClasses(classData.classes || []);
+      setSkills(skillData.skills || []);
+
+      // Extract unique students from enrollments
+      const uniqueStudents = new Map();
+      classData.classes?.forEach((cls: any) => {
+        cls.enrollments?.forEach((enr: any) => {
+          if (enr.student && !uniqueStudents.has(enr.student.id)) {
+            uniqueStudents.set(enr.student.id, enr.student);
+          }
+        });
+      });
+      setStudents(Array.from(uniqueStudents.values()));
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addOrganization = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrg),
+      });
+      if (res.ok) {
+        setNewOrg({ name: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to add organization:", err);
+    }
+  };
+
+  const addStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newStudent, role: "student" }),
+      });
+      if (res.ok) {
+        setNewStudent({ name: "", email: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to add student:", err);
+    }
+  };
+
+  const addClass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/improv/classes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newClass),
+      });
+      if (res.ok) {
+        setNewClass({ name: "", startDate: "", numWeeks: 4, organizationId: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to add class:", err);
+    }
+  };
+
+  const addSkill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/improv/skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSkill),
+      });
+      if (res.ok) {
+        setNewSkill({ name: "", category: "foundation", description: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to add skill:", err);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex gap-2 border-b" style={{ borderColor: colors.border }}>
+        {(["organizations", "students", "classes", "skills"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className="px-4 py-2 font-semibold text-sm transition-all border-b-2"
+            style={{
+              color: tab === t ? colors.teal.accent : colors.text2,
+              borderColor: tab === t ? colors.teal.accent : "transparent",
+            }}
+          >
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Students Tab */}
+      {tab === "students" && (
+        <div className="space-y-6">
+          <form onSubmit={addStudent} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Student</h3>
+            <input
+              type="text"
+              placeholder="Name"
+              value={newStudent.name}
+              onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={newStudent.email}
+              onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Add Student
+            </button>
+          </form>
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Students ({students.length})</h3>
+            <div className="space-y-2">
+              {students.map((s) => (
+                <div key={s.id} className="p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+                  <div className="font-semibold" style={{ color: colors.text }}>{s.name}</div>
+                  <div className="text-sm" style={{ color: colors.text2 }}>{s.email}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Classes Tab */}
+      {tab === "classes" && (
+        <div className="space-y-6">
+          <form onSubmit={addClass} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Class</h3>
+            <select
+              value={newClass.organizationId}
+              onChange={(e) => setNewClass({ ...newClass, organizationId: e.target.value })}
+              className="w-full px-3 py-2 rounded border"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            >
+              <option value="">Select Organization</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Class Name"
+              value={newClass.name}
+              onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <input
+              type="date"
+              value={newClass.startDate}
+              onChange={(e) => setNewClass({ ...newClass, startDate: e.target.value })}
+              className="w-full px-3 py-2 rounded border"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <input
+              type="number"
+              placeholder="Number of Weeks"
+              value={newClass.numWeeks}
+              onChange={(e) => setNewClass({ ...newClass, numWeeks: parseInt(e.target.value) })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              min="1"
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Add Class
+            </button>
+          </form>
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Classes ({classes.length})</h3>
+            <div className="space-y-2">
+              {classes.map((c) => (
+                <div key={c.id} className="p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+                  <div className="font-semibold" style={{ color: colors.text }}>{c.name}</div>
+                  <div className="text-sm" style={{ color: colors.text2 }}>{c.numWeeks} weeks • {c.enrollments?.length || 0} students</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Organizations Tab */}
+      {tab === "organizations" && (
+        <div className="space-y-6">
+          <form onSubmit={addOrganization} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Organization</h3>
+            <input
+              type="text"
+              placeholder="Organization Name"
+              value={newOrg.name}
+              onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Add Organization
+            </button>
+          </form>
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Organizations ({organizations.length})</h3>
+            <div className="space-y-2">
+              {organizations.map((org) => (
+                <div key={org.id} className="p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+                  <div className="font-semibold" style={{ color: colors.text }}>{org.name}</div>
+                  <div className="text-sm" style={{ color: colors.text2 }}>ID: {org.id}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Skills Tab */}
+      {tab === "skills" && (
+        <div className="space-y-6">
+          <form onSubmit={addSkill} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Skill</h3>
+            <input
+              type="text"
+              placeholder="Skill Name"
+              value={newSkill.name}
+              onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <select
+              value={newSkill.category}
+              onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value })}
+              className="w-full px-3 py-2 rounded border"
+              style={{ borderColor: colors.border, color: colors.text }}
+            >
+              <option value="foundation">Foundation</option>
+              <option value="scene">Scene Work</option>
+              <option value="musical">Musical</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea
+              placeholder="Description"
+              value={newSkill.description}
+              onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              rows={3}
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Add Skill
+            </button>
+          </form>
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Skills ({skills.length})</h3>
+            <div className="space-y-2">
+              {skills.map((s) => (
+                <div key={s.id} className="p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+                  <div className="font-semibold" style={{ color: colors.text }}>{s.name}</div>
+                  <div className="text-sm" style={{ color: colors.text2 }}>{s.category}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuperAdminDashboard() {
+  const [tab, setTab] = useState<"standards-banks" | "distribute">("standards-banks");
+  const [standardsBanks, setStandardsBanks] = useState<any[]>([]);
+  const [selectedBank, setSelectedBank] = useState<string | null>(null);
+  const [bankDetails, setBankDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [newBank, setNewBank] = useState({ name: "", subject: "", gradeLevel: "", description: "" });
+  const [newStandard, setNewStandard] = useState({ code: "", name: "", description: "" });
+  const [newResource, setNewResource] = useState({ type: "material", title: "", description: "", url: "" });
+
+  useEffect(() => {
+    fetchStandardsBanks();
+  }, []);
+
+  const fetchStandardsBanks = async () => {
+    try {
+      const res = await fetch("/api/standards-banks");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setStandardsBanks(data.standardsBanks || []);
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to fetch standards banks:", err);
+      setLoading(false);
+    }
+  };
+
+  const fetchBankDetails = async (bankId: string) => {
+    try {
+      const res = await fetch(`/api/standards-banks/${bankId}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setBankDetails(data);
+    } catch (err) {
+      console.error("Failed to fetch bank details:", err);
+    }
+  };
+
+  const handleSelectBank = (bankId: string) => {
+    setSelectedBank(bankId);
+    fetchBankDetails(bankId);
+  };
+
+  const addBank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/standards-banks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBank),
+      });
+      if (res.ok) {
+        setNewBank({ name: "", subject: "", gradeLevel: "", description: "" });
+        fetchStandardsBanks();
+      }
+    } catch (err) {
+      console.error("Failed to add standards bank:", err);
+    }
+  };
+
+  const addStandard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBank) return;
+    try {
+      const res = await fetch(`/api/standards-banks/${selectedBank}/standards`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newStandard,
+          exampleObjectives: [
+            { label: "A", text: "Example objective A", description: "" },
+          ],
+        }),
+      });
+      if (res.ok) {
+        setNewStandard({ code: "", name: "", description: "" });
+        fetchBankDetails(selectedBank);
+      }
+    } catch (err) {
+      console.error("Failed to add standard:", err);
+    }
+  };
+
+  const addResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBank || !bankDetails) return;
+
+    const standardId = bankDetails.standards[0]?.id;
+    if (!standardId) {
+      alert("Please add a standard first");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/standards/${standardId}/resources`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newResource,
+          createdById: "user-default", // TODO: Get actual user ID
+        }),
+      });
+      if (res.ok) {
+        setNewResource({ type: "material", title: "", description: "", url: "" });
+        fetchBankDetails(selectedBank);
+      }
+    } catch (err) {
+      console.error("Failed to add resource:", err);
+    }
+  };
+
+  if (loading) return <div style={{ color: colors.text }}>Loading...</div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex gap-2 border-b" style={{ borderColor: colors.border }}>
+        {(["standards-banks", "distribute"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className="px-4 py-2 font-semibold text-sm transition-all border-b-2"
+            style={{
+              color: tab === t ? colors.teal.accent : colors.text2,
+              borderColor: tab === t ? colors.teal.accent : "transparent",
+            }}
+          >
+            {t === "standards-banks" ? "Standards Banks" : "Distribute"}
+          </button>
+        ))}
+      </div>
+
+      {/* Standards Banks Tab */}
+      {tab === "standards-banks" && (
+        <div className="space-y-6">
+          {/* Create Standards Bank */}
+          <form onSubmit={addBank} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Create Standards Bank</h3>
+            <input
+              type="text"
+              placeholder="Name (e.g., AP US History 2024)"
+              value={newBank.name}
+              onChange={(e) => setNewBank({ ...newBank, name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Subject"
+              value={newBank.subject}
+              onChange={(e) => setNewBank({ ...newBank, subject: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Grade Level"
+              value={newBank.gradeLevel}
+              onChange={(e) => setNewBank({ ...newBank, gradeLevel: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Create Bank
+            </button>
+          </form>
+
+          {/* Standards Banks List */}
+          <div className="space-y-2">
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Standards Banks</h3>
+            <div className="space-y-2">
+              {standardsBanks.map((bank) => (
+                <div
+                  key={bank.id}
+                  onClick={() => handleSelectBank(bank.id)}
+                  className="p-4 rounded cursor-pointer transition-all"
+                  style={{
+                    backgroundColor:
+                      selectedBank === bank.id ? colors.teal.bg : colors.surface,
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  <div className="font-semibold" style={{ color: selectedBank === bank.id ? colors.teal.text : colors.text }}>
+                    {bank.name}
+                  </div>
+                  <div className="text-sm" style={{ color: colors.text2 }}>
+                    {bank.subject} • Grade {bank.gradeLevel} • {bank.standards.length} standards
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bank Details */}
+          {selectedBank && bankDetails && (
+            <div className="space-y-6 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+              <h3 className="font-bold text-lg" style={{ color: colors.text }}>{bankDetails.name} • Add Standard</h3>
+
+              {/* Add Standard Form */}
+              <form onSubmit={addStandard} className="space-y-4 p-4 rounded" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+                <input
+                  type="text"
+                  placeholder="Standard Code (e.g., 2.1)"
+                  value={newStandard.code}
+                  onChange={(e) => setNewStandard({ ...newStandard, code: e.target.value })}
+                  className="w-full px-3 py-2 rounded border placeholder-gray-900"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Standard Name (e.g., Causes of Conflict)"
+                  value={newStandard.name}
+                  onChange={(e) => setNewStandard({ ...newStandard, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded border placeholder-gray-900"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded font-semibold"
+                  style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+                >
+                  Add Standard
+                </button>
+              </form>
+
+              {/* Standards in Bank */}
+              <div className="space-y-3">
+                <h4 className="font-semibold" style={{ color: colors.text }}>Standards ({bankDetails.standards.length})</h4>
+                {bankDetails.standards.map((std: any) => (
+                  <div key={std.id} className="p-3 rounded" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+                    <div className="font-semibold" style={{ color: colors.text }}>
+                      {std.code}: {std.name}
+                    </div>
+                    <div className="text-sm mt-1" style={{ color: colors.text2 }}>
+                      {std.resources.length} resources • {std.exampleObjectives.length} example objectives
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Distribute Tab */}
+      {tab === "distribute" && (
+        <div className="p-4 rounded-lg text-center" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+          <p style={{ color: colors.text }}>Distribute standards to organizations coming soon</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
-  const [role, setRole] = useState<"teacher" | "student" | null>(null);
+  const [role, setRole] = useState<"teacher" | "student" | "admin" | "superadmin" | null>(null);
 
   if (role === "teacher") {
     return (
       <main className="min-h-screen" style={{ backgroundColor: colors.bg }}>
-        <div className="max-w-2xl mx-auto p-4 md:p-8">
-          <div className="text-center mb-8 md:mb-12">
-            <h1
-              className="text-3xl md:text-4xl font-serif font-bold mb-2"
-              style={{ color: colors.text }}
+        <div className="p-4 md:p-8">
+          <div className="mb-8">
+            <button
+              onClick={() => setRole(null)}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+              style={{
+                backgroundColor: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+              }}
             >
-              Viridian
-            </h1>
-            <p className="text-base md:text-lg" style={{ color: colors.text2 }}>
-              Improv Mastery Tracker — Teacher Dashboard
-            </p>
+              ← Back to Role Select
+            </button>
           </div>
-
-          <div
-            className="rounded-xl border p-6 md:p-8"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            }}
-          >
-            <h2
-              className="text-xl md:text-2xl font-serif font-bold mb-4"
-              style={{ color: colors.text }}
-            >
-              Getting Started
-            </h2>
-            <p className="mb-6" style={{ color: colors.text }}>
-              The Viridian frontend is fully built and ready to integrate with the Archon backend API.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <h3
-                className="font-semibold text-base md:text-lg"
-                style={{ color: colors.text }}
-              >
-                Components Built:
-              </h3>
-              <ul
-                className="space-y-2 text-sm md:text-base"
-                style={{ color: colors.text }}
-              >
-                <li>✓ ClassList, ClassDetail, WeekDetail (teacher workflow)</li>
-                <li>✓ StudentPicker, StudentDashboard, SkillDetail (student workflow)</li>
-                <li>✓ StudentSelfRatingForm, TeacherRatingForm, FeedbackForm</li>
-                <li>✓ AssessmentLog component</li>
-                <li>✓ Custom hooks for data fetching and mutations</li>
-                <li>✓ Type-safe API client with retry logic</li>
-                <li>✓ Tailwind CSS design system</li>
-              </ul>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <h3
-                className="font-semibold text-base md:text-lg"
-                style={{ color: colors.text }}
-              >
-                Documentation:
-              </h3>
-              <ul
-                className="space-y-2 text-sm md:text-base"
-                style={{ color: colors.text2 }}
-              >
-                <li>→ docs/frontend/COMPONENTS.md - Full component documentation</li>
-                <li>→ README-FRONTEND.md - Frontend architecture guide</li>
-                <li>→ lib/api/endpoints.ts - All API functions</li>
-                <li>→ lib/types/index.ts - TypeScript definitions</li>
-              </ul>
-            </div>
-
-            <div className="space-y-3 mb-8">
-              <h3
-                className="font-semibold text-base md:text-lg"
-                style={{ color: colors.text }}
-              >
-                Next Steps:
-              </h3>
-              <ol
-                className="space-y-2 text-sm md:text-base list-decimal list-inside"
-                style={{ color: colors.text }}
-              >
-                <li>Start the Archon backend API</li>
-                <li>Update API endpoint URLs in lib/api/endpoints.ts</li>
-                <li>Create pages that use the components (example in progress)</li>
-                <li>Test the complete teacher and student workflows</li>
-                <li>Deploy to production</li>
-              </ol>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setRole(null)}
-                className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm md:text-base transition-all"
-                style={{
-                  backgroundColor: colors.bg,
-                  color: colors.text,
-                  border: `1px solid ${colors.border}`,
-                }}
-              >
-                Back
-              </button>
-              <a
-                href="https://github.com/kwinslowsmith/Viridian"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm md:text-base transition-all text-center"
-                style={{
-                  backgroundColor: colors.amber.bg,
-                  color: colors.amber.text,
-                  border: `1px solid ${colors.amber.border}`,
-                }}
-              >
-                View GitHub
-              </a>
-            </div>
-          </div>
+          <TeacherDashboard />
         </div>
       </main>
     );
@@ -132,76 +900,72 @@ export default function Home() {
   if (role === "student") {
     return (
       <main className="min-h-screen" style={{ backgroundColor: colors.bg }}>
-        <div className="max-w-2xl mx-auto p-4 md:p-8">
-          <div className="text-center mb-8 md:mb-12">
-            <h1
-              className="text-3xl md:text-4xl font-serif font-bold mb-2"
-              style={{ color: colors.text }}
-            >
-              Viridian
-            </h1>
-            <p className="text-base md:text-lg" style={{ color: colors.text2 }}>
-              Improv Mastery Tracker — Student Dashboard
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl border p-6 md:p-8"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            }}
-          >
-            <h2
-              className="text-xl md:text-2xl font-serif font-bold mb-4"
-              style={{ color: colors.text }}
-            >
-              Student Interface Ready
-            </h2>
-            <p className="mb-6" style={{ color: colors.text }}>
-              All student-facing components have been built and are ready to display your learning progress, ratings, and instructor feedback.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <h3
-                className="font-semibold text-base md:text-lg"
-                style={{ color: colors.text }}
-              >
-                Features Available:
-              </h3>
-              <ul
-                className="space-y-2 text-sm md:text-base"
-                style={{ color: colors.text }}
-              >
-                <li>✓ View your classes and select one</li>
-                <li>✓ See your overall progress and mastery percentage</li>
-                <li>✓ View detailed ratings for each skill</li>
-                <li>✓ Read instructor feedback</li>
-                <li>✓ Track revision history of your self-ratings</li>
-                <li>✓ Identify skill areas to focus on</li>
-              </ul>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p
-                className="text-sm md:text-base"
-                style={{ color: colors.text }}
-              >
-                Integration with Archon backend is required to see your actual class data, ratings, and feedback.
-              </p>
-            </div>
-
+        <div className="p-4 md:p-8">
+          <div className="mb-8">
             <button
               onClick={() => setRole(null)}
-              className="w-full px-4 py-2 rounded-lg font-semibold text-sm md:text-base transition-all"
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
               style={{
-                backgroundColor: colors.amber.bg,
-                color: colors.amber.text,
-                border: `1px solid ${colors.amber.border}`,
+                backgroundColor: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
               }}
             >
-              Back
+              ← Back to Role Select
             </button>
+          </div>
+          <StudentPicker />
+        </div>
+      </main>
+    );
+  }
+
+  if (role === "admin") {
+    return (
+      <main className="min-h-screen" style={{ backgroundColor: colors.bg }}>
+        <div className="p-4 md:p-8">
+          <div className="mb-8">
+            <button
+              onClick={() => setRole(null)}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+              style={{
+                backgroundColor: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              ← Back to Role Select
+            </button>
+          </div>
+          <div className="max-w-4xl">
+            <h1 className="text-3xl font-bold mb-6" style={{ color: colors.text, fontFamily: "'DM Serif Display', serif" }}>Admin Panel</h1>
+            <AdminDashboard />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (role === "superadmin") {
+    return (
+      <main className="min-h-screen" style={{ backgroundColor: colors.bg }}>
+        <div className="p-4 md:p-8">
+          <div className="mb-8">
+            <button
+              onClick={() => setRole(null)}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+              style={{
+                backgroundColor: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              ← Back to Role Select
+            </button>
+          </div>
+          <div className="max-w-6xl">
+            <h1 className="text-3xl font-bold mb-6" style={{ color: colors.text, fontFamily: "'DM Serif Display', serif" }}>Super-Admin Panel</h1>
+            <SuperAdminDashboard />
           </div>
         </div>
       </main>
@@ -213,13 +977,17 @@ export default function Home() {
       <div className="w-full max-w-md p-4 md:p-8">
         <div className="text-center mb-8 md:mb-12">
           <h1
-            className="text-4xl md:text-5xl font-serif font-bold mb-3"
-            style={{ color: colors.text }}
+            className="text-6xl md:text-7xl font-serif font-bold mb-3"
+            style={{
+              color: colors.text,
+              textShadow: `0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)`,
+              letterSpacing: '0.05em',
+            }}
           >
             Viridian
           </h1>
           <p className="text-base md:text-lg" style={{ color: colors.text2 }}>
-            Improv Mastery Tracker
+            Mastery Tracker
           </p>
           <p className="text-xs md:text-sm mt-2" style={{ color: colors.text3 }}>
             P1 Frontend — Fully Built and Ready
@@ -262,6 +1030,44 @@ export default function Home() {
             </h2>
             <p className="text-sm md:text-base" style={{ color: colors.text2 }}>
               View your progress, self-rate skills, read feedback
+            </p>
+          </button>
+
+          <button
+            onClick={() => setRole("admin")}
+            className="w-full p-6 rounded-xl border-2 text-left transition-all hover:shadow-md"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: '#9CA3AF',
+            }}
+          >
+            <h2
+              className="text-xl md:text-2xl font-serif font-bold mb-2"
+              style={{ color: colors.text }}
+            >
+              Admin
+            </h2>
+            <p className="text-sm md:text-base" style={{ color: colors.text2 }}>
+              Manage students, classes, skills, and standards
+            </p>
+          </button>
+
+          <button
+            onClick={() => setRole("superadmin")}
+            className="w-full p-6 rounded-xl border-2 text-left transition-all hover:shadow-md"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: '#10B981',
+            }}
+          >
+            <h2
+              className="text-xl md:text-2xl font-serif font-bold mb-2"
+              style={{ color: colors.text }}
+            >
+              Super-Admin
+            </h2>
+            <p className="text-sm md:text-base" style={{ color: colors.text2 }}>
+              Manage standards banks and distribute to schools
             </p>
           </button>
         </div>

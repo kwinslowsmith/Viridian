@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
-    const classId = params.classId;
+    const { classId } = await params;
 
     const improvClass = await prisma.improvClass.findUnique({
       where: { id: classId },
@@ -41,10 +41,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
-    const classId = params.classId;
+    const { classId } = await params;
     const body = await request.json();
     const { name, subtitle, status } = body;
 

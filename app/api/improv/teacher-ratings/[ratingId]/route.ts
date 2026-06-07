@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { ratingId: string } }
+  { params }: { params: Promise<{ ratingId: string }> }
 ) {
   try {
-    const { ratingId } = params;
+    const { ratingId } = await params;
     const body = await request.json();
     const { level, instructorNotes } = body;
 

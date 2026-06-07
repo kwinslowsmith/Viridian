@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { skillId: string } }
+  { params }: { params: Promise<{ skillId: string }> }
 ) {
   try {
-    const { skillId } = params;
+    const { skillId } = await params;
 
     const skill = await prisma.improvSkill.findUnique({
       where: { id: skillId },

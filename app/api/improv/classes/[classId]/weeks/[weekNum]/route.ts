@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string; weekNum: string } }
+  { params }: { params: Promise<{ classId: string; weekNum: string }> }
 ) {
   try {
-    const { classId, weekNum } = params;
+    const { classId, weekNum } = await params;
     const weekNumber = parseInt(weekNum, 10);
 
     const week = await prisma.improvWeek.findUnique({
@@ -170,10 +170,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { classId: string; weekNum: string } }
+  { params }: { params: Promise<{ classId: string; weekNum: string }> }
 ) {
   try {
-    const { classId, weekNum } = params;
+    const { classId, weekNum } = await params;
     const weekNumber = parseInt(weekNum, 10);
     const body = await request.json();
     const { title, focusAreas, sessionNotes } = body;

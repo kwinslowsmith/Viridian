@@ -3,13 +3,9 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Get teacher ID from session/auth
-    const teacherId = request.headers.get('x-teacher-id') || 'user-default';
-
     const classes = await prisma.improvClass.findMany({
-      where: { instructorId: teacherId },
       include: {
-        enrollments: true,
+        enrollments: { include: { student: true } },
         weeks: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -28,16 +24,37 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, subtitle, numWeeks, startDate } = body;
+    const { name, subtitle, numWeeks, startDate, organizationId, instructorId } = body;
 
-    if (!name || !startDate) {
+    if (!name || !startDate || !organizationId) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, startDate' },
+        { error: 'Missing required fields: name, startDate, organizationId' },
         { status: 400 }
       );
     }
 
-    const teacherId = request.headers.get('x-teacher-id') || 'user-default';
+    let teacherId = instructorId || request.headers.get('x-teacher-id');
+
+    // If no instructor provided, find or create a default one
+    if (!teacherId) {
+      const defaultInstructor = await prisma.user.findFirst({
+        where: { email: 'admin@viridian.local' }
+      });
+
+      if (defaultInstructor) {
+        teacherId = defaultInstructor.id;
+      } else {
+        // Create a default admin user if it doesn't exist
+        const newAdmin = await prisma.user.create({
+          data: {
+            email: 'admin@viridian.local',
+            name: 'Admin',
+            role: 'instructor'
+          }
+        });
+        teacherId = newAdmin.id;
+      }
+    }
 
     const newClass = await prisma.improvClass.create({
       data: {
@@ -46,6 +63,7 @@ export async function POST(request: NextRequest) {
         numWeeks: numWeeks || 8,
         startDate: new Date(startDate),
         instructorId: teacherId,
+        organizationId,
         status: 'active',
       },
     });
