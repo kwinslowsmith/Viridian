@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users (Auth)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String   @default("student") // "student", "instructor", "admin"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  instructorClasses   ImprovClass[]
+  improvEnrollments   ImprovEnrollment[]
+  k12Enrollments      K12Enrollment[]
+
+  @@index([email])
+}
+
+// ============================================
+// IMPROV MASTERY TRACKER SCHEMA (P1)
+// ============================================
+
+model ImprovClass {
+  id          String   @id @default(cuid())
+  name        String   // "Musical Improv Level 2"
+  subtitle    String?  // "The Anti-Hero's Journey"
+
+  instructorId String
+  instructor   User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  startDate   DateTime
+  endDate     DateTime?
+  numWeeks    Int      @default(8)
+  status      String   @default("active") // "active", "archived", "draft"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  weeks       ImprovWeek[]
+  enrollments ImprovEnrollment[]
+
+  @@index([instructorId])
+}
+
+model ImprovEnrollment {
+  id        String   @id @default(cuid())
+  classId   String
+  class     ImprovClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  enrolledAt DateTime @default(now())
+  status     String   @default("active") // "active", "dropped", "completed"
+  role       String   @default("student")
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  studentRatings ImprovStudentRating[]
+  teacherRatings ImprovTeacherRating[]
+  feedback       ImprovFeedback[]
+
+  @@unique([classId, studentId])
+  @@index([classId])
+  @@index([studentId])
+}
+
+model ImprovWeek {
+  id        String   @id @default(cuid())
+  classId   String
+  class     ImprovClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  weekNum   Int      // 1-24
+  title     String?  // "Listening and Agreement"
+  focusAreas String? // Markdown description
+
+  sessionNotes        String?
+  sessionNotesUpdatedAt DateTime?
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  weekSkills     ImprovWeekSkill[]
+  studentRatings ImprovStudentRating[]
+  teacherRatings ImprovTeacherRating[]
+  feedback       ImprovFeedback[]
+
+  @@unique([classId, weekNum])
+  @@index([classId])
+}
+
+model ImprovSkill {
+  id          String   @id @default(cuid())
+  slug        String   @unique // "yes-and"
+  name        String   // "Yes And"
+  category    String   // "foundation", "scene-work", "musical"
+  categoryIcon String?  // "◆", "▲", "●"
+  categoryColor String? // "#D97706"
+
+  description String?
+
+  // JSON object with approaching, developing, proficient definitions
+  levelDefinitions String? // Stored as JSON string
+
+  isActive    Boolean  @default(true)
+  version     Int      @default(1)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  retiredAt   DateTime?
+
+  // Relations
+  objectives      ImprovObjective[]
+  weekSkills      ImprovWeekSkill[]
+  studentRatings  ImprovStudentRating[]
+  teacherRatings  ImprovTeacherRating[]
+  feedback        ImprovFeedback[]
+
+  @@index([isActive])
+}
+
+model ImprovObjective {
+  id          String   @id @default(cuid())
+  skillId     String
+  skill       ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  sequenceNum Int      // Order within skill (1, 2, 3...)
+  text        String   // Guiding question or learning target
+  description String?
+  examples    String?  // Markdown examples
+
+  @@index([skillId])
+}
+
+model ImprovWeekSkill {
+  id        String   @id @default(cuid())
+  weekId    String
+  week      ImprovWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  skillId   String
+  skill     ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  isAnchor  Boolean  @default(true) // true = assessed this week
+  sequenceNum Int    // Visual order in UI
+
+  @@unique([weekId, skillId])
+  @@index([weekId])
+  @@index([skillId])
+}
+
+model ImprovStudentRating {
+  id          String   @id @default(cuid())
+  enrollmentId String
+  enrollment  ImprovEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  weekId      String
+  week        ImprovWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  skillId     String
+  skill       ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  level       String   // "approaching", "developing", "proficient"
+  narrative   String?  // Student's explanation
+  evidence    String?  // Supporting work/context
+
+  createdAt   DateTime @default(now())
+  revisedAt   DateTime? // When student revised this rating
+
+  @@unique([enrollmentId, weekId, skillId])
+  @@index([enrollmentId])
+  @@index([weekId])
+  @@index([skillId])
+}
+
+model ImprovTeacherRating {
+  id          String   @id @default(cuid())
+  enrollmentId String
+  enrollment  ImprovEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  weekId      String
+  week        ImprovWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  skillId     String
+  skill       ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  level       String   // "approaching", "developing", "proficient"
+  instructorNotes String? // Internal teacher notes
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([enrollmentId, weekId, skillId])
+  @@index([enrollmentId])
+  @@index([weekId])
+  @@index([skillId])
+}
+
+model ImprovFeedback {
+  id          String   @id @default(cuid())
+  enrollmentId String
+  enrollment  ImprovEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  weekId      String
+  week        ImprovWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  skillId     String?
+  skill       ImprovSkill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+
+  note        String   // Instructor feedback
+  isVisible   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([enrollmentId])
+  @@index([weekId])
+  @@index([skillId])
+}
+
+// ============================================
+// K-12 HUMANITIES MASTERY TRACKER SCHEMA (P2)
+// ============================================
+
+model K12Class {
+  id          String   @id @default(cuid())
+  name        String   // "American Lit, Period 3"
+
+  instructorId String
+  instructor   User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  gradeLevel  String   // "9", "10", "11", "12"
+  subject     String   // "literature", "writing", "history", "speech"
+
+  startDate   DateTime
+  endDate     DateTime?
+  numUnits    Int      @default(8)
+  status      String   @default("active")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations (for Phase 2)
+  // units       K12Unit[]
+  // enrollments K12Enrollment[]
+
+  @@index([instructorId])
+}
+
+model K12Enrollment {
+  id        String   @id @default(cuid())
+  classId   String
+  // class     K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  enrolledAt DateTime @default(now())
+  status     String   @default("active")
+
+  createdAt DateTime @default(now())
+
+  // Placeholder for Phase 2 rating models
+  // studentRatings K12StudentRating[]
+  // teacherRatings K12TeacherRating[]
+  // feedback       K12Feedback[]
+
+  @@unique([classId, studentId])
+  @@index([studentId])
+}
