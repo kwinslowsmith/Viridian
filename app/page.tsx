@@ -262,37 +262,88 @@ function StudentPicker() {
 }
 
 function AdminDashboard() {
-  const [tab, setTab] = useState<"organizations" | "students" | "classes" | "skills">("organizations");
+  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<any[]>([]);
+  const [orgLoading, setOrgLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      const res = await fetch("/api/organizations");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setOrganizations(data.organizations || []);
+      // Auto-select first org if available
+      if (data.organizations?.length > 0) {
+        setSelectedOrg(data.organizations[0].id);
+      }
+      setOrgLoading(false);
+    } catch (err) {
+      console.error("Failed to fetch organizations:", err);
+      setOrgLoading(false);
+    }
+  };
+
+  if (orgLoading) return <div style={{ color: colors.text }}>Loading organizations...</div>;
+  if (organizations.length === 0) {
+    return (
+      <div style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}`, padding: "1rem", borderRadius: "0.5rem" }}>
+        <p style={{ color: colors.text }}>No organizations found. Ask Super-Admin to create one.</p>
+      </div>
+    );
+  }
+
+  return (
+    <OrganizationAdminPanel
+      organizationId={selectedOrg!}
+      organizations={organizations}
+      onChangeOrg={setSelectedOrg}
+    />
+  );
+}
+
+function OrganizationAdminPanel({
+  organizationId,
+  organizations,
+  onChangeOrg,
+}: {
+  organizationId: string;
+  organizations: any[];
+  onChangeOrg: (id: string) => void;
+}) {
+  const [tab, setTab] = useState<"students" | "classes" | "skills" | "standards">("students");
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [skills, setSkills] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const [newOrg, setNewOrg] = useState({ name: "" });
   const [newStudent, setNewStudent] = useState({ name: "", email: "" });
-  const [newClass, setNewClass] = useState({ name: "", startDate: "", numWeeks: 4, organizationId: "" });
+  const [newClass, setNewClass] = useState({ name: "", startDate: "", numWeeks: 4, organizationId });
   const [newSkill, setNewSkill] = useState({ name: "", category: "foundation", description: "" });
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [organizationId]);
 
   const fetchData = async () => {
     try {
-      const [orgRes, classRes, skillRes] = await Promise.all([
-        fetch("/api/organizations"),
+      const [classRes, skillRes, standardRes] = await Promise.all([
         fetch("/api/improv/classes"),
         fetch("/api/improv/skills"),
+        fetch(`/api/organizations/${organizationId}/standards`),
       ]);
-      const orgData = await orgRes.json();
       const classData = await classRes.json();
       const skillData = await skillRes.json();
+      const standardData = await standardRes.json();
 
-      setOrganizations(orgData.organizations || []);
       setClasses(classData.classes || []);
       setSkills(skillData.skills || []);
+      setStandards(standardData.distributions || []);
 
       // Extract unique students from enrollments
       const uniqueStudents = new Map();
@@ -308,23 +359,6 @@ function AdminDashboard() {
       console.error("Failed to fetch data:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const addOrganization = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/organizations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newOrg),
-      });
-      if (res.ok) {
-        setNewOrg({ name: "" });
-        fetchData();
-      }
-    } catch (err) {
-      console.error("Failed to add organization:", err);
     }
   };
 
@@ -351,10 +385,10 @@ function AdminDashboard() {
       const res = await fetch("/api/improv/classes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newClass),
+        body: JSON.stringify({ ...newClass, organizationId }),
       });
       if (res.ok) {
-        setNewClass({ name: "", startDate: "", numWeeks: 4, organizationId: "" });
+        setNewClass({ name: "", startDate: "", numWeeks: 4, organizationId });
         fetchData();
       }
     } catch (err) {
@@ -379,11 +413,34 @@ function AdminDashboard() {
     }
   };
 
+  const currentOrg = organizations.find(o => o.id === organizationId);
+
+  if (loading) return <div style={{ color: colors.text }}>Loading...</div>;
+
   return (
     <div className="space-y-6">
+      {/* Organization Selector */}
+      <div className="p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+        <label style={{ color: colors.text, display: "block", marginBottom: "0.5rem" }}>
+          <strong>Organization:</strong>
+        </label>
+        <select
+          value={organizationId}
+          onChange={(e) => onChangeOrg(e.target.value)}
+          className="w-full px-3 py-2 rounded border"
+          style={{ borderColor: colors.border, color: colors.text }}
+        >
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2 border-b" style={{ borderColor: colors.border }}>
-        {(["organizations", "students", "classes", "skills"] as const).map((t) => (
+        {(["students", "classes", "skills", "standards"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -393,7 +450,13 @@ function AdminDashboard() {
               borderColor: tab === t ? colors.teal.accent : "transparent",
             }}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === "students"
+              ? "Students"
+              : t === "classes"
+              ? "Classes"
+              : t === "skills"
+              ? "Skills"
+              : "Available Standards"}
           </button>
         ))}
       </div>
@@ -448,19 +511,7 @@ function AdminDashboard() {
       {tab === "classes" && (
         <div className="space-y-6">
           <form onSubmit={addClass} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
-            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Class</h3>
-            <select
-              value={newClass.organizationId}
-              onChange={(e) => setNewClass({ ...newClass, organizationId: e.target.value })}
-              className="w-full px-3 py-2 rounded border"
-              style={{ borderColor: colors.border, color: colors.text }}
-              required
-            >
-              <option value="">Select Organization</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Class to {currentOrg?.name}</h3>
             <input
               type="text"
               placeholder="Class Name"
@@ -511,39 +562,30 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Organizations Tab */}
-      {tab === "organizations" && (
+      {/* Available Standards Tab */}
+      {tab === "standards" && (
         <div className="space-y-6">
-          <form onSubmit={addOrganization} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
-            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Add Organization</h3>
-            <input
-              type="text"
-              placeholder="Organization Name"
-              value={newOrg.name}
-              onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
-              className="w-full px-3 py-2 rounded border placeholder-gray-900"
-              style={{ borderColor: colors.border, color: colors.text }}
-              required
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 rounded font-semibold"
-              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
-            >
-              Add Organization
-            </button>
-          </form>
-
-          <div className="space-y-2">
-            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Organizations ({organizations.length})</h3>
-            <div className="space-y-2">
-              {organizations.map((org) => (
-                <div key={org.id} className="p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
-                  <div className="font-semibold" style={{ color: colors.text }}>{org.name}</div>
-                  <div className="text-sm" style={{ color: colors.text2 }}>ID: {org.id}</div>
-                </div>
-              ))}
-            </div>
+          <div className="p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg mb-4" style={{ color: colors.text }}>Available Standards</h3>
+            {standards.length === 0 ? (
+              <p style={{ color: colors.text2 }}>No standards available yet. Super-Admin needs to push standards to your organization.</p>
+            ) : (
+              <div className="space-y-2">
+                {standards.map((dist: any) => (
+                  <div key={dist.id} className="p-3 rounded" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+                    <div className="font-semibold" style={{ color: colors.text }}>
+                      {dist.standard.code}: {dist.standard.name}
+                    </div>
+                    <div className="text-sm mt-1" style={{ color: colors.text2 }}>
+                      Bank: {dist.standard.standardsBank.name} • Status: {dist.status}
+                    </div>
+                    <div className="text-xs mt-2" style={{ color: colors.text3 }}>
+                      {dist.standard.exampleObjectives.length} example objectives • {dist.standard.resources.length} resources
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
