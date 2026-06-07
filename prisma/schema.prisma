@@ -23,6 +23,7 @@ model User {
   // Relations
   instructorClasses   ImprovClass[]
   improvEnrollments   ImprovEnrollment[]
+  k12instructorClasses K12Class[]
   k12Enrollments      K12Enrollment[]
 
   @@index([email])
