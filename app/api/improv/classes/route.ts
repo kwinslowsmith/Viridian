@@ -3,7 +3,16 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const organizationId = searchParams.get('organizationId');
+
+    const where: any = {};
+    if (organizationId) {
+      where.organizationId = organizationId;
+    }
+
     const classes = await prisma.improvClass.findMany({
+      where,
       include: {
         enrollments: { include: { student: true } },
         weeks: true,

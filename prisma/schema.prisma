@@ -12,24 +12,91 @@ datasource db {
 
 // Users (Auth)
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      String   @default("student") // "student", "instructor", "admin" (legacy, use OrganizationRole now)
+  id                        String   @id @default(cuid())
+  email                     String   @unique
+  name                      String
+  passwordHash              String?  // bcrypt hash
+  emailVerified             Boolean  @default(false)
+  emailVerificationToken    String?  @unique // temp token for verification
+  role                      String   @default("student") // "student", "instructor", "admin" (legacy, use OrganizationRole now)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   // Relations
-  organizationRoles OrganizationRole[]
-  instructorClasses   ImprovClass[]
-  improvEnrollments   ImprovEnrollment[]
-  k12instructorClasses K12Class[]
-  k12Enrollments      K12Enrollment[]
-  resourcesCreated    StandardResource[] @relation("CreatedBy")
+  organizationRoles         OrganizationRole[]
+  instructorClasses         ImprovClass[]
+  improvEnrollments         ImprovEnrollment[]
+  k12instructorClasses      K12Class[]
+  k12Enrollments            K12Enrollment[]
+  resourcesCreated          StandardResource[] @relation("CreatedBy")
+  resourcesCreatedByUser    Resource[] @relation("ResourceCreator")
   teacherStandardAssignments TeacherStandardAssignment[]
+  interventionBlocksCreated InterventionBlock[]
+  studySessionsCreated      StudySession[]
+  curatedCommunities        LearningCommunity[] @relation("CuratedBy")
+  learningCommunityMemberships LearningCommunityMember[]
+  studentPreferences        StudentPreference[]
+  calendarPreferences       StudentCalendarPreference[] @relation("CalendarPreferences")
+  joinRequests              CommunityJoinRequest[]
+  standardProgress          StudentStandardProgress[] @relation("StudentStandardProgress")
+  objectiveProgress         StudentObjectiveProgress[] @relation("StudentObjectiveProgress")
+  eventsCreated             Event[]
+  eventRSVPs                EventRSVP[] @relation("EventRSVP")
+  conversationsCreated      Conversation[] @relation("ConversationsCreated")
+  conversationParticipations ConversationParticipant[] @relation("ConversationParticipants")
+  messagesSent              Message[] @relation("MessagesSent")
+  skillAssessments          ImprovSkillAssessment[] @relation("SkillAssessments")
+  objectiveAssessments      ImprovObjectiveAssessment[] @relation("ObjectiveAssessments")
+  announcementsCreated      Announcement[] @relation("AnnouncementsCreated")
+  organizationalUnitMemberships OrganizationalUnitMember[] @relation("OrganizationalUnitMemberships")
+  leadsOrganizationalUnits   OrganizationalUnit[] @relation("OrganizationalUnitLeader")
+  librariesManaged          ResourceLibrary[] @relation("ResourceLibrarian")
+  projectsLead              Project[] @relation("ProjectLead")
+  projectMemberships        ProjectMember[] @relation("ProjectMemberships")
+
+  // For NextAuth
+  accounts                  Account[]
+  sessions                  Session[]
 
   @@index([email])
+  @@index([emailVerificationToken])
+}
+
+// NextAuth Models (required)
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 // ============================================
@@ -39,6 +106,15 @@ model User {
 model Organization {
   id        String   @id @default(cuid())
   name      String   @unique // "Match High School", "Improv Asylum", etc.
+  slug      String   @unique
+  description String?
+  logo      String?
+  topic     String?  // "education", "automotive", "technology", "business", etc.
+  isPublic  Boolean  @default(false) // Whether organization is discoverable publicly
+
+  // Curator info
+  curatorName String?
+  curatorBio  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,8 +125,25 @@ model Organization {
   k12Classes        K12Class[]
   standardsDistributions StandardsDistribution[]
   teacherStandardAssignments TeacherStandardAssignment[]
+  interventionBlocks InterventionBlock[]
+  studySessions     StudySession[]
+  learningCommunities LearningCommunity[]
+  studentPreferences StudentPreference[]
+  standards           Standard[]
+  units               Unit[]
+  skillCategories     SkillCategory[]
+  standardsBankAdoptions OrganizationStandardsBankAdoption[]
+  studentStandardProgress StudentStandardProgress[] @relation("StudentStandardProgress")
+  events              Event[]
+  conversations       Conversation[]
+  resources           Resource[]
+  organizationalUnits OrganizationalUnit[]
+  resourceLibraries   ResourceLibrary[]
+  projects            Project[]
+  announcements       Announcement[]
 
   @@index([name])
+  @@index([slug])
 }
 
 model OrganizationRole {
@@ -77,9 +170,9 @@ model OrganizationRole {
 
 model StandardsBank {
   id          String   @id @default(cuid())
-  name        String   // "AP US History 2024"
-  subject     String   // "History", "Science", "Math", etc.
-  gradeLevel  String   // "11", "9-12", etc.
+  name        String   // "AP US History 2024", "Improv Mastery"
+  subject     String   // "History", "Improvisation", "Science", "Math", etc.
+  gradeLevel  String?  // "11", "9-12", "Adult", etc.
   description String?
   source      String?  // "AP", "Common Core", "Custom", etc.
 
@@ -88,19 +181,100 @@ model StandardsBank {
 
   // Relations
   standards   Standard[]
+  units       Unit[]
+  skillCategories SkillCategory[]
+  adoptingOrganizations OrganizationStandardsBankAdoption[]
 
   @@index([subject])
   @@index([gradeLevel])
 }
 
+// ============================================
+// UNITS (for organizing content standards)
+// ============================================
+
+model Unit {
+  id              String   @id @default(cuid())
+  standardsBankId String?
+  standardsBank   StandardsBank? @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
+
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  code            String   // "1", "Unit 1", "pw-p1", etc.
+  name            String   // "Unit 1: The Ancient World"
+  subtitle        String?  // "c. 3500 BCE–c. 600 CE"
+  description     String?  // Rich description
+
+  sequenceNum     Int      // Order within course/organization
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  standards       Standard[] // Content standards in this unit
+
+  @@unique([standardsBankId, code])
+  @@index([standardsBankId])
+  @@index([organizationId])
+}
+
+// ============================================
+// SKILL CATEGORIES (for organizing skill standards)
+// ============================================
+
+model SkillCategory {
+  id              String   @id @default(cuid())
+  standardsBankId String?
+  standardsBank   StandardsBank? @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
+
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  code            String   // "RS", "HTS", "reasoning-skills", etc.
+  name            String   // "Reasoning Skills", "Historical Thinking Skills"
+  description     String?  // What this skill category encompasses
+  icon            String?  // Emoji or icon code (e.g., "RS", "▲", "HTS")
+
+  sequenceNum     Int      // Visual order
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  standards       Standard[] // Skill standards in this category
+
+  @@unique([standardsBankId, code])
+  @@index([standardsBankId])
+  @@index([organizationId])
+}
+
 model Standard {
   id            String   @id @default(cuid())
-  standardsBankId String
-  standardsBank StandardsBank @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
+  standardsBankId String?
+  standardsBank StandardsBank? @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
 
-  code        String   // "2.1", "3.2", etc.
-  name        String   // "Causes of Conflict"
-  description String?
+  organizationId String? // For org-custom standards (not from bank)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Grouping by type
+  type        String  @default("content") // "skill" | "content"
+
+  // For content standards: grouped by unit
+  unitId      String?
+  unit        Unit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  // For skill standards: grouped by skill category
+  skillCategoryId String?
+  skillCategory   SkillCategory? @relation(fields: [skillCategoryId], references: [id], onDelete: SetNull)
+
+  code        String   // "2.1", "3.2", "KC 1.1", etc.
+  name        String   // "Causes of Conflict", "Active Listening", "Early Civilizations and State Formation"
+  description String?  // Rich description of what the standard is about
+
+  // Teacher settings for mastery tracking
+  passPercentage Int @default(80) // % of objectives needed to demonstrate standard
+  mandatoryObjectiveIds String? // JSON array of mandatory ExampleObjective IDs
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -110,9 +284,15 @@ model Standard {
   exampleObjectives ExampleObjective[]
   distributions StandardsDistribution[]
   teacherAssignments TeacherStandardAssignment[]
+  studentProgress StudentStandardProgress[]
+  classStandards ClassStandard[]
 
   @@unique([standardsBankId, code])
   @@index([standardsBankId])
+  @@index([organizationId])
+  @@index([type])
+  @@index([unitId])
+  @@index([skillCategoryId])
 }
 
 model ClassStandard {
@@ -121,6 +301,7 @@ model ClassStandard {
   // Will be linked to ImprovClass or K12Class via polymorphic pattern
 
   standardId String
+  standard   Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -135,10 +316,21 @@ model ExampleObjective {
   standard    Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
 
   label       String   // "A", "B", "C", etc.
-  text        String   // "Identify 3+ causes"
-  description String?
+  text        String   // "Identify 3+ causes" (short learning target)
+  description String?  // Extended description
+
+  // Proficiency level details (A/B/C progression of sophistication)
+  learningTarget String?  // What students should be able to do at this level
+  evidenceCriteria String? // How to know they achieved it (rubric/evidence description)
 
   sequenceNum Int      // Order
+
+  // Source tracking (curriculum vs custom teacher-authored)
+  source      String   @default("curriculum") // "curriculum" | "custom"
+
+  // Relations
+  classObjectives ClassObjective[]
+  studentProgress StudentObjectiveProgress[]
 
   @@unique([standardId, label])
   @@index([standardId])
@@ -232,6 +424,12 @@ model ImprovClass {
   // Relations
   weeks       ImprovWeek[]
   enrollments ImprovEnrollment[]
+  conversations Conversation[]
+  events      Event[]
+  skillAssessments ImprovSkillAssessment[] @relation("SkillAssessments")
+  classSkills ImprovClassSkill[]
+  objectiveAssessments ImprovObjectiveAssessment[]
+  resources           Resource[]
 
   @@index([instructorId])
 }
@@ -269,6 +467,9 @@ model ImprovWeek {
   title     String?  // "Listening and Agreement"
   focusAreas String? // Markdown description
 
+  agenda          String?  // Lesson plan/agenda for the week
+  materialsJson   String?  // JSON array of {type, title, url} objects
+
   sessionNotes        String?
   sessionNotesUpdatedAt DateTime?
 
@@ -279,6 +480,7 @@ model ImprovWeek {
   updatedAt DateTime @updatedAt
 
   // Relations
+  days           ImprovDay[]
   weekSkills     ImprovWeekSkill[]
   studentRatings ImprovStudentRating[]
   teacherRatings ImprovTeacherRating[]
@@ -286,6 +488,36 @@ model ImprovWeek {
 
   @@unique([classId, weekNum])
   @@index([classId])
+}
+
+model ImprovDay {
+  id          String   @id @default(cuid())
+  weekId      String
+  week        ImprovWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  date        DateTime
+  dayOfWeek   Int      // 0-6 (Sun-Sat)
+
+  title       String?  // "Listening & Agreement exercises"
+  description String?  // Agenda/lesson notes
+  type        String   @default("lesson") // lesson, assessment, event, holiday, etc.
+
+  homework    String?  // Text description or markdown
+  materialsJson String? // JSON array of {title, url, type}
+
+  skillsJson  String?  // JSON array of skill IDs covered
+  isMajor     Boolean  @default(false) // Shows on student main calendar
+
+  // Documents
+  googleDocUrl String?  // Embedded Google Doc URL
+  pdfFileKey  String?   // Supabase storage key for PDF
+  pdfFileName String?   // Original PDF file name
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([weekId])
+  @@index([date])
 }
 
 model ImprovSkill {
@@ -314,6 +546,9 @@ model ImprovSkill {
   studentRatings  ImprovStudentRating[]
   teacherRatings  ImprovTeacherRating[]
   feedback        ImprovFeedback[]
+  assessments     ImprovSkillAssessment[] @relation("SkillAssessments")
+  classSkills     ImprovClassSkill[]
+  resourceSkills  ResourceSkill[]
 
   @@index([isActive])
 }
@@ -327,6 +562,17 @@ model ImprovObjective {
   text        String   // Guiding question or learning target
   description String?
   examples    String?  // Markdown examples
+
+  isMandatory Boolean  @default(false) // Must be passed to pass the skill
+  isCustom    Boolean  @default(false) // Teacher-created vs system
+  assessmentGuidance String? // Google Doc URL or instructions from teacher
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assessments ImprovObjectiveAssessment[]
+  resourceObjectives ResourceObjective[]
 
   @@index([skillId])
 }
@@ -345,6 +591,66 @@ model ImprovWeekSkill {
   @@unique([weekId, skillId])
   @@index([weekId])
   @@index([skillId])
+}
+
+model ImprovClassSkill {
+  id          String   @id @default(cuid())
+  classId     String
+  class       ImprovClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  skillId     String
+  skill       ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  // Configuration for this skill in this class
+  mandatoryObjectiveCount Int @default(0) // How many objectives must be passed
+  totalObjectivesRequired Int @default(0) // Total objectives needed to pass (0 = all must pass)
+  sequenceNum Int // Visual order of skills in class
+
+  createdAt   DateTime @default(now())
+
+  @@unique([classId, skillId])
+  @@index([classId])
+  @@index([skillId])
+}
+
+model ImprovObjectiveAssessment {
+  id          String   @id @default(cuid())
+  objectiveId String
+  objective   ImprovObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  studentId   String
+  student     User @relation("ObjectiveAssessments", fields: [studentId], references: [id], onDelete: Cascade)
+
+  classId     String
+  class       ImprovClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  // Student submission
+  submissionType String? // "google-doc" or "text"
+  submissionUrl  String? // Google Doc URL
+  submissionText String? // Text submission
+  submittedAt DateTime?
+
+  // Self assessment
+  studentRubricType String? // "binary", "feedback", "rubric"
+  studentRating Int?       // 0-1 for binary, or point value
+  studentFeedback String?  // Student's own feedback
+
+  // Teacher assessment
+  teacherRubricType String? // "binary", "feedback", "rubric"
+  teacherRating Int?        // 0-1 for binary, or point value
+  teacherFeedback String?   // Teacher's feedback
+  rubricName String?        // Reference to a named rubric if applicable
+  gradeAt DateTime?
+
+  status String @default("not-started") // "not-started", "submitted", "graded"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([objectiveId, studentId])
+  @@index([classId])
+  @@index([studentId])
+  @@index([objectiveId])
 }
 
 model ImprovStudentRating {
@@ -417,12 +723,55 @@ model ImprovFeedback {
 }
 
 // ============================================
+// IMPROV SKILL ASSESSMENTS (On-Demand, Non-Weekly)
+// ============================================
+
+model ImprovSkillAssessment {
+  id              String   @id @default(cuid())
+
+  classId         String
+  class           ImprovClass @relation("SkillAssessments", fields: [classId], references: [id], onDelete: Cascade)
+
+  studentId       String
+  student         User     @relation("SkillAssessments", fields: [studentId], references: [id], onDelete: Cascade)
+
+  skillId         String
+  skill           ImprovSkill @relation("SkillAssessments", fields: [skillId], references: [id], onDelete: Cascade)
+
+  // Student self-assessment (1-4: approaching, developing, proficient, advanced)
+  studentSelfLevel Int?     // 1-4, nullable if not yet rated
+
+  // Teacher assessment (confirms or overrides student rating)
+  teacherLevel    Int?     // 1-4, nullable if teacher hasn't confirmed yet
+  teacherNote     String?  // Feedback from teacher
+
+  // Track when teacher confirmed
+  teacherConfirmedAt DateTime?
+
+  // Full history of all changes (JSON array of { date, studentSelfLevel, teacherLevel, teacherNote })
+  history         String?  // Stored as JSON
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([classId, studentId, skillId])
+  @@index([classId])
+  @@index([studentId])
+  @@index([skillId])
+  @@index([teacherLevel])
+}
+
+// Add relations to ImprovClass and User
+// These will be added at the top of the User and ImprovClass models
+
+// ============================================
 // K-12 HUMANITIES MASTERY TRACKER SCHEMA (P2)
 // ============================================
 
 model K12Class {
   id          String   @id @default(cuid())
   name        String   // "American Lit, Period 3"
+  subtitle    String?
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -436,30 +785,32 @@ model K12Class {
   startDate   DateTime
   endDate     DateTime?
   numUnits    Int      @default(8)
+  numWeeks    Int      @default(36)
   status      String   @default("active")
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations (for Phase 2)
-  // units       K12Unit[]
-  // enrollments K12Enrollment[]
+  // Relations
+  weeks       K12Week[]
+  enrollments K12Enrollment[]
+  projects    ProjectClass[]
 
   @@index([instructorId])
+  @@index([organizationId])
 }
 
 model K12Enrollment {
   id        String   @id @default(cuid())
   classId   String
-  // class     K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class     K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   studentId String
   student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   enrolledAt DateTime @default(now())
   status     String   @default("active")
-
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   // Placeholder for Phase 2 rating models
   // studentRatings K12StudentRating[]
@@ -467,5 +818,758 @@ model K12Enrollment {
   // feedback       K12Feedback[]
 
   @@unique([classId, studentId])
+  @@index([classId])
   @@index([studentId])
+}
+
+model K12Week {
+  id        String   @id @default(cuid())
+  classId   String
+  class     K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  weekNum   Int      // 1-36 (or however many weeks in the course)
+  title     String?  // "Unit 1: Critical Thinking"
+  unit      String?  // Unit number/name
+
+  agenda          String?  // Lesson plan/agenda for the week
+  assessments     String?  // Assessment info (comma-separated or JSON)
+  materialsJson   String?  // JSON array of {type, title, url} objects
+
+  sessionNotes        String?
+  sessionNotesUpdatedAt DateTime?
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  days K12Day[]
+
+  @@unique([classId, weekNum])
+  @@index([classId])
+}
+
+model K12Day {
+  id          String   @id @default(cuid())
+  weekId      String
+  week        K12Week  @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  date        DateTime
+  dayOfWeek   Int      // 0-6 (Sun-Sat)
+
+  title       String?  // "Intro to Visual Analysis"
+  description String?  // Agenda/lesson notes
+  type        String   @default("lesson") // lesson, assessment, event, holiday, etc.
+
+  homework    String?  // Text description or markdown
+  materialsJson String? // JSON array of {title, url, type}
+
+  standardsJson String? // JSON array of standard IDs assessed
+  isMajor     Boolean  @default(false) // Shows on student main calendar
+
+  // Documents
+  googleDocUrl String?  // Embedded Google Doc URL
+  pdfFileKey  String?   // Supabase storage key for PDF
+  pdfFileName String?   // Original PDF file name
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([weekId])
+  @@index([date])
+}
+
+// ============================================
+// TEACHER OBJECTIVE CUSTOMIZATION
+// ============================================
+
+model ClassObjective {
+  id                  String   @id @default(cuid())
+  classId             String   // Can be ImprovClass or K12Class
+  exampleObjectiveId  String
+  exampleObjective    ExampleObjective @relation(fields: [exampleObjectiveId], references: [id], onDelete: Cascade)
+
+  customText          String?  // Teacher's version of the objective text
+  isActive            Boolean  @default(true) // Whether to show to students
+  objectiveDescription String?  // Extended description of what students need to do
+  googleDocUrl        String?  // Link to Google Doc with guidance/examples
+  isMandatory         Boolean  @default(false) // Whether this objective must be completed to pass standard
+
+  deletedAt           DateTime?  // Soft delete timestamp
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([classId, exampleObjectiveId])
+  @@index([classId])
+  @@index([exampleObjectiveId])
+}
+
+// ============================================
+// INTERVENTION & STUDY SESSIONS (Phase 2)
+// ============================================
+
+model InterventionBlock {
+  id              String   @id @default(cuid())
+  classId         String   // ImprovClass or K12Class
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  weekNum         Int      // Which week this intervention is in
+  title           String   // "Review Session for 2.1"
+  description     String?  // Details about what will be covered
+  date            DateTime // When the intervention happens
+
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([classId])
+  @@index([organizationId])
+  @@index([weekNum])
+  @@index([createdById])
+}
+
+model StudySession {
+  id              String   @id @default(cuid())
+  classId         String   // ImprovClass or K12Class
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  weekNum         Int      // Which week
+  title           String   // "Study Session: 2.1"
+  description     String?
+  date            DateTime
+
+  isStudentCreated Boolean @default(false)
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([classId])
+  @@index([organizationId])
+  @@index([weekNum])
+  @@index([createdById])
+}
+
+// ============================================
+// LEARNING COMMUNITIES & MODULES (Phase 2)
+// ============================================
+
+model LearningCommunity {
+  id                      String   @id @default(cuid())
+
+  // Core identity
+  slug                    String   @unique // URL-friendly: "learn-taxes"
+  name                    String   // "Learn How to Do Taxes"
+  description             String?
+  coverImage              String?  // URL
+
+  // Scope & access
+  scope                   String   // "global" | "organization"
+  organizationId          String?  // NULL if global, orgId if org-scoped
+  organization            Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Curation & moderation
+  curatorId               String
+  curator                 User     @relation("CuratedBy", fields: [curatorId], references: [id], onDelete: Cascade)
+  status                  String   @default("draft") // "draft" | "pending-approval" | "active" | "archived"
+  approvedAt              DateTime?
+  approvedById            String?
+
+  // Access control
+  isPublic                Boolean  @default(true) // Can be discovered
+  requiresApprovalToJoin  Boolean  @default(false) // Curator must approve members
+
+  // Metadata
+  topic                   String?  // "education", "career", "life-skills", etc.
+  difficulty              String?  // "beginner", "intermediate", "advanced"
+  estimatedHours          Int?     // Time to complete all modules
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  modules                 LearningModule[]
+  members                 LearningCommunityMember[]
+  joinRequests            CommunityJoinRequest[]
+  events                  Event[]
+  resources               Resource[]
+  projects                Project[]
+
+  @@unique([organizationId, slug])
+  @@index([scope])
+  @@index([status])
+  @@index([topic])
+  @@index([curatorId])
+}
+
+model LearningModule {
+  id              String   @id @default(cuid())
+  communityId     String
+  community       LearningCommunity @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title           String   // "Module 1: Tax Basics"
+  description     String?
+  sequenceNum     Int      // Order within community
+  estimatedHours  Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([communityId, sequenceNum])
+  @@index([communityId])
+}
+
+model LearningCommunityMember {
+  id              String   @id @default(cuid())
+  communityId     String
+  community       LearningCommunity @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role            String   @default("member") // "member" | "curator" | "moderator"
+  status          String   @default("active") // "active" | "suspended" | "left"
+  joinedAt        DateTime @default(now())
+  progress        Float    @default(0) // % complete (0-100)
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@index([status])
+}
+
+model CommunityJoinRequest {
+  id                      String   @id @default(cuid())
+  communityId             String
+  community               LearningCommunity @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id])
+
+  status                  String   @default("pending") // "pending" | "approved" | "rejected"
+  requestedAt             DateTime @default(now())
+  respondedAt             DateTime?
+  respondedById           String?
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([status])
+}
+
+// ============================================
+// STUDENT PREFERENCES & PERSONALIZATION
+// ============================================
+
+model StudentPreference {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId  String?  // NULL = user preferences; orgId = org-specific prefs
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Material type preferences (comma-separated: "video,article,worksheet")
+  preferredMaterialTypes String?
+
+  // Learning interests (comma-separated tags)
+  learningInterests String?
+
+  // Community preferences
+  preferredTopics String?  // "career,education,life-skills"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+}
+
+model StudentCalendarPreference {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     User     @relation("CalendarPreferences", fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Can be an ImprovClass ID or K12Class ID
+  classId     String
+  className   String?  // Cache for display
+  classType   String   // "improv" or "k12"
+
+  isVisible   Boolean  @default(false) // Student toggled "show this class"
+
+  // Can also be a community
+  communityId String?
+  communityName String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, classId, classType])
+  @@index([studentId])
+}
+
+// ============================================
+// ORGANIZATION ADOPTION OF STANDARDS BANKS
+// ============================================
+
+model OrganizationStandardsBankAdoption {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  standardsBankId String
+  standardsBank   StandardsBank @relation(fields: [standardsBankId], references: [id], onDelete: Cascade)
+
+  adoptedAt       DateTime @default(now())
+
+  @@unique([organizationId, standardsBankId])
+  @@index([organizationId])
+}
+
+model StudentStandardProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation("StudentStandardProgress", fields: [userId], references: [id], onDelete: Cascade)
+
+  standardId      String
+  standard        Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  organizationId  String
+  organization    Organization @relation("StudentStandardProgress", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  classId         String?  // Which class this progress is from
+
+  // For skill standards: 1-4 level; for content: binary completion
+  level           Int?     // 1-4 for skills (1=approaching, 2=developing, 3=proficient, 4=advanced)
+  completed       Boolean  @default(false) // for content objectives
+
+  completedAt     DateTime?
+  lastScoredAt    DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, standardId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([standardId])
+}
+
+model StudentObjectiveProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation("StudentObjectiveProgress", fields: [userId], references: [id], onDelete: Cascade)
+
+  objectiveId     String
+  objective       ExampleObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  completed       Boolean  @default(false)
+  completedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, objectiveId])
+  @@index([userId])
+  @@index([objectiveId])
+}
+
+// ============================================
+// EVENTS & CALENDAR
+// ============================================
+
+model Event {
+  id                String   @id @default(cuid())
+  title             String
+  description       String?
+
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  classId           String?
+  class             ImprovClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  communityId       String?
+  community         LearningCommunity? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  createdById       String
+  createdBy         User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Event timing
+  startDate         DateTime
+  endDate           DateTime?
+  location          String?  // physical location or Zoom/Meet link
+
+  // Recurrence
+  recurrenceType    String   @default("none") // "none", "weekly", "monthly"
+  recurrenceEndDate DateTime?
+
+  // Capacity
+  maxAttendees      Int?
+
+  status            String   @default("scheduled") // "scheduled", "cancelled", "completed"
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  rsvps             EventRSVP[]
+  conversations     Conversation[]
+
+  @@index([organizationId])
+  @@index([communityId])
+  @@index([createdById])
+  @@index([startDate])
+}
+
+model EventRSVP {
+  id                String   @id @default(cuid())
+  eventId           String
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId            String
+  user              User     @relation("EventRSVP", fields: [userId], references: [id], onDelete: Cascade)
+
+  status            String   @default("attending") // "attending", "maybe", "declined"
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+// ============================================
+// MESSAGING CENTER
+// ============================================
+
+model Conversation {
+  id                String   @id @default(cuid())
+
+  // Type of conversation
+  type              String   // "direct" | "class" | "event" | "organization"
+
+  // Context (optional)
+  classId           String?  // For class-level conversations
+  class             ImprovClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  eventId           String?  // For event conversations
+  event             Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  organizationId    String?  // For org-wide announcements
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  // Display info
+  title             String?  // Custom title or auto-generated for groups
+  lastMessageAt     DateTime?
+
+  // Mail vs Message settings
+  isMail            Boolean  @default(false)  // True for announcements, false for chat
+  allowReplies      Boolean  @default(true)  // Can participants reply?
+  isArchived        Boolean  @default(false) // Is this conversation archived?
+
+  createdById       String
+  createdBy         User     @relation("ConversationsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  participants      ConversationParticipant[]
+  messages          Message[]
+
+  @@index([type])
+  @@index([classId])
+  @@index([eventId])
+  @@index([organizationId])
+  @@index([createdById])
+}
+
+model ConversationParticipant {
+  id                String   @id @default(cuid())
+
+  conversationId    String
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId            String
+  user              User     @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+
+  lastReadAt        DateTime @default(now())  // Track when participant last read messages
+
+  addedAt           DateTime @default(now())
+  removedAt         DateTime?  // NULL if still a participant
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model Message {
+  id                String   @id @default(cuid())
+
+  conversationId    String
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId          String
+  sender            User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+
+  content           String
+  googleDocUrl      String?  @db.Text  // URL to embedded Google Doc
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// ============================================
+// RESOURCE BANK
+// ============================================
+
+model Resource {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  url           String?
+  fileKey       String?
+  fileName      String?
+  fileSize      Int?
+  mimeType      String?
+  type          String   // "assessment" | "material" | "tool" | "template" | "link" | "video"
+  format        String?  // "pdf" | "google-doc" | "video" | "article" | "worksheet" | "spreadsheet"
+  tags          String?  // comma-separated
+
+  visibility    String   @default("org") // "public" | "org" | "class" | "community" | "library"
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  createdById   String
+  createdBy     User @relation("ResourceCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  classId       String?
+  class         ImprovClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  communityId   String?
+  community     LearningCommunity? @relation(fields: [communityId], references: [id], onDelete: SetNull)
+
+  resourceLibraryId String?
+  resourceLibrary   ResourceLibrary? @relation(fields: [resourceLibraryId], references: [id], onDelete: SetNull)
+
+  moduleId      String?   // reserved Phase 2
+
+  skills        ResourceSkill[]
+  objectives    ResourceObjective[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([classId])
+  @@index([communityId])
+  @@index([resourceLibraryId])
+  @@index([visibility])
+  @@index([type])
+}
+
+model ResourceSkill {
+  resourceId  String
+  resource    Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  skillId     String
+  skill       ImprovSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([resourceId, skillId])
+  @@index([skillId])
+}
+
+model ResourceObjective {
+  resourceId   String
+  resource     Resource        @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  objectiveId  String
+  objective    ImprovObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@id([resourceId, objectiveId])
+  @@index([objectiveId])
+}
+
+// ============================================
+// ORGANIZATIONAL STRUCTURE (Departments, Grade Levels, Admin Groups, etc.)
+// ============================================
+
+model ResourceLibrary {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name            String   // "History Department Resources", "9th Grade Materials", etc.
+  description     String?
+
+  librarianId     String?  // User assigned as curator
+  librarian       User?    @relation("ResourceLibrarian", fields: [librarianId], references: [id], onDelete: SetNull)
+
+  organizationalUnitId String? @unique
+  organizationalUnit   OrganizationalUnit? @relation(fields: [organizationalUnitId], references: [id], onDelete: SetNull)
+
+  resources       Resource[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([librarianId])
+  @@index([organizationalUnitId])
+}
+
+model OrganizationalUnit {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name            String   // "History Department", "9th Grade", "Admin Council", etc.
+  description     String?
+  type            String   // "Department" | "GradeLevel" | "AdminLevel" | "Operations" | "Custom"
+
+  // Access control
+  visibility      String   @default("restricted") // "public" | "restricted"
+  accessLevel     String   @default("admin-assigned") // "open" | "admin-assigned" | "role-based"
+
+  // Leadership
+  leaderId        String?
+  leader          User?    @relation("OrganizationalUnitLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+
+  // Resources
+  resourceLibrary ResourceLibrary?
+
+  // Members
+  members         OrganizationalUnitMember[]
+
+  // Projects
+  projects        Project[]
+
+  // Hierarchical structure
+  parentId        String?
+  parent          OrganizationalUnit? @relation("UnitHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children        OrganizationalUnit[] @relation("UnitHierarchy")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([leaderId])
+}
+
+model OrganizationalUnitMember {
+  id              String   @id @default(cuid())
+  unitId          String
+  unit            OrganizationalUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation("OrganizationalUnitMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  role            String   @default("Member") // "Leader" | "Librarian" | "Member"
+  joinedAt        DateTime @default(now())
+
+  @@unique([unitId, userId])
+  @@index([unitId])
+  @@index([userId])
+}
+
+// ============================================
+// PROJECTS (Org, Department, Community scope)
+// ============================================
+
+model Project {
+  id              String   @id @default(cuid())
+
+  name            String
+  description     String?
+  status          String   @default("planning") // "planning" | "active" | "on-hold" | "completed"
+
+  // Scope (which level is this project at?)
+  scope           String   // "organization" | "department" | "community"
+
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  departmentId    String?
+  department      OrganizationalUnit? @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  communityId     String?
+  community       LearningCommunity? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  leadId          String
+  lead            User     @relation("ProjectLead", fields: [leadId], references: [id], onDelete: Cascade)
+
+  members         ProjectMember[]
+  classes         ProjectClass[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([communityId])
+  @@index([scope])
+  @@index([status])
+}
+
+model ProjectMember {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation("ProjectMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  role            String   @default("member") // "lead" | "member"
+  joinedAt        DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ProjectClass {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  classId         String
+  k12Class        K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, classId])
+  @@index([projectId])
+}
+
+model Announcement {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdById     String
+  createdBy       User @relation("AnnouncementsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  publishedAt     DateTime @default(now())
+  expiresAt       DateTime? // optional expiration date
+  priority        String   @default("normal") // "low" | "normal" | "high" | "urgent"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([createdById])
+  @@index([publishedAt])
 }

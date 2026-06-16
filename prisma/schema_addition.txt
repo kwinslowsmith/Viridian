@@ -1,0 +1,18 @@
+// Add this to schema.prisma before final closing brace
+
+model ClassObjective {
+  id                  String   @id @default(cuid())
+  classId             String   // Can be ImprovClass or K12Class
+  exampleObjectiveId  String
+  exampleObjective    ExampleObjective @relation(fields: [exampleObjectiveId], references: [id], onDelete: Cascade)
+
+  customText          String?  // Teacher's version of the objective text
+  isActive            Boolean  @default(true) // Whether to show to students
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([classId, exampleObjectiveId])
+  @@index([classId])
+  @@index([exampleObjectiveId])
+}

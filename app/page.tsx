@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { colors } from "@/app/modules/improv/design/colors";
 import { ClassList } from "@/app/modules/improv/components/ClassList";
 import { StudentDashboard } from "@/app/modules/improv/components/StudentDashboard";
@@ -333,7 +336,7 @@ function OrganizationAdminPanel({
   const fetchData = async () => {
     try {
       const [classRes, skillRes, standardRes] = await Promise.all([
-        fetch("/api/improv/classes"),
+        fetch(`/api/improv/classes?organizationId=${organizationId}`),
         fetch("/api/improv/skills"),
         fetch(`/api/organizations/${organizationId}/standards`),
       ]);
@@ -650,19 +653,40 @@ function OrganizationAdminPanel({
 }
 
 function SuperAdminDashboard() {
-  const [tab, setTab] = useState<"standards-banks" | "distribute">("standards-banks");
+  const [tab, setTab] = useState<"organizations" | "standards-banks" | "distribute">("organizations");
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState<any>(null);
+  const [editOrgName, setEditOrgName] = useState("");
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingMemberRole, setEditingMemberRole] = useState<string>("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberRole, setNewMemberRole] = useState("Teacher");
   const [standardsBanks, setStandardsBanks] = useState<any[]>([]);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [newOrg, setNewOrg] = useState({ name: "" });
   const [newBank, setNewBank] = useState({ name: "", subject: "", gradeLevel: "", description: "" });
   const [newStandard, setNewStandard] = useState({ code: "", name: "", description: "" });
   const [newResource, setNewResource] = useState({ type: "material", title: "", description: "", url: "" });
 
   useEffect(() => {
+    fetchOrganizations();
     fetchStandardsBanks();
   }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      const res = await fetch("/api/organizations");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setOrganizations(data.organizations || []);
+    } catch (err) {
+      console.error("Failed to fetch organizations:", err);
+    }
+  };
 
   const fetchStandardsBanks = async () => {
     try {
@@ -685,6 +709,131 @@ function SuperAdminDashboard() {
       setBankDetails(data);
     } catch (err) {
       console.error("Failed to fetch bank details:", err);
+    }
+  };
+
+  const addOrganization = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrg),
+      });
+      if (res.ok) {
+        setNewOrg({ name: "" });
+        fetchOrganizations();
+      }
+    } catch (err) {
+      console.error("Failed to add organization:", err);
+    }
+  };
+
+  const viewOrgDetails = async (orgId: string) => {
+    try {
+      const res = await fetch(`/api/organizations/${orgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedOrg(data.organization);
+        setEditOrgName(data.organization.name);
+      }
+    } catch (err) {
+      console.error("Failed to fetch org details:", err);
+    }
+  };
+
+  const updateOrgName = async () => {
+    if (!selectedOrg || !editOrgName) return;
+    try {
+      const res = await fetch(`/api/organizations/${selectedOrg.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editOrgName }),
+      });
+      if (res.ok) {
+        fetchOrganizations();
+        setSelectedOrg(null);
+      }
+    } catch (err) {
+      console.error("Failed to update organization:", err);
+    }
+  };
+
+  const deleteOrganization = async (orgId: string) => {
+    if (!confirm("Are you sure? This will delete the organization and all its data.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/organizations/${orgId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchOrganizations();
+        setSelectedOrg(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete organization");
+      }
+    } catch (err) {
+      console.error("Failed to delete organization:", err);
+    }
+  };
+
+  const startEditingMember = (memberId: string, currentRole: string) => {
+    setEditingMemberId(memberId);
+    setEditingMemberRole(currentRole);
+  };
+
+  const cancelEditingMember = () => {
+    setEditingMemberId(null);
+    setEditingMemberRole("");
+  };
+
+  const updateMemberRole = async () => {
+    if (!selectedOrg || !editingMemberId) return;
+    try {
+      const res = await fetch(`/api/organizations/${selectedOrg.id}/members/${editingMemberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: editingMemberRole }),
+      });
+      if (res.ok) {
+        await viewOrgDetails(selectedOrg.id);
+        setEditingMemberId(null);
+        setEditingMemberRole("");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to update member role");
+      }
+    } catch (err) {
+      console.error("Failed to update member role:", err);
+    }
+  };
+
+  const addMemberToOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrg || !newMemberEmail) return;
+    try {
+      const res = await fetch(`/api/organizations/${selectedOrg.id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newMemberEmail,
+          name: newMemberName || undefined,
+          role: newMemberRole,
+        }),
+      });
+      if (res.ok) {
+        await viewOrgDetails(selectedOrg.id);
+        setNewMemberEmail("");
+        setNewMemberName("");
+        setNewMemberRole("Teacher");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to add member");
+      }
+    } catch (err) {
+      console.error("Failed to add member:", err);
     }
   };
 
@@ -767,7 +916,7 @@ function SuperAdminDashboard() {
     <div className="space-y-6">
       {/* Tabs */}
       <div className="flex gap-2 border-b" style={{ borderColor: colors.border }}>
-        {(["standards-banks", "distribute"] as const).map((t) => (
+        {(["organizations", "standards-banks", "distribute"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -777,10 +926,224 @@ function SuperAdminDashboard() {
               borderColor: tab === t ? colors.teal.accent : "transparent",
             }}
           >
-            {t === "standards-banks" ? "Standards Banks" : "Distribute"}
+            {t === "organizations" ? "Organizations" : t === "standards-banks" ? "Standards Banks" : "Distribute"}
           </button>
         ))}
       </div>
+
+      {/* Organizations Tab */}
+      {tab === "organizations" && (
+        <div className="space-y-6">
+          {/* Create Organization */}
+          <form onSubmit={addOrganization} className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Create Organization</h3>
+            <input
+              type="text"
+              placeholder="Organization Name"
+              value={newOrg.name}
+              onChange={(e) => setNewOrg({ name: e.target.value })}
+              className="w-full px-3 py-2 rounded border placeholder-gray-900"
+              style={{ borderColor: colors.border, color: colors.text }}
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded font-semibold"
+              style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+            >
+              Create Organization
+            </button>
+          </form>
+
+          {/* Organizations List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {organizations.map((org) => (
+              <div
+                key={org.id}
+                className="p-4 rounded cursor-pointer transition-all"
+                onClick={() => viewOrgDetails(org.id)}
+                style={{
+                  backgroundColor:
+                    selectedOrg?.id === org.id ? colors.teal.bg : colors.surface,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                <div className="font-semibold" style={{ color: colors.text }}>
+                  {org.name}
+                </div>
+                <div className="text-sm mt-1" style={{ color: colors.text2 }}>
+                  Click to edit
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Organization Detail Panel */}
+          {selectedOrg && (
+            <div
+              className="p-4 rounded-lg space-y-4"
+              style={{ backgroundColor: colors.surface, border: `2px solid ${colors.teal.accent}` }}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg" style={{ color: colors.text }}>
+                  Edit: {selectedOrg.name}
+                </h3>
+                <button
+                  onClick={() => setSelectedOrg(null)}
+                  className="px-3 py-1 rounded text-sm"
+                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Organization Name Edit */}
+              <div className="space-y-2">
+                <label style={{ color: colors.text, display: "block", fontSize: "0.875rem", fontWeight: 600 }}>
+                  Organization Name
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editOrgName}
+                    onChange={(e) => setEditOrgName(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded border"
+                    style={{ borderColor: colors.border, color: colors.text }}
+                  />
+                  <button
+                    onClick={updateOrgName}
+                    className="px-4 py-2 rounded font-semibold"
+                    style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Member Form */}
+              <form onSubmit={addMemberToOrg} className="space-y-3 p-3 rounded" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+                <label style={{ color: colors.text, display: "block", fontSize: "0.875rem", fontWeight: 600 }}>
+                  Add New Member
+                </label>
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  className="w-full px-2 py-1 rounded border text-sm"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Name (optional)"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full px-2 py-1 rounded border text-sm"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                />
+                <select
+                  value={newMemberRole}
+                  onChange={(e) => setNewMemberRole(e.target.value)}
+                  className="w-full px-2 py-1 rounded border text-sm"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                >
+                  <option value="SuperAdmin">SuperAdmin</option>
+                  <option value="SchoolAdmin">SchoolAdmin</option>
+                  <option value="Teacher">Teacher</option>
+                  <option value="Student">Student</option>
+                </select>
+                <button
+                  type="submit"
+                  className="w-full px-2 py-1 rounded text-sm font-semibold"
+                  style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+                >
+                  Add Member
+                </button>
+              </form>
+
+              {/* Members */}
+              {selectedOrg.users && selectedOrg.users.length > 0 && (
+                <div className="space-y-2">
+                  <label style={{ color: colors.text, display: "block", fontSize: "0.875rem", fontWeight: 600 }}>
+                    Members ({selectedOrg.users.length})
+                  </label>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {selectedOrg.users.map((ou: any) => (
+                      <div key={ou.userId} className="space-y-1">
+                        {editingMemberId === ou.userId ? (
+                          <div className="p-3 rounded" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.teal.border}` }}>
+                            <div style={{ color: colors.text }} className="font-medium text-sm mb-2">
+                              {ou.user.name}
+                            </div>
+                            <div style={{ color: colors.text2 }} className="text-xs mb-3">
+                              {ou.user.email}
+                            </div>
+                            <div className="space-y-2">
+                              <select
+                                value={editingMemberRole}
+                                onChange={(e) => setEditingMemberRole(e.target.value)}
+                                className="w-full px-2 py-1 rounded border text-sm"
+                                style={{ borderColor: colors.border, color: colors.text }}
+                              >
+                                <option value="SuperAdmin">SuperAdmin</option>
+                                <option value="SchoolAdmin">SchoolAdmin</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Student">Student</option>
+                              </select>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={updateMemberRole}
+                                  className="flex-1 px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: colors.teal.bg, color: colors.text }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={cancelEditingMember}
+                                  className="flex-1 px-2 py-1 rounded text-xs"
+                                  style={{ backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 rounded text-sm cursor-pointer transition-all hover:opacity-80"
+                            style={{ backgroundColor: colors.bg }}
+                            onClick={() => startEditingMember(ou.userId, ou.role)}
+                          >
+                            <div style={{ color: colors.text }} className="font-medium">
+                              {ou.user.name}
+                            </div>
+                            <div style={{ color: colors.text2 }} className="text-xs">
+                              {ou.user.email}
+                            </div>
+                            <div style={{ color: colors.teal.accent }} className="text-xs font-semibold mt-1">
+                              {ou.role} • (click to edit)
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Button */}
+              <button
+                onClick={() => deleteOrganization(selectedOrg.id)}
+                className="w-full px-4 py-2 rounded font-semibold text-white"
+                style={{ backgroundColor: "#ef4444" }}
+              >
+                🗑️ Delete Organization
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Standards Banks Tab */}
       {tab === "standards-banks" && (
@@ -914,7 +1277,45 @@ function SuperAdminDashboard() {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [role, setRole] = useState<"teacher" | "student" | "admin" | "superadmin" | null>(null);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
+
+  // Show loading state while session is being checked
+  if (status === 'loading' || status === 'authenticated') {
+    return <div style={{ color: colors.text }}>Loading...</div>;
+  }
+
+  // Show landing page if not authenticated
+  if (!session) {
+    return (
+      <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.bg }}>
+        <div className="text-center max-w-2xl">
+          <h1 className="text-6xl md:text-7xl font-serif font-bold mb-4" style={{ color: colors.text, fontFamily: "'DM Serif Display', serif" }}>
+            Viridian
+          </h1>
+          <p className="text-xl md:text-2xl mb-2" style={{ color: colors.text }}>Global Learning Communities</p>
+          <p className="text-lg mb-12" style={{ color: colors.text2 }}>Master improv, master yourself</p>
+
+          <div className="flex gap-4 justify-center">
+            <Link href="/auth/signup" className="px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: colors.teal.bg, color: colors.text }}>
+              Sign Up
+            </Link>
+            <Link href="/auth/login" className="px-8 py-3 rounded-lg font-semibold text-lg border-2" style={{ borderColor: colors.teal.accent, color: colors.teal.accent }}>
+              Login
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (role === "teacher") {
     return (
@@ -1034,6 +1435,39 @@ export default function Home() {
           <p className="text-xs md:text-sm mt-2" style={{ color: colors.text3 }}>
             P1 Frontend — Fully Built and Ready
           </p>
+        </div>
+
+        <div className="flex gap-2 justify-center mb-8">
+          <Link
+            href="/discover"
+            className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+            style={{
+              backgroundColor: colors.teal.bg,
+              color: colors.text,
+            }}
+          >
+            Discover Communities
+          </Link>
+          <Link
+            href="/communities"
+            className="px-4 py-2 rounded-lg font-semibold text-sm transition-all border"
+            style={{
+              borderColor: colors.border,
+              color: colors.text,
+            }}
+          >
+            My Communities
+          </Link>
+          <Link
+            href="/curator"
+            className="px-4 py-2 rounded-lg font-semibold text-sm transition-all border"
+            style={{
+              borderColor: colors.border,
+              color: colors.text,
+            }}
+          >
+            Curator
+          </Link>
         </div>
 
         <div className="space-y-3 md:space-y-4">

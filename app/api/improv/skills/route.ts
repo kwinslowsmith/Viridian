@@ -1,96 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const skills = await prisma.improvSkill.findMany({
       where: { isActive: true },
-      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+      orderBy: [{ category: 'asc' }, { id: 'asc' }],
     });
 
-    const skillsWithLevels = skills.map((skill) => ({
-      id: skill.id,
-      slug: skill.slug,
-      name: skill.name,
-      category: skill.category,
-      categoryIcon: skill.categoryIcon,
-      categoryColor: skill.categoryColor,
-      description: skill.description,
-      levels: skill.levelDefinitions
-        ? JSON.parse(skill.levelDefinitions)
-        : {
-            approaching: '',
-            developing: '',
-            proficient: '',
-          },
+    const skillsWithDefinitions = skills.map(skill => ({
+      ...skill,
+      levelDefinitions: skill.levelDefinitions ? JSON.parse(skill.levelDefinitions) : {},
     }));
 
-    // Get unique categories
-    const categories = Array.from(
-      new Map(
-        skillsWithLevels.map((skill) => [
-          skill.category,
-          {
-            id: skill.category,
-            name:
-              skill.category.charAt(0).toUpperCase() +
-              skill.category.slice(1).replace('-', ' '),
-            icon: skill.categoryIcon,
-            color: skill.categoryColor,
-          },
-        ])
-      ).values()
-    );
+    // Group by category
+    const categories = ['foundation', 'scene-work', 'musical'];
+    const grouped = categories.map(cat => ({
+      id: cat,
+      name: cat === 'foundation' ? 'Foundation' : cat === 'scene-work' ? 'Scene Work' : 'Musical',
+      icon: skillsWithDefinitions.find(s => s.category === cat)?.categoryIcon || '',
+      color: skillsWithDefinitions.find(s => s.category === cat)?.categoryColor || '',
+      skills: skillsWithDefinitions.filter(s => s.category === cat),
+    }));
 
-    return NextResponse.json({
-      skills: skillsWithLevels,
-      categories,
-    });
+    return NextResponse.json({ categories, skills: skillsWithDefinitions }, { status: 200 });
   } catch (error) {
-    console.error('Error fetching skills:', error);
+    console.error('Failed to fetch skills:', error);
     return NextResponse.json(
       { error: 'Failed to fetch skills' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, category, description } = body;
-
-    if (!name || !category) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, category' },
-        { status: 400 }
-      );
-    }
-
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
-
-    const skill = await prisma.improvSkill.create({
-      data: {
-        name,
-        slug,
-        category,
-        description: description || '',
-        categoryIcon: '◆',
-        categoryColor: '#D97706',
-        levelDefinitions: JSON.stringify({
-          approaching: 'Still developing this skill',
-          developing: 'Making progress on this skill',
-          proficient: 'Demonstrating proficiency in this skill',
-        }),
-        isActive: true,
-      },
-    });
-
-    return NextResponse.json(skill, { status: 201 });
-  } catch (error: any) {
-    console.error('Error creating skill:', error);
-    return NextResponse.json(
-      { error: 'Failed to create skill' },
       { status: 500 }
     );
   }
