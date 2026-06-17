@@ -103,6 +103,17 @@ export function NavHeader() {
           >
             Calendar
           </Link>
+          <Link
+            href="/polymath"
+            className="font-semibold text-sm transition-colors px-3 py-1 rounded"
+            style={{
+              color: isActive('/polymath') ? colors.text : colors.text,
+              backgroundColor: isActive('/polymath') ? colors.amber.bg : 'transparent',
+              textDecoration: 'none',
+            }}
+          >
+            Polymath
+          </Link>
         </nav>
 
         {/* User Info & Logout */}
