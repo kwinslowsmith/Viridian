@@ -1304,12 +1304,15 @@ export default function Home() {
           <p className="text-xl md:text-2xl mb-2" style={{ color: colors.text }}>Global Learning Communities</p>
           <p className="text-lg mb-12" style={{ color: colors.text2 }}>Master improv, master yourself</p>
 
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/auth/signup" className="px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: colors.teal.bg, color: colors.text }}>
               Sign Up
             </Link>
             <Link href="/auth/login" className="px-8 py-3 rounded-lg font-semibold text-lg border-2" style={{ borderColor: colors.teal.accent, color: colors.teal.accent }}>
               Login
+            </Link>
+            <Link href="/polymath" className="px-8 py-3 rounded-lg font-semibold text-lg border-2" style={{ borderColor: colors.amber.border, color: colors.text, backgroundColor: colors.amber.bg }}>
+              Polymath Magazine
             </Link>
           </div>
         </div>
