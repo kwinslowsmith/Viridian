@@ -1,0 +1,143 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { prisma } from '@/lib/prisma';
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { slug: string; articleId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { slug, articleId } = params;
+    const body = await req.json();
+    const { title, abstract, content, topic, tags, estimatedReadTime, coverImage, status } = body;
+
+    const community = await prisma.learningCommunity.findUnique({
+      where: { slug },
+      select: { id: true, curatorId: true },
+    });
+
+    if (!community) {
+      return NextResponse.json({ error: 'Community not found' }, { status: 404 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user || community.curatorId !== user.id) {
+      return NextResponse.json(
+        { error: 'Only community curator can update articles' },
+        { status: 403 }
+      );
+    }
+
+    const article = await prisma.polymathArticle.findUnique({
+      where: { id: articleId },
+      select: { communityId: true },
+    });
+
+    if (!article || article.communityId !== community.id) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
+
+    const updateData: any = {};
+    if (title) updateData.title = title;
+    if (abstract !== undefined) updateData.abstract = abstract;
+    if (content) updateData.content = content;
+    if (topic !== undefined) updateData.topic = topic;
+    if (tags !== undefined) updateData.tags = tags;
+    if (estimatedReadTime !== undefined) updateData.estimatedReadTime = estimatedReadTime;
+    if (coverImage !== undefined) updateData.coverImage = coverImage;
+
+    // Handle status changes
+    if (status && status !== 'draft') {
+      updateData.status = status;
+      if (status === 'published' && !updateData.publishedAt) {
+        updateData.publishedAt = new Date();
+      }
+    }
+
+    const updated = await prisma.polymathArticle.update({
+      where: { id: articleId },
+      data: updateData,
+      include: {
+        author: { select: { id: true, name: true, email: true } },
+        polymath_articles_resources: {
+          include: { resource: true },
+          orderBy: { sequenceNum: 'asc' },
+        },
+      },
+    });
+
+    return NextResponse.json(updated, { status: 200 });
+  } catch (error) {
+    console.error('[PUT /articles/[articleId]]', error);
+    return NextResponse.json(
+      { error: 'Failed to update article' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { slug: string; articleId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { slug, articleId } = params;
+
+    const community = await prisma.learningCommunity.findUnique({
+      where: { slug },
+      select: { id: true, curatorId: true },
+    });
+
+    if (!community) {
+      return NextResponse.json({ error: 'Community not found' }, { status: 404 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user || community.curatorId !== user.id) {
+      return NextResponse.json(
+        { error: 'Only community curator can delete articles' },
+        { status: 403 }
+      );
+    }
+
+    const article = await prisma.polymathArticle.findUnique({
+      where: { id: articleId },
+      select: { communityId: true },
+    });
+
+    if (!article || article.communityId !== community.id) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
+
+    await prisma.polymathArticle.delete({
+      where: { id: articleId },
+    });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error('[DELETE /articles/[articleId]]', error);
+    return NextResponse.json(
+      { error: 'Failed to delete article' },
+      { status: 500 }
+    );
+  }
+}

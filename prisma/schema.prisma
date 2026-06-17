@@ -54,6 +54,10 @@ model User {
   librariesManaged          ResourceLibrary[] @relation("ResourceLibrarian")
   projectsLead              Project[] @relation("ProjectLead")
   projectMemberships        ProjectMember[] @relation("ProjectMemberships")
+  articlesCreated           PolymathArticle[] @relation("ArticlesCreated")
+  toolsCreated              PolymathTool[] @relation("ToolsCreated")
+  modulesCreated            PolymathModule[] @relation("ModulesCreated")
+  collectionsCreated        PolymathResourceCollection[] @relation("CollectionsCreated")
 
   // For NextAuth
   accounts                  Account[]
@@ -1002,6 +1006,10 @@ model LearningCommunity {
   events                  Event[]
   resources               Resource[]
   projects                Project[]
+  articles                PolymathArticle[] @relation("Articles")
+  tools                   PolymathTool[] @relation("Tools")
+  polymathModules         PolymathModule[] @relation("PolymathModules")
+  resourceCollections     PolymathResourceCollection[] @relation("ResourceCollections")
 
   @@unique([organizationId, slug])
   @@index([scope])
@@ -1370,6 +1378,10 @@ model Resource {
 
   skills        ResourceSkill[]
   objectives    ResourceObjective[]
+  articleLinks  PolymathArticleResource[]
+  toolLinks     PolymathToolResource[]
+  moduleLinks   PolymathModuleResource[]
+  collectionLinks PolymathCollectionResource[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1572,4 +1584,205 @@ model Announcement {
   @@index([organizationId])
   @@index([createdById])
   @@index([publishedAt])
+}
+
+// ============================================
+// POLYMATH MAGAZINE — COMMUNITY PUBLISHING
+// ============================================
+
+model PolymathArticle {
+  id              String   @id @default(cuid())
+
+  communityId     String
+  community       LearningCommunity @relation("Articles", fields: [communityId], references: [id], onDelete: Cascade)
+
+  authorId        String
+  author          User     @relation("ArticlesCreated", fields: [authorId], references: [id], onDelete: Cascade)
+
+  title           String
+  abstract        String?  // Short summary for magazine feed
+  content         String   @db.Text // Markdown
+
+  topic           String?  // "education", "career", "life-skills", etc.
+  tags            String?  // Comma-separated
+  estimatedReadTime Int?   // Minutes
+
+  status          String   @default("draft") // "draft" | "published" | "archived"
+  publishedAt     DateTime?
+
+  coverImage      String?  // URL to cover image
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  polymath_articles_resources PolymathArticleResource[]
+
+  @@index([communityId])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([topic])
+}
+
+model PolymathTool {
+  id              String   @id @default(cuid())
+
+  communityId     String
+  community       LearningCommunity @relation("Tools", fields: [communityId], references: [id], onDelete: Cascade)
+
+  authorId        String
+  author          User     @relation("ToolsCreated", fields: [authorId], references: [id], onDelete: Cascade)
+
+  name            String   // "el-lector-diario", "Diagram Builder", etc.
+  description     String?
+  toolType        String   // "interactive", "simulator", "builder", "analyzer", "reader"
+
+  toolUrl         String?  // External URL if hosted elsewhere
+  iframeUrl       String?  // Embed URL for iframe
+  codeRepository  String?  // GitHub URL or similar
+
+  thumbnail       String?  // Screenshot/preview image
+  difficulty      String?  // "beginner", "intermediate", "advanced"
+  estimatedUsageTime Int? // Minutes
+
+  languages       String?  // Comma-separated: "en,es,fr"
+  accessibilityFeatures String? // Comma-separated features
+
+  status          String   @default("draft") // "draft" | "published" | "archived"
+  publishedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  polymath_tools_resources PolymathToolResource[]
+
+  @@index([communityId])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([toolType])
+}
+
+model PolymathModule {
+  id              String   @id @default(cuid())
+
+  communityId     String
+  community       LearningCommunity @relation("PolymathModules", fields: [communityId], references: [id], onDelete: Cascade)
+
+  authorId        String
+  author          User     @relation("ModulesCreated", fields: [authorId], references: [id], onDelete: Cascade)
+
+  title           String   // "How to Get Into Woodworking"
+  description     String?
+  topic           String?
+  tags            String?
+
+  lessonsJson     String?  // JSON array of {title, description, estimatedHours} objects
+  estimatedHours  Int?     // Total hours to complete
+  difficulty      String?  // "beginner", "intermediate", "advanced"
+
+  sequenceNum     Int      // Order within community (0-indexed)
+
+  status          String   @default("draft") // "draft" | "published" | "archived"
+  publishedAt     DateTime?
+
+  coverImage      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  polymath_modules_resources PolymathModuleResource[]
+
+  @@unique([communityId, sequenceNum])
+  @@index([communityId])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([topic])
+}
+
+model PolymathResourceCollection {
+  id              String   @id @default(cuid())
+
+  communityId     String
+  community       LearningCommunity @relation("ResourceCollections", fields: [communityId], references: [id], onDelete: Cascade)
+
+  authorId        String
+  author          User     @relation("CollectionsCreated", fields: [authorId], references: [id], onDelete: Cascade)
+
+  name            String   // "Essential Woodworking Tools", etc.
+  description     String?
+  topic           String?
+  tags            String?
+
+  resources       PolymathCollectionResource[]
+
+  status          String   @default("draft") // "draft" | "published" | "archived"
+  publishedAt     DateTime?
+
+  coverImage      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([communityId])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([topic])
+}
+
+// Junction models for linking resources to Polymath content
+
+model PolymathArticleResource {
+  articleId   String
+  article     PolymathArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  resourceId  String
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  sequenceNum Int      // Order in article
+
+  @@id([articleId, resourceId])
+  @@index([resourceId])
+}
+
+model PolymathToolResource {
+  toolId      String
+  tool        PolymathTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  resourceId  String
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([toolId, resourceId])
+  @@index([resourceId])
+}
+
+model PolymathModuleResource {
+  moduleId    String
+  module      PolymathModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  resourceId  String
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  sequenceNum Int      // Order in module
+
+  @@id([moduleId, resourceId])
+  @@index([resourceId])
+}
+
+model PolymathCollectionResource {
+  collectionId String
+  collection   PolymathResourceCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  resourceId   String
+  resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  sequenceNum  Int      // Order in collection
+
+  @@id([collectionId, resourceId])
+  @@index([resourceId])
 }
