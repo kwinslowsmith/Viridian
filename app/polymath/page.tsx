@@ -83,8 +83,17 @@ export default function PolymathMagazine() {
       const data = await res.json();
 
       // Ensure data has the expected structure
-      if (data && typeof data === 'object' && 'articles' in data) {
-        setContent(data);
+      if (
+        data &&
+        typeof data === 'object' &&
+        ('articles' in data || 'tools' in data || 'modules' in data || 'collections' in data)
+      ) {
+        setContent({
+          articles: Array.isArray(data.articles) ? data.articles : [],
+          tools: Array.isArray(data.tools) ? data.tools : [],
+          modules: Array.isArray(data.modules) ? data.modules : [],
+          collections: Array.isArray(data.collections) ? data.collections : [],
+        });
       } else {
         console.error('Invalid API response structure:', data);
         setContent({ articles: [], tools: [], modules: [], collections: [] });

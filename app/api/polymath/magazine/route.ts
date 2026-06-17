@@ -84,11 +84,11 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Combine and format response
-    const feed = {
+    // Combine and format response with guaranteed structure
+    const response = {
       articles: articles.map((a) => ({
         id: a.id,
-        type: 'article',
+        type: 'article' as const,
         title: a.title,
         abstract: a.abstract,
         community: a.community,
@@ -99,10 +99,10 @@ export async function GET(req: NextRequest) {
         estimatedReadTime: a.estimatedReadTime,
         coverImage: a.coverImage,
         resources: a.polymath_articles_resources,
-      })),
+      })) || [],
       tools: tools.map((t) => ({
         id: t.id,
-        type: 'tool',
+        type: 'tool' as const,
         name: t.name,
         description: t.description,
         community: t.community,
@@ -116,10 +116,10 @@ export async function GET(req: NextRequest) {
         estimatedUsageTime: t.estimatedUsageTime,
         languages: t.languages,
         accessibilityFeatures: t.accessibilityFeatures,
-      })),
+      })) || [],
       modules: modules.map((m) => ({
         id: m.id,
-        type: 'module',
+        type: 'module' as const,
         title: m.title,
         description: m.description,
         community: m.community,
@@ -132,10 +132,10 @@ export async function GET(req: NextRequest) {
         lessons: m.lessonsJson ? JSON.parse(m.lessonsJson) : [],
         coverImage: m.coverImage,
         resources: m.polymath_modules_resources,
-      })),
+      })) || [],
       collections: collections.map((c) => ({
         id: c.id,
-        type: 'collection',
+        type: 'collection' as const,
         name: c.name,
         description: c.description,
         community: c.community,
@@ -145,10 +145,10 @@ export async function GET(req: NextRequest) {
         tags: c.tags,
         coverImage: c.coverImage,
         resources: c.resources.map((r) => r.resource),
-      })),
+      })) || [],
     };
 
-    return NextResponse.json(feed, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
     console.error('[GET /polymath/magazine]', error);
     return NextResponse.json(
