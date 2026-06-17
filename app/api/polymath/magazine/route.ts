@@ -149,10 +149,13 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(feed, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[GET /polymath/magazine]', error);
     return NextResponse.json(
-      { error: 'Failed to fetch magazine feed' },
+      {
+        error: 'Failed to fetch magazine feed',
+        details: error?.message || String(error)
+      },
       { status: 500 }
     );
   }

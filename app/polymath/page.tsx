@@ -81,9 +81,17 @@ export default function PolymathMagazine() {
       }
       const res = await fetch(url.toString());
       const data = await res.json();
-      setContent(data);
+
+      // Ensure data has the expected structure
+      if (data && typeof data === 'object' && 'articles' in data) {
+        setContent(data);
+      } else {
+        console.error('Invalid API response structure:', data);
+        setContent({ articles: [], tools: [], modules: [], collections: [] });
+      }
     } catch (error) {
       console.error('Failed to fetch magazine content:', error);
+      setContent({ articles: [], tools: [], modules: [], collections: [] });
     } finally {
       setLoading(false);
     }
