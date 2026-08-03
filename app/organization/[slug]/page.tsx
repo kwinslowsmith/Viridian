@@ -17,6 +17,7 @@ import { OrgResourceLibrary } from '@/app/components/OrgResourceLibrary';
 import { OrganizationalUnitList } from '@/app/components/OrganizationalUnitList';
 import { OrgNewsfeed } from '@/app/components/OrgNewsfeed';
 import { OrgHourlyCalendar } from '@/app/components/OrgHourlyCalendar';
+import { K12StandardsInterface } from '@/app/components/K12StandardsInterface';
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -1049,8 +1050,7 @@ function ClassesTab({ org, onBrowseClick }: { org: any; onBrowseClick?: () => vo
 function StandardsTab({ org }: { org: any }) {
   return (
     <div>
-      <h2 style={{ color: colors.text, marginBottom: '1rem', fontSize: '20px', fontWeight: '600' }}>Learning Standards</h2>
-      <p style={{ color: colors.text2 }}>Browse standards and track your progress. Standards view coming soon...</p>
+      <K12StandardsInterface orgId={org?.id} />
     </div>
   );
 }
