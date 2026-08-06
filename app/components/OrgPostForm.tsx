@@ -5,6 +5,8 @@ import { PolymathButton } from './PolymathButton';
 import { StatusBadge } from './StatusBadge';
 import { ApprovalProgressBar } from './ApprovalProgressBar';
 import { ContentForm } from './ContentForm';
+import { Toast } from './Toast';
+import { validateOrgArticle, hasErrors, FormErrors } from '@/lib/polymath/form-validation';
 
 interface OrgAdmin {
   id: string;
@@ -51,6 +53,10 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [showApproverDropdown, setShowApproverDropdown] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Fetch org admins
   useEffect(() => {
@@ -74,23 +80,69 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
     fetchAdmins();
   }, [organizationId]);
 
-  const handleToggleApprover = (adminId: string) => {
-    setFormData({
-      ...formData,
-      selectedApprovers: formData.selectedApprovers.includes(adminId)
-        ? formData.selectedApprovers.filter((id) => id !== adminId)
-        : [...formData.selectedApprovers, adminId],
+  // Validate form on field change
+  const validateForm = (data: FormData) => {
+    return validateOrgArticle({
+      title: data.title,
+      content: data.content,
+      tier: data.tier,
+      organizationId: organizationId,
+      selectedApprovers: data.selectedApprovers,
     });
+  };
+
+  // Handle field blur - validate and mark as touched
+  const handleFieldBlur = (fieldName: string) => {
+    setTouchedFields((prev) => new Set(prev).add(fieldName));
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
+  };
+
+  // Handle field change with debounced validation
+  const handleFieldChange = (field: keyof FormData, value: any) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+
+    // Validate only if field has been touched
+    if (touchedFields.has(field)) {
+      const newErrors = validateForm(newFormData);
+      setErrors(newErrors);
+    }
+  };
+
+  const handleToggleApprover = (adminId: string) => {
+    const newApprovers = formData.selectedApprovers.includes(adminId)
+      ? formData.selectedApprovers.filter((id) => id !== adminId)
+      : [...formData.selectedApprovers, adminId];
+
+    handleFieldChange('selectedApprovers', newApprovers);
+    handleFieldBlur('selectedApprovers');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title.trim() || !formData.content.trim()) {
-      setErrorMessage('Please fill in all required fields');
-      setStatus('error');
+    // Mark all fields as touched
+    setTouchedFields(new Set(['title', 'content', 'tier', 'selectedApprovers']));
+
+    // Validate form
+    const formErrors = validateForm(formData);
+    setErrors(formErrors);
+
+    if (hasErrors(formErrors)) {
+      setToast({
+        message: 'Please fix validation errors before submitting',
+        type: 'error',
+      });
       return;
     }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    setShowConfirmDialog(false);
 
     try {
       setStatus('loading');
@@ -122,6 +174,12 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
       const post = await response.json();
       setStatus('success');
 
+      // Show success toast
+      setToast({
+        message: 'Article submitted for approval!',
+        type: 'success',
+      });
+
       // Reset form
       setFormData({
         title: '',
@@ -129,14 +187,21 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
         tier: 'introduction',
         selectedApprovers: [],
       });
+      setErrors({});
+      setTouchedFields(new Set());
 
       onSuccess?.(post.id);
 
       // Clear success message after 3 seconds
       setTimeout(() => setStatus('idle'), 3000);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
+      const errorMsg = error instanceof Error ? error.message : 'An error occurred while submitting';
+      setErrorMessage(errorMsg);
       setStatus('error');
+      setToast({
+        message: errorMsg,
+        type: 'error',
+      });
     }
   };
 
@@ -145,7 +210,15 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      <div className="space-y-6">
       {/* Header with org branding */}
       <div className="bg-[#F5F3F0] border border-[#B8A899]/20 rounded-lg p-4">
         <div className="flex items-start justify-between mb-4">
@@ -178,12 +251,22 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
             id="title"
             type="text"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) => handleFieldChange('title', e.target.value)}
+            onBlur={() => handleFieldBlur('title')}
             placeholder="Give your organization article a compelling title"
-            className="w-full px-4 py-2 border border-[#B8A899]/20 rounded-lg font-sans text-sm text-[#3C3C3C] placeholder-[#B8A899] focus:outline-none focus:ring-2 focus:ring-[#8B3A3A] focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded-lg font-sans text-sm text-[#3C3C3C] placeholder-[#B8A899] focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              touchedFields.has('title') && errors.title
+                ? 'border-red-300 focus:ring-red-300 bg-red-50'
+                : 'border-[#B8A899]/20 focus:ring-[#8B3A3A]'
+            }`}
             maxLength={200}
           />
-          <p className="text-xs text-[#B8A899] mt-1">{formData.title.length}/200 characters</p>
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-[#B8A899]">{formData.title.length}/200 characters</p>
+            {touchedFields.has('title') && errors.title && (
+              <p className="text-xs text-red-600 font-medium">✕ {errors.title}</p>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -191,11 +274,24 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
           <label htmlFor="content" className="block text-sm font-medium text-[#3C3C3C] mb-2">
             Content <span className="text-red-500">*</span>
           </label>
-          <ContentForm
-            value={formData.content}
-            onChange={(content) => setFormData({ ...formData, content })}
-            placeholder="Write your organization article content here..."
-          />
+          <div className={`rounded-lg overflow-hidden border ${
+            touchedFields.has('content') && errors.content
+              ? 'border-red-300 bg-red-50'
+              : 'border-[#B8A899]/20'
+          }`}>
+            <ContentForm
+              value={formData.content}
+              onChange={(content) => handleFieldChange('content', content)}
+              onBlur={() => handleFieldBlur('content')}
+              placeholder="Write your organization article content here..."
+            />
+          </div>
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-[#B8A899]">{formData.content.length} characters</p>
+            {touchedFields.has('content') && errors.content && (
+              <p className="text-xs text-red-600 font-medium">✕ {errors.content}</p>
+            )}
+          </div>
         </div>
 
         {/* Tier Selector */}
@@ -210,7 +306,10 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
                 name="tier"
                 value="introduction"
                 checked={formData.tier === 'introduction'}
-                onChange={(e) => setFormData({ ...formData, tier: e.target.value as TierType })}
+                onChange={(e) => {
+                  handleFieldChange('tier', e.target.value as TierType);
+                  handleFieldBlur('tier');
+                }}
                 className="w-4 h-4"
               />
               <span className="text-[#3C3C3C]">🎯 Introduction</span>
@@ -221,7 +320,10 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
                 name="tier"
                 value="intermediate"
                 checked={formData.tier === 'intermediate'}
-                onChange={(e) => setFormData({ ...formData, tier: e.target.value as TierType })}
+                onChange={(e) => {
+                  handleFieldChange('tier', e.target.value as TierType);
+                  handleFieldBlur('tier');
+                }}
                 className="w-4 h-4"
               />
               <span className="text-[#3C3C3C]">📚 Intermediate</span>
@@ -232,12 +334,18 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
                 name="tier"
                 value="expert"
                 checked={formData.tier === 'expert'}
-                onChange={(e) => setFormData({ ...formData, tier: e.target.value as TierType })}
+                onChange={(e) => {
+                  handleFieldChange('tier', e.target.value as TierType);
+                  handleFieldBlur('tier');
+                }}
                 className="w-4 h-4"
               />
               <span className="text-[#3C3C3C]">⭐ Expert</span>
             </label>
           </div>
+          {touchedFields.has('tier') && errors.tier && (
+            <p className="text-xs text-red-600 font-medium mt-2">✕ {errors.tier}</p>
+          )}
         </div>
 
         {/* Approver Selector */}
@@ -297,6 +405,9 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
             )}
           </div>
 
+          {touchedFields.has('selectedApprovers') && errors.selectedApprovers && (
+            <p className="text-xs text-red-600 font-medium mt-2">✕ {errors.selectedApprovers}</p>
+          )}
           <p className="text-xs text-[#B8A899] mt-2">
             💡 Selected approvers will review and approve your content
           </p>
@@ -317,17 +428,13 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
         )}
 
         {/* Error Message */}
-        {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Success Message */}
-        {status === 'success' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg flex items-center gap-2">
-            <span>⏳ Pending Approval</span>
-            <span className="text-xs">Your article has been submitted for review.</span>
+        {status === 'error' && errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg flex items-start gap-2">
+            <span className="text-lg">✕</span>
+            <div className="flex-1">
+              <p className="font-medium mb-1">Error Submitting Article</p>
+              <p>{errorMessage}</p>
+            </div>
           </div>
         )}
 
@@ -338,11 +445,47 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
             variant="primary"
             size="lg"
             isFullWidth
-            disabled={status === 'loading' || formData.selectedApprovers.length === 0}
+            disabled={status === 'loading' || hasErrors(errors)}
           >
             {status === 'loading' ? '⏳ Submitting...' : 'Submit for Approval'}
           </PolymathButton>
         </div>
+
+        {/* Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[#3C3C3C] mb-2">Submit for Approval?</h3>
+                <p className="text-sm text-[#B8A899]">
+                  Your article will be submitted to {formData.selectedApprovers.length} approver{formData.selectedApprovers.length !== 1 ? 's' : ''} for review.
+                </p>
+              </div>
+
+              <div className="bg-[#F5F3F0] rounded-lg p-3 text-sm text-[#3C3C3C]">
+                <p className="font-medium mb-2">Preview:</p>
+                <p className="line-clamp-2">{formData.title}</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-4 py-2 border border-[#B8A899]/20 rounded-lg text-[#3C3C3C] font-medium hover:bg-[#F5F3F0] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmedSubmit}
+                  className="flex-1 px-4 py-2 bg-[#8B3A3A] text-white rounded-lg font-medium hover:bg-[#6B2A2A] transition-colors"
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Info text */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
@@ -355,6 +498,7 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
           </ul>
         </div>
       </form>
-    </div>
+      </div>
+    </>
   );
 };

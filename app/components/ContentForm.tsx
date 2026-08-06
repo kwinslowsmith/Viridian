@@ -6,6 +6,7 @@ import { PolymathButton } from './PolymathButton';
 interface ContentFormProps {
   value: string;
   onChange: (content: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   maxLength?: number;
   minHeight?: string;
@@ -14,6 +15,7 @@ interface ContentFormProps {
 export const ContentForm: React.FC<ContentFormProps> = ({
   value,
   onChange,
+  onBlur,
   placeholder = 'Write your content here...',
   maxLength = 10000,
   minHeight = 'min-h-64',
@@ -130,6 +132,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         maxLength={maxLength}
         className={`w-full ${minHeight} p-4 border border-[#B8A899]/20 rounded-b-lg font-sans text-sm text-[#3C3C3C] placeholder-[#B8A899] focus:outline-none focus:ring-2 focus:ring-[#8B3A3A] focus:border-transparent resize-none`}
