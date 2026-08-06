@@ -5,7 +5,16 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    let session = await getServerSession(authOptions);
+
+    // Dev mode: allow test user ID header
+    if (!session?.user?.id && process.env.NODE_ENV === 'development') {
+      const testUserId = req.headers.get('X-Test-User-Id');
+      if (testUserId) {
+        session = { user: { id: testUserId } } as any;
+      }
+    }
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -48,22 +57,26 @@ export async function GET(req: NextRequest) {
 
     // Query articles if included
     if (contentTypes.includes('articles')) {
+      // First, fetch all pending articles for the organization (if specified)
       const articles = await prisma.polymathArticle.findMany({
         where: {
           status: 'pending_approval',
           ...(organizationId && { organizationId }),
         },
-        include: {
-          
-          
-          
-        },
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
       });
 
-      approvalQueue.articles = articles.map((article) => {
+      // Filter to only articles where current user is in the approval chain
+      const userArticles = articles
+        .filter((article) => {
+          const approvalChain = article.approvalChain
+            ? JSON.parse(article.approvalChain)
+            : [];
+          return approvalChain.includes(session.user.id);
+        })
+        .slice(offset, offset + limit);
+
+      approvalQueue.articles = userArticles.map((article) => {
         const approvalChain = article.approvalChain
           ? JSON.parse(article.approvalChain)
           : [];
@@ -88,17 +101,20 @@ export async function GET(req: NextRequest) {
           status: 'pending_approval',
           ...(organizationId && { organizationId }),
         },
-        include: {
-          
-          
-          
-        },
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
       });
 
-      approvalQueue.modules = modules.map((module) => {
+      // Filter to only modules where current user is in the approval chain
+      const userModules = modules
+        .filter((module) => {
+          const approvalChain = module.approvalChain
+            ? JSON.parse(module.approvalChain)
+            : [];
+          return approvalChain.includes(session.user.id);
+        })
+        .slice(offset, offset + limit);
+
+      approvalQueue.modules = userModules.map((module) => {
         const approvalChain = module.approvalChain
           ? JSON.parse(module.approvalChain)
           : [];
@@ -122,17 +138,20 @@ export async function GET(req: NextRequest) {
           status: 'pending_approval',
           ...(organizationId && { organizationId }),
         },
-        include: {
-          
-          
-          
-        },
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
       });
 
-      approvalQueue.tools = tools.map((tool) => {
+      // Filter to only tools where current user is in the approval chain
+      const userTools = tools
+        .filter((tool) => {
+          const approvalChain = tool.approvalChain
+            ? JSON.parse(tool.approvalChain)
+            : [];
+          return approvalChain.includes(session.user.id);
+        })
+        .slice(offset, offset + limit);
+
+      approvalQueue.tools = userTools.map((tool) => {
         const approvalChain = tool.approvalChain
           ? JSON.parse(tool.approvalChain)
           : [];
@@ -156,17 +175,20 @@ export async function GET(req: NextRequest) {
           status: 'pending_approval',
           ...(organizationId && { organizationId }),
         },
-        include: {
-          
-          
-          
-        },
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
       });
 
-      approvalQueue.collections = collections.map((collection) => {
+      // Filter to only collections where current user is in the approval chain
+      const userCollections = collections
+        .filter((collection) => {
+          const approvalChain = collection.approvalChain
+            ? JSON.parse(collection.approvalChain)
+            : [];
+          return approvalChain.includes(session.user.id);
+        })
+        .slice(offset, offset + limit);
+
+      approvalQueue.collections = userCollections.map((collection) => {
         const approvalChain = collection.approvalChain
           ? JSON.parse(collection.approvalChain)
           : [];

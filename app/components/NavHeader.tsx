@@ -4,11 +4,36 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { colors } from '@/app/modules/improv/design/colors';
+import { useState, useEffect } from 'react';
 
 export function NavHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const [approvalCount, setApprovalCount] = useState(0);
+  const [showPolymathDropdown, setShowPolymathDropdown] = useState(false);
+
+  // Fetch approval count
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchApprovalCount = async () => {
+      try {
+        const response = await fetch('/api/polymath/approval-queue?contentType=articles&limit=1');
+        if (response.ok) {
+          const data = await response.json();
+          setApprovalCount((data.queue || data.articles || []).length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch approval count:', err);
+      }
+    };
+
+    fetchApprovalCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchApprovalCount, 30000);
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
 
   // Don't show nav on auth pages or home page
   if (!session || pathname === '/' || pathname.startsWith('/auth')) {
@@ -103,17 +128,48 @@ export function NavHeader() {
           >
             Calendar
           </Link>
-          <Link
-            href="/polymath"
-            className="font-semibold text-sm transition-colors px-3 py-1 rounded"
-            style={{
-              color: isActive('/polymath') ? colors.text : colors.text,
-              backgroundColor: isActive('/polymath') ? colors.amber.bg : 'transparent',
-              textDecoration: 'none',
-            }}
+          <div
+            className="relative"
+            onMouseEnter={() => setShowPolymathDropdown(true)}
+            onMouseLeave={() => setShowPolymathDropdown(false)}
           >
-            Polymath
-          </Link>
+            <Link
+              href="/polymath"
+              className="font-semibold text-sm transition-colors px-3 py-1 rounded flex items-center gap-2"
+              style={{
+                color: isActive('/polymath') ? colors.text : colors.text,
+                backgroundColor: isActive('/polymath') ? colors.amber.bg : 'transparent',
+                textDecoration: 'none',
+              }}
+            >
+              Polymath
+              {approvalCount > 0 && (
+                <span
+                  className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full"
+                  style={{ backgroundColor: '#D4A574' }}
+                >
+                  {approvalCount}
+                </span>
+              )}
+            </Link>
+            {showPolymathDropdown && approvalCount > 0 && (
+              <div
+                className="absolute top-full mt-1 left-0 bg-white rounded shadow-lg border z-50"
+                style={{ borderColor: colors.border }}
+              >
+                <Link
+                  href="/polymath/approvals"
+                  className="block px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
+                  style={{
+                    color: isActive('/polymath/approvals') ? '#D4A574' : colors.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Approval Queue ({approvalCount})
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* User Info & Logout */}
