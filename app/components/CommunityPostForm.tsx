@@ -74,9 +74,12 @@ export const CommunityPostForm: React.FC<CommunityPostFormProps> = ({
       setStatus('loading');
       setErrorMessage('');
 
-      const response = await fetch('/api/polymath/posts', {
+      const response = await fetch('/api/polymath/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-User-Id': userId,
+        },
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
@@ -85,7 +88,6 @@ export const CommunityPostForm: React.FC<CommunityPostFormProps> = ({
           communityId: communityId,
           tier: formData.tier,
           tags: formData.tags,
-          status: 'pending_approval',
           visibility: 'community',
         }),
       });

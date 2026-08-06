@@ -83,17 +83,19 @@ export const IndividualPostForm: React.FC<IndividualPostFormProps> = ({
       setStatus('loading');
       setErrorMessage('');
 
-      const response = await fetch('/api/polymath/posts', {
+      const response = await fetch('/api/polymath/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-User-Id': userId,
+        },
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
-          authorType: 'user',
+          authorType: 'individual',
           authorId: userId,
           tier: formData.tier,
           tags: formData.tags,
-          status: 'published',
           visibility: 'public',
         }),
       });

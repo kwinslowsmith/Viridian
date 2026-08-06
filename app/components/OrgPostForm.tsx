@@ -92,19 +92,16 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
       return;
     }
 
-    if (formData.selectedApprovers.length === 0) {
-      setErrorMessage('Please select at least one approver');
-      setStatus('error');
-      return;
-    }
-
     try {
       setStatus('loading');
       setErrorMessage('');
 
-      const response = await fetch('/api/polymath/posts', {
+      const response = await fetch('/api/polymath/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-User-Id': userId,
+        },
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
@@ -112,7 +109,6 @@ export const OrgPostForm: React.FC<OrgPostFormProps> = ({
           authorId: organizationId,
           organizationId: organizationId,
           tier: formData.tier,
-          status: 'pending_approval',
           visibility: 'organization',
           approvalChain: formData.selectedApprovers,
         }),

@@ -101,18 +101,19 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
       setStatus('loading');
       setErrorMessage('');
 
-      const response = await fetch('/api/polymath/posts', {
+      const response = await fetch('/api/polymath/articles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-User-Id': userId,
+        },
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
           authorType: 'event',
           authorId: formData.eventId,
           eventId: formData.eventId,
-          resourceType: formData.resourceType,
-          status: 'published',
-          visibility: formData.visibility === 'attendees_only' ? 'class' : 'public',
+          visibility: formData.visibility === 'attendees_only' ? 'event' : 'public',
         }),
       });
 
@@ -289,9 +290,9 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
 
         {/* Success Message */}
         {status === 'success' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg flex items-center gap-2">
-            <span>✓ Published!</span>
-            <span className="text-xs">Your event resource is now available.</span>
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg flex items-center gap-2">
+            <span>⏳ Pending Approval</span>
+            <span className="text-xs">Your resource has been submitted for review by the event organizer.</span>
           </div>
         )}
 
