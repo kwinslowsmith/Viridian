@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { colors } from '@/app/modules/improv/design/colors';
+import { terminology } from '@/app/config/terminology';
 
 export function TeacherGradingDashboard({ classId }: { classId: string }) {
   const { data: session } = useSession();
@@ -129,7 +130,7 @@ export function TeacherGradingDashboard({ classId }: { classId: string }) {
   return (
     <div style={{ maxWidth: '1000px' }}>
       <h2 style={{ color: colors.text, fontSize: '20px', fontWeight: '600', marginBottom: '1.5rem' }}>
-        Grading Dashboard
+        {terminology.teacher.headers.gradingDashboard}
       </h2>
 
       <div style={{ display: 'grid', gap: '1.5rem' }}>
@@ -440,12 +441,12 @@ function SubmissionGradingModal({
 
           <div>
             <p style={{ color: colors.text2, fontSize: '12px', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
-              Your Feedback
+              {terminology.teacher.headers.feedback}
             </p>
             <textarea
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Provide constructive feedback..."
+              placeholder={terminology.teacher.prompts.feedbackPlaceholder}
               style={{
                 width: '100%',
                 minHeight: '150px',
@@ -469,7 +470,7 @@ function SubmissionGradingModal({
               style={{ cursor: 'pointer', width: '18px', height: '18px' }}
             />
             <span style={{ color: colors.text, fontSize: '14px', fontWeight: '500' }}>
-              Student passed this objective
+              {terminology.teacher.labels.masterized}
             </span>
           </label>
         </div>

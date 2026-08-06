@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { colors } from '@/app/modules/improv/design/colors';
+import { terminology, getMandatoryBadgeInfo } from '@/app/config/terminology';
 
 export function StudentObjectiveSubmission({
   classId,
@@ -131,7 +132,7 @@ export function StudentObjectiveSubmission({
             </h2>
             <p style={{ color: colors.text2, fontSize: '13px', margin: '0.5rem 0 0 0' }}>
               {objective.skill.name}
-              {objective.isMandatory && ' • Mandatory'}
+              {objective.isMandatory && ` • ${getMandatoryBadgeInfo(true).label}`}
             </p>
           </div>
           <button
@@ -175,7 +176,7 @@ export function StudentObjectiveSubmission({
         {/* Submission Form */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '600', marginBottom: '1rem' }}>
-            Your Submission
+            {terminology.student.headers.submission}
           </h3>
 
           <div style={{ marginBottom: '1rem' }}>
@@ -250,7 +251,7 @@ export function StudentObjectiveSubmission({
         {/* Self Assessment */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '600', marginBottom: '1rem' }}>
-            Your Self-Assessment
+            {terminology.student.headers.selfAssessment}
           </h3>
 
           <div style={{ marginBottom: '1rem' }}>
@@ -261,7 +262,7 @@ export function StudentObjectiveSubmission({
               value={studentFeedback}
               onChange={(e) => setStudentFeedback(e.target.value)}
               disabled={isSubmitted}
-              placeholder="How well do you think you did? What could you improve?"
+              placeholder={terminology.student.prompts.reflectionPlaceholder}
               style={{
                 width: '100%',
                 minHeight: '80px',

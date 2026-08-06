@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { colors } from '@/app/modules/improv/design/colors';
+import { terminology, getMandatoryBadgeInfo } from '@/app/config/terminology';
 
 export function StudentObjectiveList({
   classId,
@@ -106,7 +107,7 @@ export function StudentObjectiveList({
   return (
     <div style={{ maxWidth: '900px' }}>
       <h2 style={{ color: colors.text, fontSize: '20px', fontWeight: '600', marginBottom: '1.5rem' }}>
-        Learning Objectives
+        {terminology.student.headers.learningObjectives}
       </h2>
 
       {classSkills.length === 0 ? (
@@ -154,7 +155,7 @@ export function StudentObjectiveList({
                     </h3>
                     <p style={{ color: colors.text2, fontSize: '13px', margin: '0.25rem 0 0 0' }}>
                       {mandatoryCount > 0 || totalRequired > 0
-                        ? `${mandatoryCount} mandatory, ${totalRequired} to pass`
+                        ? `${mandatoryCount} core + ${totalRequired} challenge objectives`
                         : `${group.objectives.length} objectives`}
                     </p>
                   </div>
@@ -205,20 +206,23 @@ export function StudentObjectiveList({
                                 {obj.text}
                               </p>
                               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                                {isMandatory && (
-                                  <span
-                                    style={{
-                                      backgroundColor: '#ef4444',
-                                      color: 'white',
-                                      padding: '2px 6px',
-                                      borderRadius: '3px',
-                                      fontSize: '10px',
-                                      fontWeight: '600',
-                                    }}
-                                  >
-                                    Mandatory
-                                  </span>
-                                )}
+                                {isMandatory && (() => {
+                                  const badgeInfo = getMandatoryBadgeInfo(isMandatory);
+                                  return (
+                                    <span
+                                      style={{
+                                        backgroundColor: badgeInfo.backgroundColor,
+                                        color: badgeInfo.color,
+                                        padding: '2px 6px',
+                                        borderRadius: '3px',
+                                        fontSize: '10px',
+                                        fontWeight: '600',
+                                      }}
+                                    >
+                                      {badgeInfo.label}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                             </div>
                             <div
