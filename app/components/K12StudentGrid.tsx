@@ -17,7 +17,7 @@ export function K12StudentGrid({
   standardNames = {},
   className,
   onCellClick,
-}: K12StudentGridProps): JSX.Element {
+}: K12StudentGridProps): React.JSX.Element {
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
 

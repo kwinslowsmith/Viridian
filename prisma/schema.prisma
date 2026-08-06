@@ -54,10 +54,7 @@ model User {
   librariesManaged          ResourceLibrary[] @relation("ResourceLibrarian")
   projectsLead              Project[] @relation("ProjectLead")
   projectMemberships        ProjectMember[] @relation("ProjectMemberships")
-  articlesCreated           PolymathArticle[] @relation("ArticlesCreated")
-  toolsCreated              PolymathTool[] @relation("ToolsCreated")
-  modulesCreated            PolymathModule[] @relation("ModulesCreated")
-  collectionsCreated        PolymathResourceCollection[] @relation("CollectionsCreated")
+  postsCreated              PolymathPost[] @relation("PolymathPostsCreated")
 
   // For NextAuth
   accounts                  Account[]
@@ -145,6 +142,7 @@ model Organization {
   resourceLibraries   ResourceLibrary[]
   projects            Project[]
   announcements       Announcement[]
+  polymathPosts       PolymathPost[] @relation("PolymathPosts")
 
   @@index([name])
   @@index([slug])
@@ -331,6 +329,9 @@ model ExampleObjective {
 
   // Source tracking (curriculum vs custom teacher-authored)
   source      String   @default("curriculum") // "curriculum" | "custom"
+
+  // Mastery tracking
+  isMandatory Boolean  @default(false) // Must be completed to pass the standard
 
   // Relations
   classObjectives ClassObjective[]
@@ -799,6 +800,7 @@ model K12Class {
   weeks       K12Week[]
   enrollments K12Enrollment[]
   projects    ProjectClass[]
+  polymathPosts PolymathPost[] @relation("PolymathPosts")
 
   @@index([instructorId])
   @@index([organizationId])
@@ -1006,10 +1008,7 @@ model LearningCommunity {
   events                  Event[]
   resources               Resource[]
   projects                Project[]
-  articles                PolymathArticle[] @relation("Articles")
-  tools                   PolymathTool[] @relation("Tools")
-  polymathModules         PolymathModule[] @relation("PolymathModules")
-  resourceCollections     PolymathResourceCollection[] @relation("ResourceCollections")
+  polymathPosts           PolymathPost[] @relation("PolymathPosts")
 
   @@unique([organizationId, slug])
   @@index([scope])
@@ -1593,11 +1592,14 @@ model Announcement {
 model PolymathArticle {
   id              String   @id @default(cuid())
 
-  communityId     String
-  community       LearningCommunity @relation("Articles", fields: [communityId], references: [id], onDelete: Cascade)
+  // Multi-stakeholder author support
+  authorType      String   @default("individual") // "individual" | "organization" | "community" | "event"
+  authorId        String   // userId | organizationId | communityId | eventId (depends on authorType)
 
-  authorId        String
-  author          User     @relation("ArticlesCreated", fields: [authorId], references: [id], onDelete: Cascade)
+  // Scoping to multiple contexts
+  communityId     String?
+  organizationId  String?
+  eventId         String?
 
   title           String
   abstract        String?  // Short summary for magazine feed
@@ -1607,9 +1609,13 @@ model PolymathArticle {
   tags            String?  // Comma-separated
   estimatedReadTime Int?   // Minutes
 
-  status          String   @default("draft") // "draft" | "published" | "archived"
-  publishedAt     DateTime?
+  // Approval workflow
+  status          String   @default("draft") // "draft" | "pending_approval" | "published" | "archived"
+  visibility      String   @default("public") // "public" | "organization" | "community" | "event" | "private"
+  requiresApproval Boolean  @default(false) // True for org/community/event content
+  approvalChain   String?  // JSON array of user IDs who must approve
 
+  publishedAt     DateTime?
   coverImage      String?  // URL to cover image
 
   createdAt       DateTime @default(now())
@@ -1619,20 +1625,27 @@ model PolymathArticle {
   polymath_articles_resources PolymathArticleResource[]
 
   @@index([communityId])
+  @@index([organizationId])
   @@index([authorId])
+  @@index([authorType])
   @@index([status])
+  @@index([visibility])
   @@index([publishedAt])
   @@index([topic])
+  @@index([status, visibility, publishedAt])
 }
 
 model PolymathTool {
   id              String   @id @default(cuid())
 
-  communityId     String
-  community       LearningCommunity @relation("Tools", fields: [communityId], references: [id], onDelete: Cascade)
+  // Multi-stakeholder author support
+  authorType      String   @default("individual") // "individual" | "organization" | "community" | "event"
+  authorId        String   // userId | organizationId | communityId | eventId (depends on authorType)
 
-  authorId        String
-  author          User     @relation("ToolsCreated", fields: [authorId], references: [id], onDelete: Cascade)
+  // Scoping to multiple contexts
+  communityId     String?
+  organizationId  String?
+  eventId         String?
 
   name            String   // "el-lector-diario", "Diagram Builder", etc.
   description     String?
@@ -1649,7 +1662,12 @@ model PolymathTool {
   languages       String?  // Comma-separated: "en,es,fr"
   accessibilityFeatures String? // Comma-separated features
 
-  status          String   @default("draft") // "draft" | "published" | "archived"
+  // Approval workflow
+  status          String   @default("draft") // "draft" | "pending_approval" | "published" | "archived"
+  visibility      String   @default("public") // "public" | "organization" | "community" | "event" | "private"
+  requiresApproval Boolean  @default(false)
+  approvalChain   String?  // JSON array of user IDs who must approve
+
   publishedAt     DateTime?
 
   createdAt       DateTime @default(now())
@@ -1659,8 +1677,11 @@ model PolymathTool {
   polymath_tools_resources PolymathToolResource[]
 
   @@index([communityId])
+  @@index([organizationId])
   @@index([authorId])
+  @@index([authorType])
   @@index([status])
+  @@index([visibility])
   @@index([publishedAt])
   @@index([toolType])
 }
@@ -1668,11 +1689,14 @@ model PolymathTool {
 model PolymathModule {
   id              String   @id @default(cuid())
 
-  communityId     String
-  community       LearningCommunity @relation("PolymathModules", fields: [communityId], references: [id], onDelete: Cascade)
+  // Multi-stakeholder author support
+  authorType      String   @default("individual") // "individual" | "organization" | "community" | "event"
+  authorId        String   // userId | organizationId | communityId | eventId (depends on authorType)
 
-  authorId        String
-  author          User     @relation("ModulesCreated", fields: [authorId], references: [id], onDelete: Cascade)
+  // Scoping to multiple contexts
+  communityId     String?
+  organizationId  String?
+  eventId         String?
 
   title           String   // "How to Get Into Woodworking"
   description     String?
@@ -1685,9 +1709,13 @@ model PolymathModule {
 
   sequenceNum     Int      // Order within community (0-indexed)
 
-  status          String   @default("draft") // "draft" | "published" | "archived"
-  publishedAt     DateTime?
+  // Approval workflow
+  status          String   @default("draft") // "draft" | "pending_approval" | "published" | "archived"
+  visibility      String   @default("public") // "public" | "organization" | "community" | "event" | "private"
+  requiresApproval Boolean  @default(false)
+  approvalChain   String?  // JSON array of user IDs who must approve
 
+  publishedAt     DateTime?
   coverImage      String?
 
   createdAt       DateTime @default(now())
@@ -1698,8 +1726,11 @@ model PolymathModule {
 
   @@unique([communityId, sequenceNum])
   @@index([communityId])
+  @@index([organizationId])
   @@index([authorId])
+  @@index([authorType])
   @@index([status])
+  @@index([visibility])
   @@index([publishedAt])
   @@index([topic])
 }
@@ -1707,11 +1738,14 @@ model PolymathModule {
 model PolymathResourceCollection {
   id              String   @id @default(cuid())
 
-  communityId     String
-  community       LearningCommunity @relation("ResourceCollections", fields: [communityId], references: [id], onDelete: Cascade)
+  // Multi-stakeholder author support
+  authorType      String   @default("individual") // "individual" | "organization" | "community" | "event"
+  authorId        String   // userId | organizationId | communityId | eventId (depends on authorType)
 
-  authorId        String
-  author          User     @relation("CollectionsCreated", fields: [authorId], references: [id], onDelete: Cascade)
+  // Scoping to multiple contexts
+  communityId     String?
+  organizationId  String?
+  eventId         String?
 
   name            String   // "Essential Woodworking Tools", etc.
   description     String?
@@ -1720,17 +1754,24 @@ model PolymathResourceCollection {
 
   resources       PolymathCollectionResource[]
 
-  status          String   @default("draft") // "draft" | "published" | "archived"
-  publishedAt     DateTime?
+  // Approval workflow
+  status          String   @default("draft") // "draft" | "pending_approval" | "published" | "archived"
+  visibility      String   @default("public") // "public" | "organization" | "community" | "event" | "private"
+  requiresApproval Boolean  @default(false)
+  approvalChain   String?  // JSON array of user IDs who must approve
 
+  publishedAt     DateTime?
   coverImage      String?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([communityId])
+  @@index([organizationId])
   @@index([authorId])
+  @@index([authorType])
   @@index([status])
+  @@index([visibility])
   @@index([publishedAt])
   @@index([topic])
 }
@@ -1785,4 +1826,56 @@ model PolymathCollectionResource {
 
   @@id([collectionId, resourceId])
   @@index([resourceId])
+}
+
+// ============================================
+// POLYMATH POSTS — Multi-Source Content
+// ============================================
+
+model PolymathPost {
+  id              String   @id @default(cuid())
+
+  // Author information (flexible)
+  authorType      String   // "user" | "organization" | "community" | "class"
+  authorId        String   // ID of the actual author entity
+
+  // Creator (the User who posted it)
+  creatorId       String
+  creator         User     @relation("PolymathPostsCreated", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Optional scope fields (depending on authorType)
+  organizationId  String?  // If posted from/for an organization
+  organization    Organization? @relation("PolymathPosts", fields: [organizationId], references: [id], onDelete: SetNull)
+
+  communityId     String?  // If posted from a community
+  community       LearningCommunity? @relation("PolymathPosts", fields: [communityId], references: [id], onDelete: SetNull)
+
+  classId         String?  // If posted from a class
+  class           K12Class? @relation("PolymathPosts", fields: [classId], references: [id], onDelete: SetNull)
+
+  // Content
+  title           String
+  abstract        String?  // Short summary for feed
+  content         String   @db.Text // Markdown
+
+  topic           String?  // "education", "announcement", "resource", etc.
+  tags            String?  // Comma-separated
+
+  // Publishing
+  status          String   @default("draft") // "draft" | "published" | "archived"
+  visibility      String   @default("public") // "public" | "organization" | "community" | "class" | "private"
+
+  publishedAt     DateTime?
+  coverImage      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([authorType])
+  @@index([organizationId])
+  @@index([communityId])
+  @@index([classId])
+  @@index([creatorId])
+  @@index([status])
+  @@index([publishedAt])
 }

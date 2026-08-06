@@ -17,7 +17,7 @@ export function K12StandardsList({
   onDrill,
   selectedDomain = 'all',
   onDomainChange,
-}: StandardsListProps): JSX.Element {
+}: StandardsListProps): React.JSX.Element {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   // Get unique domains
@@ -35,11 +35,11 @@ export function K12StandardsList({
   }, [standards, selectedDomain]);
 
   const handleStandardClick = (standard: Standard) => {
-    if (onSelectStandard) {
-      onSelectStandard(standard);
-    }
     if (onDrill) {
       onDrill(standard.id);
+    }
+    if (onSelectStandard) {
+      onSelectStandard(standard);
     }
   };
 

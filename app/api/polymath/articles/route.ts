@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { invalidateMagazineCache } from '@/lib/cache/magazine-cache';
 
 export async function POST(req: NextRequest) {
   try {
@@ -207,6 +208,11 @@ export async function POST(req: NextRequest) {
         publishedAt: requiresApproval ? null : new Date(),
       },
     });
+
+    // Invalidate magazine cache if article is published
+    if (!requiresApproval) {
+      await invalidateMagazineCache();
+    }
 
     return NextResponse.json(
       {

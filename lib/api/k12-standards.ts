@@ -272,3 +272,32 @@ export async function bulkUpdateClassMastery(
     throw error;
   }
 }
+
+/**
+ * Calculate mastery status for a standard based on mandatory/optional objectives
+ * @param objectives - Array of objectives with isMandatory flag
+ * @param progressMap - Object mapping objective ID to score (0-100)
+ * @param passPercentage - Threshold percentage for passing (default 80)
+ * @returns Object with passed, mandatoryComplete, and overallScore
+ */
+export function calculateStandardMastery(
+  objectives: Array<{ id: string; isMandatory?: boolean }>,
+  progressMap: Record<string, number>,
+  passPercentage: number = 80
+): { passed: boolean; mandatoryComplete: boolean; overallScore: number } {
+  const mandatory = objectives.filter(o => o.isMandatory);
+  const allScores = objectives.map(o => progressMap[o.id] ?? 0);
+
+  const mandatoryComplete =
+    mandatory.length === 0 ||
+    mandatory.every(o => (progressMap[o.id] ?? 0) >= passPercentage);
+
+  const overallScore =
+    allScores.length > 0
+      ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+      : 0;
+
+  const passed = mandatoryComplete && overallScore >= passPercentage;
+
+  return { passed, mandatoryComplete, overallScore };
+}

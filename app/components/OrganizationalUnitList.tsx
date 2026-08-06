@@ -43,7 +43,7 @@ export function OrganizationalUnitList({ orgSlug }: { orgSlug: string }) {
   }
 
   if (error) {
-    return <div style={{ color: colors.error }}>{error}</div>;
+    return <div style={{ color: colors.red.accent }}>{error}</div>;
   }
 
   if (departments.length === 0) {

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const published = req.nextUrl.searchParams.get('published') === 'true';
 
     const community = await prisma.learningCommunity.findUnique({
@@ -27,9 +27,7 @@ export async function GET(
 
     const collections = await prisma.polymathResourceCollection.findMany({
       where: whereClause,
-      include: {
-        author: { select: { id: true, name: true, email: true } },
-        resources: {
+      include: {resources: {
           include: { resource: true },
           orderBy: { sequenceNum: 'asc' },
         },
@@ -49,7 +47,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -57,7 +55,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { slug } = params;
+    const { slug } = await params;
     const body = await req.json();
     const { name, description, topic, tags, coverImage, resourceIds } = body;
 
@@ -106,9 +104,7 @@ export async function POST(
           })),
         },
       },
-      include: {
-        author: { select: { id: true, name: true, email: true } },
-        resources: {
+      include: {resources: {
           include: { resource: true },
           orderBy: { sequenceNum: 'asc' },
         },

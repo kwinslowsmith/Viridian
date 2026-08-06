@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { slug: string; collectionId: string } }
+  { params }: { params: Promise<{ slug: string; collectionId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { slug, collectionId } = params;
+    const { slug, collectionId } = await params;
     const body = await req.json();
 
     const community = await prisma.learningCommunity.findUnique({
@@ -76,9 +76,7 @@ export async function PUT(
     const updated = await prisma.polymathResourceCollection.update({
       where: { id: collectionId },
       data: updateData,
-      include: {
-        author: { select: { id: true, name: true, email: true } },
-        resources: {
+      include: {resources: {
           include: { resource: true },
           orderBy: { sequenceNum: 'asc' },
         },
@@ -97,7 +95,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { slug: string; collectionId: string } }
+  { params }: { params: Promise<{ slug: string; collectionId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -105,7 +103,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { slug, collectionId } = params;
+    const { slug, collectionId } = await params;
 
     const community = await prisma.learningCommunity.findUnique({
       where: { slug },

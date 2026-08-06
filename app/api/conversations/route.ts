@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -203,17 +203,16 @@ export async function POST(request: NextRequest) {
         console.log('Found', finalParticipantIds.length, 'class members');
       } else if (departmentIds.length > 0) {
         console.log('Fetching department members for departments:', departmentIds);
-        const departmentMembers = await prisma.user.findMany({
+        const departmentMembers = await prisma.organizationalUnitMember.findMany({
           where: {
-            departmentId: { in: departmentIds },
-            organizationRoles: {
-              some: { organizationId }
+            unit: {
+              id: { in: departmentIds }
             }
           },
-          select: { id: true },
-          distinct: ['id'],
+          select: { userId: true },
+          distinct: ['userId'],
         });
-        finalParticipantIds = departmentMembers.map((m) => m.id);
+        finalParticipantIds = departmentMembers.map((m) => m.userId);
         console.log('Found', finalParticipantIds.length, 'department members');
       } else {
         console.log('Fetching all organization members for org:', organizationId);

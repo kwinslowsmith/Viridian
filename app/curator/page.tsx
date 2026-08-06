@@ -147,6 +147,13 @@ export default function CuratorPanelPage() {
           >
             {showCreateForm ? 'Cancel' : '+ Create Community'}
           </button>
+          <Link
+            href="/curator/polymath"
+            className="px-6 py-3 rounded font-semibold text-white"
+            style={{ backgroundColor: colors.amber.bg }}
+          >
+            📰 Polymath Publisher
+          </Link>
           <button
             onClick={() => setRefreshKey(prev => prev + 1)}
             className="px-6 py-3 rounded font-semibold border"

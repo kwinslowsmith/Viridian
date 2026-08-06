@@ -132,7 +132,7 @@ export default function K12ClassDetailPage() {
         >
           ← Back
         </button>
-        <div style={{ color: colors.error }}>{error || 'Class not found'}</div>
+        <div style={{ color: colors.red.accent }}>{error || 'Class not found'}</div>
       </main>
     );
   }

@@ -1,0 +1,341 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    POLYMATH CONTENT POSTING API                             ║
+║                        Endpoints Reference                                  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+BASE URL: http://localhost:3000/api/polymath
+
+═══════════════════════════════════════════════════════════════════════════════
+ARTICLES (5 endpoints)
+═══════════════════════════════════════════════════════════════════════════════
+
+POST /articles
+  Create new article
+  Auth: Required
+  Body: {title, content, abstract, authorType, authorId, [organizationId], [communityId], [eventId], [visibility], [topic], [tags], [coverImage]}
+  Response: Article object with status: "published" or "pending_approval"
+  Status Codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden
+
+GET /articles
+  List articles with filtering and pagination
+  Auth: Optional (shows published if not authenticated)
+  Query: [limit], [offset], [authorType], [status], [visibility], [communityId], [organizationId]
+  Response: {articles: [], count: number}
+  Status Codes: 200 OK
+
+PUT /articles/:id
+  Update article (draft or pending_approval only)
+  Auth: Required
+  Body: {[title], [content], [abstract], [topic], [tags], [coverImage], [visibility]}
+  Response: Updated article object
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+PATCH /articles/:id/approve
+  Approve article in workflow
+  Auth: Required (must be in approvalChain)
+  Body: {}
+  Response: Article object with approvalProgress {approved, total, remaining}
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+PATCH /articles/:id/reject
+  Reject article with optional feedback
+  Auth: Required (must be in approvalChain or creator)
+  Body: {[feedback]}
+  Response: Article object with status: "rejected", rejectionFeedback, rejectedBy, rejectedAt
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+═══════════════════════════════════════════════════════════════════════════════
+MODULES (4 endpoints)
+═══════════════════════════════════════════════════════════════════════════════
+
+POST /modules
+  Create new module
+  Auth: Required
+  Body: {title, lessonsJson, [description], [authorType], [authorId], [organizationId], [communityId], [eventId], [visibility], [difficulty], [estimatedHours], [topic], [tags], [coverImage], [sequenceNum]}
+  Response: Module object with status: "published" or "pending_approval"
+  Status Codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden
+
+GET /modules
+  List modules with filtering and pagination
+  Auth: Optional
+  Query: [limit], [offset], [authorType], [status], [visibility], [communityId], [organizationId]
+  Response: {modules: [], count: number}
+  Status Codes: 200 OK
+
+PATCH /modules/:id/approve
+  Approve module in workflow
+  Auth: Required (must be in approvalChain)
+  Body: {}
+  Response: Module object with approvalProgress
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+PATCH /modules/:id/reject
+  Reject module with optional feedback
+  Auth: Required (must be in approvalChain or creator)
+  Body: {[feedback]}
+  Response: Module object with status: "rejected"
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+═══════════════════════════════════════════════════════════════════════════════
+TOOLS (3 endpoints)
+═══════════════════════════════════════════════════════════════════════════════
+
+POST /tools
+  Create new tool
+  Auth: Required
+  Body: {name, toolType, [description], [toolUrl], [iframeUrl], [codeRepository], [authorType], [authorId], [organizationId], [communityId], [eventId], [visibility], [difficulty], [estimatedUsageTime], [languages], [accessibilityFeatures], [topic], [tags], [thumbnail]}
+  Response: Tool object with status: "published" or "pending_approval"
+  Status Codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden
+
+GET /tools
+  List tools with filtering and pagination
+  Auth: Optional
+  Query: [limit], [offset], [authorType], [status], [visibility], [communityId], [organizationId], [toolType]
+  Response: {tools: [], count: number}
+  Status Codes: 200 OK
+
+PATCH /tools/:id/approve
+  Approve tool in workflow
+  Auth: Required (must be in approvalChain)
+  Body: {}
+  Response: Tool object with approvalProgress
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+PATCH /tools/:id/reject
+  Reject tool with optional feedback
+  Auth: Required (must be in approvalChain or creator)
+  Body: {[feedback]}
+  Response: Tool object with status: "rejected"
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+═══════════════════════════════════════════════════════════════════════════════
+COLLECTIONS (2 endpoints)
+═══════════════════════════════════════════════════════════════════════════════
+
+POST /collections
+  Create new resource collection
+  Auth: Required
+  Body: {name, [description], [resources], [authorType], [authorId], [organizationId], [communityId], [eventId], [visibility], [topic], [tags], [coverImage]}
+  Response: Collection object with status: "published" or "pending_approval"
+  Status Codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden
+
+GET /collections
+  List collections with filtering and pagination
+  Auth: Optional
+  Query: [limit], [offset], [authorType], [status], [visibility], [communityId], [organizationId]
+  Response: {collections: [], count: number}
+  Status Codes: 200 OK
+
+PATCH /collections/:id/approve
+  Approve collection in workflow
+  Auth: Required (must be in approvalChain)
+  Body: {}
+  Response: Collection object with approvalProgress
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+PATCH /collections/:id/reject
+  Reject collection with optional feedback
+  Auth: Required (must be in approvalChain or creator)
+  Body: {[feedback]}
+  Response: Collection object with status: "rejected"
+  Status Codes: 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found
+
+═══════════════════════════════════════════════════════════════════════════════
+APPROVAL QUEUE (1 endpoint)
+═══════════════════════════════════════════════════════════════════════════════
+
+GET /approval-queue
+  Fetch all pending approvals
+  Auth: Required (must be org admin)
+  Query: [organizationId], [contentType], [limit], [offset]
+  Response: {articles: [], modules: [], tools: [], collections: []} OR {queue: [], count: number}
+  Status Codes: 200 OK, 403 Forbidden
+
+═══════════════════════════════════════════════════════════════════════════════
+AUTHOR TYPES & REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+individual
+  Who: The user posting
+  Auto-Published: YES
+  Requires: None
+  Approval Chain: None
+
+organization
+  Who: User with SuperAdmin or SchoolAdmin role
+  Auto-Published: NO
+  Requires: organizationId field
+  Approval Chain: All org admins
+
+community
+  Who: User with curator or moderator role
+  Auto-Published: NO
+  Requires: communityId field
+  Approval Chain: Community curator
+
+event
+  Who: Event creator only
+  Auto-Published: NO
+  Requires: eventId field
+  Approval Chain: Event creator
+
+═══════════════════════════════════════════════════════════════════════════════
+VISIBILITY LEVELS
+═══════════════════════════════════════════════════════════════════════════════
+
+public
+  - Visible to all users
+  - Searchable
+  - Default level
+
+organization
+  - Visible to organization members only
+  - Filtered by organizationId
+  - Requires membership
+
+community
+  - Visible to community members only
+  - Filtered by communityId
+  - Requires membership
+
+event
+  - Visible to event participants only
+  - Filtered by eventId
+  - Requires RSVP/enrollment
+
+private
+  - Visible to creator and approvers only
+  - Not in feeds
+  - Internal use
+
+═══════════════════════════════════════════════════════════════════════════════
+STATUS LIFECYCLE
+═══════════════════════════════════════════════════════════════════════════════
+
+Individual Content:
+  draft → published
+
+Organization/Community/Event Content:
+  draft → pending_approval → published
+  OR
+  pending_approval → rejected (can edit) → pending_approval
+
+Terminal States:
+  archived (from any state)
+  rejected (until edited and resubmitted)
+
+═══════════════════════════════════════════════════════════════════════════════
+APPROVAL WORKFLOW LOGIC
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Content created with authorType (e.g., organization)
+   → approvalChain populated with required approvers
+   → status = "pending_approval"
+
+2. First approver calls PATCH /[id]/approve
+   → Approver removed from approvalChain
+   → status = "pending_approval" (if chain not empty)
+   → approvalProgress.remaining decrements
+
+3. Last approver calls PATCH /[id]/approve
+   → Approver removed from approvalChain (now empty)
+   → status = "published"
+   → publishedAt = now
+
+4. Any approver can PATCH /[id]/reject at any time
+   → status = "rejected"
+   → approvalChain = null
+   → feedback stored
+
+5. Creator can edit rejected content
+   → PUT /[id] updates content
+   → status remains "rejected"
+   → Can be resubmitted (create new version or reset status)
+
+═══════════════════════════════════════════════════════════════════════════════
+ERROR RESPONSES
+═══════════════════════════════════════════════════════════════════════════════
+
+400 Bad Request
+  - Missing required fields
+  - Invalid field values
+  - Invalid authorType
+  - Cannot edit published content
+  - Content not in valid state for operation
+
+401 Unauthorized
+  - No valid session
+  - Session expired
+  - Auth required but not provided
+
+403 Forbidden
+  - Insufficient role (not org admin, curator, etc.)
+  - Not in approval chain for approval
+  - Cannot edit others' content
+  - No permission to view organization/community/event
+
+404 Not Found
+  - Content ID doesn't exist
+  - Referenced organization/community/event doesn't exist
+
+500 Server Error
+  - Database error
+  - Unexpected failure
+  - Check logs for details
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+Individual Article (Auto-Published):
+  POST /articles
+    title, content, authorType: "individual", authorId: "user_123"
+
+Organization Article (Requires Approval):
+  POST /articles
+    title, content, authorType: "organization", authorId: "org_123", organizationId: "org_123"
+
+Module with Lessons:
+  POST /modules
+    title, lessonsJson: [{title, description, estimatedHours}], ...
+
+Tool with Iframe:
+  POST /tools
+    name, toolType: "interactive", iframeUrl: "...", ...
+
+Collection with Resources:
+  POST /collections
+    name, resources: ["resource_1", "resource_2"], ...
+
+Approve Content:
+  PATCH /articles/:id/approve (from approver account)
+
+Reject Content:
+  PATCH /articles/:id/reject {feedback: "..."}
+
+List Published Content:
+  GET /articles?status=published&visibility=public
+
+View Approval Queue:
+  GET /approval-queue?organizationId=org_123
+
+═══════════════════════════════════════════════════════════════════════════════
+DOCUMENTATION FILES
+═══════════════════════════════════════════════════════════════════════════════
+
+POLYMATH_API_GETTING_STARTED.md
+  → Start here - setup and first requests
+
+POLYMATH_IMPLEMENTATION_SUMMARY.md
+  → Architecture, features, testing strategy
+
+POLYMATH_API_DOCS.md
+  → Complete endpoint specification
+
+POLYMATH_API_EXAMPLES.md
+  → 12 practical examples with cURL
+
+POLYMATH_ENDPOINTS_REFERENCE.txt
+  → This file - quick lookup
+
+═══════════════════════════════════════════════════════════════════════════════

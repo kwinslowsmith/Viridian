@@ -17,7 +17,7 @@ export function K12CohortFilter({
   standardIds,
   standardNames = {},
   onSelectCohort,
-}: K12CohortFilterProps): JSX.Element {
+}: K12CohortFilterProps): React.JSX.Element {
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(
     cohorts.length > 0 ? cohorts[0].id : null
   );

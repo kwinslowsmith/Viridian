@@ -241,7 +241,7 @@ export function K12StandardsHierarchy({ classId, className }: { classId: string;
                 Objectives
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {currentStandard?.objectives.map(obj => {
+                {currentStandard?.objectives.map((obj: any) => {
                   const isActive = activeToggles.has(obj.id);
                   const isInactive = viewMode === 'student' && !isActive;
 

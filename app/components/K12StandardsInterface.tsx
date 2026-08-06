@@ -5,6 +5,8 @@ import { K12StandardsList } from './K12StandardsList';
 import { K12ClassList } from './K12ClassList';
 import { K12StudentGrid } from './K12StudentGrid';
 import { K12CohortFilter } from './K12CohortFilter';
+import { ImportStandardsModal } from './ImportStandardsModal';
+import { ObjectivesPanel } from './ObjectivesPanel';
 import { K12StandardsData, Standard, Class, StudentMastery } from './K12StandardsInterface.types';
 import { mockK12Data } from './K12StandardsInterface.mockData';
 import {
@@ -20,6 +22,7 @@ type ViewType = 'standards' | 'classes' | 'students' | 'cohorts';
 
 interface K12StandardsInterfaceProps {
   orgId?: string;
+  orgSlug?: string;
   data?: K12StandardsData;
 }
 
@@ -39,8 +42,9 @@ type LoadingState = 'idle' | 'loading' | 'error';
 
 export function K12StandardsInterface({
   orgId,
+  orgSlug,
   data = mockK12Data,
-}: K12StandardsInterfaceProps): JSX.Element {
+}: K12StandardsInterfaceProps): React.JSX.Element {
   const [currentView, setCurrentView] = useState<ViewType>('standards');
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -55,6 +59,20 @@ export function K12StandardsInterface({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [useRealData, setUseRealData] = useState(false);
 
+  // Objectives panel state
+  const [objectivesPanelOpen, setObjectivesPanelOpen] = useState(false);
+  const [selectedStandardForObjectives, setSelectedStandardForObjectives] = useState<{
+    id: string;
+    name: string;
+    code: string;
+    description?: string;
+    passPercentage?: number;
+    objectives: any[];
+  } | null>(null);
+
+  // Import modal state
+  const [importModalOpen, setImportModalOpen] = useState(false);
+
   // Fetch standards when component mounts or orgId changes
   useEffect(() => {
     if (useRealData && orgId) {
@@ -62,9 +80,9 @@ export function K12StandardsInterface({
     }
   }, [useRealData, orgId]);
 
-  // Fetch class mastery data when class is selected
+  // Fetch class mastery data when class is selected (only for mock data in Phase 1)
   useEffect(() => {
-    if (useRealData && selectedClass && orgId) {
+    if (!useRealData && selectedClass && orgId) {
       loadClassMasteryData(selectedClass.id);
     }
   }, [useRealData, selectedClass, orgId]);
@@ -98,6 +116,87 @@ export function K12StandardsInterface({
       setErrorMessage(msg);
       setLoadingState('error');
       console.error('Error loading class mastery data:', error);
+    }
+  };
+
+  const handleStandardDrill = async (standardId: string) => {
+    if (!useRealData) {
+      return;
+    }
+
+    // Find the standard in apiStandards
+    const standard = apiStandards.find((s) => s.id === standardId);
+    if (standard) {
+      setSelectedStandardForObjectives({
+        id: standard.id,
+        name: standard.name,
+        code: standard.code,
+        description: standard.description,
+        passPercentage: standard.passPercentage,
+        objectives: standard.objectives || [],
+      });
+      setObjectivesPanelOpen(true);
+    }
+  };
+
+  const handleToggleMandatory = async (objectiveId: string, isMandatory: boolean) => {
+    if (!selectedStandardForObjectives) {
+      console.warn('No standard selected');
+      return;
+    }
+
+    console.log('Toggling objective', objectiveId, 'to isMandatory:', isMandatory);
+
+    // Optimistic update first
+    setSelectedStandardForObjectives((prev) =>
+      prev
+        ? {
+            ...prev,
+            objectives: prev.objectives.map((obj) =>
+              obj.id === objectiveId ? { ...obj, isMandatory } : obj
+            ),
+          }
+        : null
+    );
+
+    try {
+      const url = `/api/standards/${selectedStandardForObjectives.id}/objectives/${objectiveId}`;
+      console.log('Calling PATCH:', url);
+
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isMandatory }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.text();
+        console.error('API error:', res.status, errorData);
+        // Revert optimistic update on error
+        setSelectedStandardForObjectives((prev) =>
+          prev
+            ? {
+                ...prev,
+                objectives: prev.objectives.map((obj) =>
+                  obj.id === objectiveId ? { ...obj, isMandatory: !isMandatory } : obj
+                ),
+              }
+            : null
+        );
+      }
+    } catch (error) {
+      console.error('Failed to toggle objective mandatory status:', error);
+      // Revert optimistic update on error
+      setSelectedStandardForObjectives((prev) =>
+        prev
+          ? {
+              ...prev,
+              objectives: prev.objectives.map((obj) =>
+                obj.id === objectiveId ? { ...obj, isMandatory: !isMandatory } : obj
+              ),
+            }
+          : null
+      );
     }
   };
 
@@ -203,8 +302,26 @@ export function K12StandardsInterface({
             </p>
           </div>
 
-          {/* Data Source Toggle */}
+          {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {useRealData && (
+              <button
+                onClick={() => setImportModalOpen(true)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  backgroundColor: '#ff9800',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  transition: 'all 0.2s',
+                }}
+              >
+                + Import Standards
+              </button>
+            )}
             <button
               onClick={() => setUseRealData(!useRealData)}
               style={{
@@ -249,54 +366,58 @@ export function K12StandardsInterface({
             >
               Standards
             </button>
-            <button
-              onClick={() => setCurrentView('classes')}
-              style={{
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: currentView === 'classes' ? '600' : '500',
-                color: currentView === 'classes' ? colors.teal.accent : colors.text2,
-                backgroundColor: 'transparent',
-                border: 'none',
-                borderBottom: currentView === 'classes' ? `3px solid ${colors.teal.accent}` : 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Classes
-            </button>
-            <button
-              onClick={() => setCurrentView('students')}
-              style={{
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: currentView === 'students' ? '600' : '500',
-                color: currentView === 'students' ? colors.teal.accent : colors.text2,
-                backgroundColor: 'transparent',
-                border: 'none',
-                borderBottom: currentView === 'students' ? `3px solid ${colors.teal.accent}` : 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Students
-            </button>
-            <button
-              onClick={() => setCurrentView('cohorts')}
-              style={{
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: currentView === 'cohorts' ? '600' : '500',
-                color: currentView === 'cohorts' ? colors.teal.accent : colors.text2,
-                backgroundColor: 'transparent',
-                border: 'none',
-                borderBottom: currentView === 'cohorts' ? `3px solid ${colors.teal.accent}` : 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Cohorts
-            </button>
+            {!useRealData && (
+              <>
+                <button
+                  onClick={() => setCurrentView('classes')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: currentView === 'classes' ? '600' : '500',
+                    color: currentView === 'classes' ? colors.teal.accent : colors.text2,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderBottom: currentView === 'classes' ? `3px solid ${colors.teal.accent}` : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Classes
+                </button>
+                <button
+                  onClick={() => setCurrentView('students')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: currentView === 'students' ? '600' : '500',
+                    color: currentView === 'students' ? colors.teal.accent : colors.text2,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderBottom: currentView === 'students' ? `3px solid ${colors.teal.accent}` : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Students
+                </button>
+                <button
+                  onClick={() => setCurrentView('cohorts')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: currentView === 'cohorts' ? '600' : '500',
+                    color: currentView === 'cohorts' ? colors.teal.accent : colors.text2,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderBottom: currentView === 'cohorts' ? `3px solid ${colors.teal.accent}` : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Cohorts
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -419,16 +540,41 @@ export function K12StandardsInterface({
         )}
 
         {currentView === 'standards' && (
-          <K12StandardsList
-            standards={standardsToDisplay}
-            onSelectStandard={setSelectedStandard}
-            onDrill={(id) => {
-              setSelectedStandardId(id);
-              setCurrentView('classes');
-            }}
-            selectedDomain={selectedDomain}
-            onDomainChange={setSelectedDomain}
-          />
+          <>
+            {useRealData && apiStandards.length === 0 && !loadingState && (
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  backgroundColor: '#fffbea',
+                  borderRadius: '6px',
+                  marginBottom: '1rem',
+                  border: '1px solid #ffe082',
+                }}
+              >
+                <p style={{ color: '#e65100', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  No standards imported yet
+                </p>
+                <p style={{ color: '#f57c00', fontSize: '13px' }}>
+                  Click "+ Import Standards" above to import learning standards from available banks.
+                </p>
+              </div>
+            )}
+            <K12StandardsList
+              standards={standardsToDisplay}
+              onSelectStandard={setSelectedStandard}
+              onDrill={(id) => {
+                if (useRealData) {
+                  handleStandardDrill(id);
+                } else {
+                  setSelectedStandardId(id);
+                  setCurrentView('classes');
+                }
+              }}
+              selectedDomain={selectedDomain}
+              onDomainChange={setSelectedDomain}
+            />
+          </>
         )}
 
         {currentView === 'classes' && (
@@ -491,8 +637,8 @@ export function K12StandardsInterface({
         >
           <p style={{ color: colors.text2, marginBottom: '4px' }}>Total Standards</p>
           <p style={{ fontSize: '20px', fontWeight: '700', color: colors.text }}>
-            {useRealData && classMasteryData
-              ? classMasteryData.summary.totalStandards
+            {useRealData && apiStandards.length > 0
+              ? apiStandards.length
               : data.standards.length}
           </p>
         </div>
@@ -504,7 +650,7 @@ export function K12StandardsInterface({
             border: `1px solid ${colors.border}`,
           }}
         >
-          <p style={{ color: colors.text2, marginBottom: '4px' }}>Total Classes</p>
+          <p style={{ color: colors.text2, marginBottom: '4px' }}>Classes</p>
           <p style={{ fontSize: '20px', fontWeight: '700', color: colors.text }}>
             {classesToDisplay.length}
           </p>
@@ -532,16 +678,33 @@ export function K12StandardsInterface({
             border: `1px solid ${colors.border}`,
           }}
         >
-          <p style={{ color: colors.text2, marginBottom: '4px' }}>
-            {useRealData ? 'Avg Mastery' : 'Student Cohorts'}
-          </p>
+          <p style={{ color: colors.text2, marginBottom: '4px' }}>Avg Mastery</p>
           <p style={{ fontSize: '20px', fontWeight: '700', color: colors.text }}>
             {useRealData && classMasteryData
-              ? classMasteryData.summary.averageMastery.toFixed(2)
-              : data.cohorts.length}
+              ? Math.round((classMasteryData.summary.averageMastery || 0) * 100)
+              : '--'}
+            %
           </p>
         </div>
       </div>
+
+      {/* Modals */}
+      <ImportStandardsModal
+        isOpen={importModalOpen}
+        orgSlug={orgSlug}
+        onClose={() => setImportModalOpen(false)}
+        onImportSuccess={() => {
+          loadStandards();
+          setImportModalOpen(false);
+        }}
+      />
+
+      <ObjectivesPanel
+        isOpen={objectivesPanelOpen}
+        standard={selectedStandardForObjectives}
+        onClose={() => setObjectivesPanelOpen(false)}
+        onToggleMandatory={handleToggleMandatory}
+      />
     </div>
   );
 }

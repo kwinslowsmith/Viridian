@@ -113,7 +113,7 @@ export default function DepartmentDetailPage() {
         >
           ← Back
         </button>
-        <div style={{ color: colors.error }}>{error || 'Department not found'}</div>
+        <div style={{ color: colors.red.accent }}>{error || 'Department not found'}</div>
       </main>
     );
   }
@@ -357,8 +357,8 @@ export default function DepartmentDetailPage() {
                               : '#f59e0b50',
                           color:
                             project.status === 'active'
-                              ? colors.success
-                              : colors.warning,
+                              ? colors.green.accent
+                              : colors.orange.accent,
                           borderRadius: '4px',
                           fontSize: '12px',
                           fontWeight: '500',

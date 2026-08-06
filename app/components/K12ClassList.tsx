@@ -24,7 +24,7 @@ export function K12ClassList({
   classes,
   onSelectClass,
   onDrill,
-}: ClassListProps): JSX.Element {
+}: ClassListProps): React.JSX.Element {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'name' | 'students' | 'mastery'>('name');
 
@@ -121,12 +121,9 @@ export function K12ClassList({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: '1rem',
-          '@media (max-width: 768px)': {
-            gridTemplateColumns: '1fr',
-          },
-        } as React.CSSProperties}
+        }}
       >
         {sortedClasses.length === 0 ? (
           <div

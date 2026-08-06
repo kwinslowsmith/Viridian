@@ -20,7 +20,7 @@ export async function GET(
             exampleObjectives: {
               orderBy: { sequenceNum: 'asc' },
               include: {
-                classObjective: true,
+                classObjectives: true,
               },
             },
           },
@@ -55,7 +55,7 @@ export async function GET(
       let objectives = cs.standard.exampleObjectives;
       if (view === 'student') {
         objectives = objectives.filter(
-          obj => obj.classObjective?.isActive ?? true
+          obj => obj.classObjectives?.[0]?.isActive ?? true
         );
       }
 
@@ -63,17 +63,20 @@ export async function GET(
         id: cs.standard.id,
         code: cs.standard.code,
         name: cs.standard.name,
-        objectives: objectives.map(obj => ({
-          id: obj.id,
-          label: obj.label,
-          text: obj.text,
-          description: obj.description,
-          isActive: obj.classObjective?.isActive ?? true,
-          customDescription: obj.classObjective?.objectiveDescription,
-          googleDocUrl: obj.classObjective?.googleDocUrl,
-          isMandatory: obj.classObjective?.isMandatory ?? false,
-          classObjectiveId: obj.classObjective?.id,
-        })),
+        objectives: objectives.map(obj => {
+          const classObj = obj.classObjectives?.[0];
+          return {
+            id: obj.id,
+            label: obj.label,
+            text: obj.text,
+            description: obj.description,
+            isActive: classObj?.isActive ?? true,
+            customDescription: classObj?.objectiveDescription,
+            googleDocUrl: classObj?.googleDocUrl,
+            isMandatory: classObj?.isMandatory ?? false,
+            classObjectiveId: classObj?.id,
+          };
+        }),
       };
 
       unitsMap.get(unit.id).standards.push(standard);

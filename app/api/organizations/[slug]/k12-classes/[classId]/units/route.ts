@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -28,41 +26,58 @@ export async function GET(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    // Get all standards for this class (which contain objectives grouped by unit)
-    const standards = await prisma.k12Standard.findMany({
+    // Fetch standards grouped by unit for this class
+    const classStandards = await prisma.classStandard.findMany({
       where: { classId },
-      select: {
-        id: true,
-        unitNum: true,
-        title: true,
-        objectives: {
-          select: {
-            id: true,
-            label: true,
-            text: true,
+      include: {
+        standard: {
+          include: {
+            unit: true,
+            exampleObjectives: {
+              orderBy: { sequenceNum: 'asc' },
+            },
           },
-          orderBy: { label: 'asc' },
         },
       },
-      orderBy: { unitNum: 'asc' },
     });
 
     // Group by unit
-    const unitsMap = new Map();
-    standards.forEach(std => {
-      if (!unitsMap.has(std.unitNum)) {
-        unitsMap.set(std.unitNum, {
-          id: `unit-${std.unitNum}`,
-          unitNum: std.unitNum,
-          title: std.title,
-          objectives: [],
+    const unitsMap = new Map<string, any>();
+
+    classStandards.forEach((cs) => {
+      const unit = cs.standard.unit;
+      if (!unit) return;
+
+      if (!unitsMap.has(unit.id)) {
+        unitsMap.set(unit.id, {
+          id: unit.id,
+          sequenceNum: unit.sequenceNum,
+          name: unit.name,
+          code: unit.code,
+          standards: [],
         });
       }
-      const unit = unitsMap.get(std.unitNum);
-      unit.objectives.push(...std.objectives);
+
+      const unitData = unitsMap.get(unit.id);
+      unitData.standards.push({
+        id: cs.standard.id,
+        code: cs.standard.code,
+        name: cs.standard.name,
+        description: cs.standard.description,
+        objectives: cs.standard.exampleObjectives.map((obj) => ({
+          id: obj.id,
+          label: obj.label,
+          text: obj.text,
+          description: obj.description,
+          learningTarget: obj.learningTarget,
+          sequenceNum: obj.sequenceNum,
+        })),
+      });
     });
 
-    const units = Array.from(unitsMap.values());
+    const units = Array.from(unitsMap.values()).sort(
+      (a, b) => a.sequenceNum - b.sequenceNum
+    );
 
     return NextResponse.json({ units });
   } catch (error) {

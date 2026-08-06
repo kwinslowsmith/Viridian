@@ -294,13 +294,24 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
               </span>
             </button>
 
-            {expandedSkills.has(skillId) && (
-              <div style={{ padding: '1rem', borderTop: `1px solid ${colors.border}`, display: 'grid', gap: '1rem' }}>
-                {group.objectives.length === 0 ? (
-                  <p style={{ color: colors.text2, fontSize: '13px', margin: 0 }}>No objectives yet</p>
-                ) : (
-                  group.objectives.map((obj: any) => (
-                    <div
+            {expandedSkills.has(skillId) && (() => {
+              const mandatory = group.objectives.filter((o: any) => o.isMandatory);
+              const optional = group.objectives.filter((o: any) => !o.isMandatory);
+
+              return (
+                <div style={{ padding: '1rem', borderTop: `1px solid ${colors.border}`, display: 'grid', gap: '1.5rem' }}>
+                  {group.objectives.length === 0 ? (
+                    <p style={{ color: colors.text2, fontSize: '13px', margin: 0 }}>No objectives yet</p>
+                  ) : (
+                    <>
+                      {mandatory.length > 0 && (
+                        <div>
+                          <h4 style={{ margin: '0 0 1rem 0', fontSize: '12px', fontWeight: '600', color: '#333', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Required Objectives ({mandatory.length})
+                          </h4>
+                          <div style={{ display: 'grid', gap: '1rem' }}>
+                            {mandatory.map((obj: any) => (
+                              <div
                       key={obj.id}
                       style={{
                         backgroundColor: colors.bg,
@@ -472,11 +483,187 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                           )}
                         </div>
                       )}
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+                            </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {optional.length > 0 && (
+                        <div>
+                          {mandatory.length > 0 && (
+                            <div style={{ height: '1px', backgroundColor: colors.border, margin: '0.5rem 0' }} />
+                          )}
+                          <h4 style={{ margin: '0 0 1rem 0', fontSize: '12px', fontWeight: '600', color: colors.text2, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Optional Objectives ({optional.length})
+                          </h4>
+                          <div style={{ display: 'grid', gap: '1rem' }}>
+                            {optional.map((obj: any) => (
+                              <div
+                                key={obj.id}
+                                style={{
+                                  backgroundColor: colors.bg,
+                                  border: `1px solid ${colors.border}`,
+                                  borderRadius: '4px',
+                                  padding: '1rem',
+                                }}
+                              >
+                                {editingId === obj.id ? (
+                                  <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <input
+                                      type="text"
+                                      value={editForm.text}
+                                      onChange={(e) => setEditForm({ ...editForm, text: e.target.value })}
+                                      style={{
+                                        padding: '8px',
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: '4px',
+                                        color: colors.text,
+                                        backgroundColor: colors.surface,
+                                        fontSize: '13px',
+                                        boxSizing: 'border-box',
+                                      }}
+                                    />
+                                    <input
+                                      type="text"
+                                      value={editForm.assessmentGuidance || ''}
+                                      onChange={(e) => setEditForm({ ...editForm, assessmentGuidance: e.target.value })}
+                                      placeholder="Assessment guidance URL or instructions"
+                                      style={{
+                                        padding: '8px',
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: '4px',
+                                        color: colors.text,
+                                        backgroundColor: colors.surface,
+                                        fontSize: '13px',
+                                        boxSizing: 'border-box',
+                                      }}
+                                    />
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={editForm.isMandatory}
+                                        onChange={(e) => setEditForm({ ...editForm, isMandatory: e.target.checked })}
+                                      />
+                                      <span style={{ color: colors.text2, fontSize: '13px' }}>Mandatory</span>
+                                    </label>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button
+                                        onClick={() => handleUpdateObjective(obj.id)}
+                                        style={{
+                                          flex: 1,
+                                          padding: '8px',
+                                          backgroundColor: colors.teal.accent,
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '12px',
+                                        }}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingId(null)}
+                                        style={{
+                                          flex: 1,
+                                          padding: '8px',
+                                          backgroundColor: colors.border,
+                                          color: colors.text,
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '12px',
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.75rem' }}>
+                                        <p style={{ color: colors.text, fontSize: '14px', fontWeight: '500', margin: 0, lineHeight: '1.5' }}>
+                                          {obj.text}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                          <button
+                                            onClick={() => {
+                                              setEditingId(obj.id);
+                                              setEditForm(obj);
+                                            }}
+                                            style={{
+                                              padding: '8px 14px',
+                                              backgroundColor: colors.teal.accent,
+                                              color: 'white',
+                                              border: 'none',
+                                              borderRadius: '4px',
+                                              cursor: 'pointer',
+                                              fontSize: '13px',
+                                              fontWeight: '500',
+                                            }}
+                                          >
+                                            Edit
+                                          </button>
+                                          {obj.isCustom && (
+                                            <button
+                                              onClick={() => handleDeleteObjective(obj.id)}
+                                              style={{
+                                                padding: '8px 14px',
+                                                backgroundColor: '#ef4444',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: '500',
+                                              }}
+                                            >
+                                              Delete
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {obj.assessmentGuidance && (
+                                      <div style={{ paddingTop: '0.75rem', borderTop: `1px solid ${colors.border}` }}>
+                                        <p style={{ color: colors.text2, fontSize: '12px', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
+                                          Assessment Guidance
+                                        </p>
+                                        {obj.assessmentGuidance.startsWith('http') ? (
+                                          <a
+                                            href={obj.assessmentGuidance}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                              color: colors.teal.accent,
+                                              fontSize: '13px',
+                                              textDecoration: 'underline',
+                                              cursor: 'pointer',
+                                            }}
+                                          >
+                                            Open in new tab →
+                                          </a>
+                                        ) : (
+                                          <p style={{ color: colors.text, fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                                            {obj.assessmentGuidance}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         ))}
       </div>

@@ -132,7 +132,7 @@ export default function OrganizationPage() {
   }
 
   if (userRole === 'Student') {
-    return <StudentDashboard org={organization} />;
+    return <StudentDashboard org={organization} userRole={userRole} />;
   }
 
   return (
@@ -142,7 +142,7 @@ export default function OrganizationPage() {
   );
 }
 
-function StudentDashboard({ org }: { org: any }) {
+function StudentDashboard({ org, userRole }: { org: any; userRole?: string }) {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<'calendar' | 'classes' | 'standards' | 'events' | 'feedback' | 'messages' | 'community' | 'resources'>('calendar');
   const [showEventModal, setShowEventModal] = useState(false);
@@ -1050,7 +1050,7 @@ function ClassesTab({ org, onBrowseClick }: { org: any; onBrowseClick?: () => vo
 function StandardsTab({ org }: { org: any }) {
   return (
     <div>
-      <K12StandardsInterface orgId={org?.id} />
+      <K12StandardsInterface orgId={org?.id} orgSlug={org?.slug} />
     </div>
   );
 }
@@ -2445,7 +2445,7 @@ function EventDetailModal({ org, event, onClose, onUpdated }: { org: any; event:
 
 function AdminDashboard({ org }: { org: any }) {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<'calendar' | 'classes' | 'resources' | 'events' | 'messages' | 'people' | 'communities' | 'departments'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'classes' | 'resources' | 'events' | 'messages' | 'people' | 'communities' | 'departments' | 'standards'>('calendar');
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
@@ -2455,6 +2455,7 @@ function AdminDashboard({ org }: { org: any }) {
     { id: 'calendar', label: 'Calendar' },
     { id: 'classes', label: 'Classes' },
     { id: 'departments', label: 'Departments' },
+    { id: 'standards', label: 'Standards' },
     { id: 'resources', label: 'Resources' },
     { id: 'communities', label: 'Communities' },
     { id: 'events', label: 'Events' },
@@ -2470,6 +2471,8 @@ function AdminDashboard({ org }: { org: any }) {
         return <AdminClassesTab org={org} onAddClick={() => setShowAddClassModal(true)} />;
       case 'departments':
         return <OrganizationalUnitList orgSlug={org.slug} />;
+      case 'standards':
+        return <StandardsTab org={org} />;
       case 'resources':
         return <OrgResourceLibrary org={org} userRole="SuperAdmin" userId={session?.user?.id || ''} />;
       case 'communities':

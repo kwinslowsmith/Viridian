@@ -49,6 +49,7 @@ export async function GET(
           description: obj.description || '',
           customText: customization?.customText || null,
           isActive: customization?.isActive ?? true,
+          isMandatory: customization?.isMandatory ?? obj.isMandatory,
           classObjectiveId: customization?.id || null,
           sequenceNum: obj.sequenceNum,
         };

@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-type StatusType = 'published' | 'pending_approval' | 'rejected' | 'draft';
+type StatusType = 'published' | 'pending_approval' | 'rejected' | 'draft' | 'changes_requested';
 type AuthorType = 'individual' | 'organization' | 'community' | 'event';
 type VisibilityType = 'public' | 'organization' | 'community' | 'class' | 'private';
 
@@ -30,6 +30,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     pending_approval: { bg: 'bg-amber-100', text: 'text-amber-700', icon: '⏳' },
     rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: '✗' },
     draft: { bg: 'bg-gray-100', text: 'text-gray-700', icon: '📝' },
+    changes_requested: { bg: 'bg-orange-100', text: 'text-orange-700', icon: '⚠️' },
   };
 
   const authorTypeConfig: Record<AuthorType, { bg: string; text: string; icon: string; label: string }> = {

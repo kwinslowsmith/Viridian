@@ -69,9 +69,10 @@ export async function PUT(request: NextRequest) {
     // Upsert preference
     await prisma.studentCalendarPreference.upsert({
       where: {
-        studentId_classId: {
+        studentId_classId_classType: {
           studentId: session.user.id,
           classId,
+          classType,
         },
       },
       update: { isVisible },

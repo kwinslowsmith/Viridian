@@ -11,6 +11,9 @@ interface Day {
   homework?: string;
   type: string;
   isMajor: boolean;
+  googleDocUrl?: string;
+  pdfFileName?: string;
+  pdfFileKey?: string;
 }
 
 interface ClassScheduleManagerProps {
@@ -554,10 +557,10 @@ function DayEditorModal({ day, classId, classType, onClose, onSave }: DayEditorM
             style={{
               marginBottom: '1.5rem',
               padding: '0.75rem',
-              backgroundColor: colors.critical.bg,
-              border: `1px solid ${colors.critical.accent}`,
+              backgroundColor: colors.red.bg,
+              border: `1px solid ${colors.red.accent}`,
               borderRadius: '6px',
-              color: colors.critical.accent,
+              color: colors.red.accent,
               fontSize: '14px',
             }}
           >

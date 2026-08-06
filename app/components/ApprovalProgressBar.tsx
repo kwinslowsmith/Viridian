@@ -57,9 +57,9 @@ export const ApprovalProgressBar: React.FC<ApprovalProgressBarProps> = ({
                 )}
               </div>
               <span className="flex-grow text-[#3C3C3C]">{approver.name}</span>
-              {approver.approved && approver.approvedAt && (
+              {approver.approved && (approver as any).approvedAt && (
                 <span className="text-xs text-[#B8A899]">
-                  {new Date(approver.approvedAt).toLocaleDateString()}
+                  {new Date((approver as any).approvedAt).toLocaleDateString()}
                 </span>
               )}
             </div>

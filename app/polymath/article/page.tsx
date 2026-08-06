@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymathViewToggle } from '@/app/components/PolymathViewToggle';
 import { PolymathButton } from '@/app/components/PolymathButton';
@@ -13,7 +13,7 @@ import {
   ARTICLE_AUTHOR,
 } from '@/app/polymath/mockData';
 
-export default function ArticleDetailPage() {
+function ArticleDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const articleId = searchParams.get('id') || '1';
@@ -315,5 +315,13 @@ export default function ArticleDetailPage() {
       {/* Footer */}
       <PolymathFooter />
     </main>
+  );
+}
+
+export default function ArticleDetailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticleDetailContent />
+    </Suspense>
   );
 }

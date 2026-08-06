@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
     // 4. Get general events visible to this user
     const events = await prisma.event.findMany({
       where: {
-        date: { gte: start, lte: end },
+        startDate: { gte: start, lte: end },
         OR: [
           { createdById: userId },
           { organizationId: null }, // Public events
@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
       items.push({
         id: `event-${event.id}`,
         type: 'event',
-        date: event.date,
+        date: event.startDate,
         title: event.title,
         description: event.description,
       });

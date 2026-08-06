@@ -1,161 +1,195 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
+import { getMagazineFromCache, setMagazineCache } from '@/lib/cache/magazine-cache';
 
-export async function GET(req: NextRequest) {
+const CONTENT_TRUNCATION_LENGTH = 300;
+
+function truncateContent(content: string | null, maxLength: number = CONTENT_TRUNCATION_LENGTH): string | null {
+  if (!content) return null;
+  if (content.length <= maxLength) return content;
+  return content.substring(0, maxLength) + '...';
+}
+
+function getAuthorName(authorType: string, authorId: string): string {
+  switch (authorType) {
+    case 'individual':
+      return 'Individual Contributor';
+    case 'organization':
+      return `Org: ${authorId}`;
+    case 'community':
+      return `Community: ${authorId}`;
+    case 'event':
+      return `Event: ${authorId}`;
+    default:
+      return 'Unknown';
+  }
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const contentType = req.nextUrl.searchParams.get('type'); // articles, tools, modules, collections, or null for all
-    const topic = req.nextUrl.searchParams.get('topic');
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '50');
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+    const topic = request.nextUrl.searchParams.get('topic');
+    const visibility = request.nextUrl.searchParams.get('visibility') || 'public';
+    const cacheKey = `magazine:${visibility}:${topic || 'all'}`;
 
-    const publishedFilter = { status: 'published' };
-    const topicFilter = topic ? { topic } : {};
-
-    let articles = [];
-    let tools = [];
-    let modules = [];
-    let collections = [];
-
-    // Fetch articles
-    if (!contentType || contentType === 'articles') {
-      articles = await prisma.polymathArticle.findMany({
-        where: { ...publishedFilter, ...topicFilter },
-        include: {
-          community: { select: { id: true, slug: true, name: true } },
-          author: { select: { id: true, name: true, email: true } },
-          polymath_articles_resources: {
-            include: { resource: true },
-            orderBy: { sequenceNum: 'asc' },
-          },
-        },
-        orderBy: { publishedAt: 'desc' },
-        take: limit,
-        skip: offset,
+    // Check cache first
+    const cached = await getMagazineFromCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        status: 200,
+        headers: { 'X-Cache': 'HIT' },
       });
     }
 
-    // Fetch tools
-    if (!contentType || contentType === 'tools') {
-      tools = await prisma.polymathTool.findMany({
-        where: { ...publishedFilter, ...topicFilter },
-        include: {
-          community: { select: { id: true, slug: true, name: true } },
-          author: { select: { id: true, name: true, email: true } },
-        },
-        orderBy: { publishedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      });
-    }
-
-    // Fetch modules
-    if (!contentType || contentType === 'modules') {
-      modules = await prisma.polymathModule.findMany({
-        where: { ...publishedFilter, ...topicFilter },
-        include: {
-          community: { select: { id: true, slug: true, name: true } },
-          author: { select: { id: true, name: true, email: true } },
-          polymath_modules_resources: {
-            include: { resource: true },
-            orderBy: { sequenceNum: 'asc' },
-          },
-        },
-        orderBy: { sequenceNum: 'asc' },
-        take: limit,
-        skip: offset,
-      });
-    }
-
-    // Fetch collections
-    if (!contentType || contentType === 'collections') {
-      collections = await prisma.polymathResourceCollection.findMany({
-        where: { ...publishedFilter, ...topicFilter },
-        include: {
-          community: { select: { id: true, slug: true, name: true } },
-          author: { select: { id: true, name: true, email: true } },
-          resources: {
-            include: { resource: true },
-            orderBy: { sequenceNum: 'asc' },
-          },
-        },
-        orderBy: { publishedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      });
-    }
-
-    // Combine and format response with guaranteed structure
-    const response = {
-      articles: articles.map((a) => ({
-        id: a.id,
-        type: 'article' as const,
-        title: a.title,
-        abstract: a.abstract,
-        community: a.community,
-        author: a.author,
-        publishedAt: a.publishedAt,
-        topic: a.topic,
-        tags: a.tags,
-        estimatedReadTime: a.estimatedReadTime,
-        coverImage: a.coverImage,
-        resources: a.polymath_articles_resources,
-      })) || [],
-      tools: tools.map((t) => ({
-        id: t.id,
-        type: 'tool' as const,
-        name: t.name,
-        description: t.description,
-        community: t.community,
-        author: t.author,
-        publishedAt: t.publishedAt,
-        toolType: t.toolType,
-        toolUrl: t.toolUrl,
-        iframeUrl: t.iframeUrl,
-        thumbnail: t.thumbnail,
-        difficulty: t.difficulty,
-        estimatedUsageTime: t.estimatedUsageTime,
-        languages: t.languages,
-        accessibilityFeatures: t.accessibilityFeatures,
-      })) || [],
-      modules: modules.map((m) => ({
-        id: m.id,
-        type: 'module' as const,
-        title: m.title,
-        description: m.description,
-        community: m.community,
-        author: m.author,
-        publishedAt: m.publishedAt,
-        topic: m.topic,
-        tags: m.tags,
-        difficulty: m.difficulty,
-        estimatedHours: m.estimatedHours,
-        lessons: m.lessonsJson ? JSON.parse(m.lessonsJson) : [],
-        coverImage: m.coverImage,
-        resources: m.polymath_modules_resources,
-      })) || [],
-      collections: collections.map((c) => ({
-        id: c.id,
-        type: 'collection' as const,
-        name: c.name,
-        description: c.description,
-        community: c.community,
-        author: c.author,
-        publishedAt: c.publishedAt,
-        topic: c.topic,
-        tags: c.tags,
-        coverImage: c.coverImage,
-        resources: c.resources.map((r) => r.resource),
-      })) || [],
+    const whereClause: any = {
+      status: 'published',
+      visibility: {
+        in: [visibility, 'public'],
+      },
     };
 
-    return NextResponse.json(response, { status: 200 });
-  } catch (error: any) {
-    console.error('[GET /polymath/magazine]', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch magazine feed',
-        details: error?.message || String(error)
+    if (topic) {
+      whereClause.topic = topic;
+    }
+
+    const [articles, tools, modules, collections] = await Promise.all([
+      prisma.polymathArticle.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          title: true,
+          abstract: true,
+          content: true,
+          coverImage: true,
+          topic: true,
+          tags: true,
+          estimatedReadTime: true,
+          authorType: true,
+          authorId: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 20,
+      }),
+      prisma.polymathTool.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          toolType: true,
+          toolUrl: true,
+          iframeUrl: true,
+          thumbnail: true,
+          difficulty: true,
+          estimatedUsageTime: true,
+          authorType: true,
+          authorId: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 20,
+      }),
+      prisma.polymathModule.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          difficulty: true,
+          estimatedHours: true,
+          lessonsJson: true,
+          coverImage: true,
+          topic: true,
+          tags: true,
+          authorType: true,
+          authorId: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 20,
+      }),
+      prisma.polymathResourceCollection.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          topic: true,
+          tags: true,
+          coverImage: true,
+          authorType: true,
+          authorId: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 20,
+      }),
+    ]);
+
+    // Transform articles with author info and truncated content
+    const articlesWithAuthor = articles.map((a) => ({
+      ...a,
+      content: truncateContent(a.content),
+      author: {
+        id: a.authorId,
+        name: getAuthorName(a.authorType, a.authorId),
+        type: a.authorType,
       },
+    }));
+
+    // Transform tools with author info
+    const toolsWithAuthor = tools.map((t) => ({
+      ...t,
+      author: {
+        id: t.authorId,
+        name: getAuthorName(t.authorType, t.authorId),
+        type: t.authorType,
+      },
+    }));
+
+    // Transform modules with author info
+    const modulesWithAuthor = modules.map((m) => ({
+      ...m,
+      author: {
+        id: m.authorId,
+        name: getAuthorName(m.authorType, m.authorId),
+        type: m.authorType,
+      },
+    }));
+
+    // Transform collections with author info
+    const collectionsWithAuthor = collections.map((c) => ({
+      ...c,
+      author: {
+        id: c.authorId,
+        name: getAuthorName(c.authorType, c.authorId),
+        type: c.authorType,
+      },
+    }));
+
+    const response = {
+      articles: articlesWithAuthor,
+      tools: toolsWithAuthor,
+      modules: modulesWithAuthor,
+      collections: collectionsWithAuthor,
+    };
+
+    // Set cache with 5-minute TTL
+    await setMagazineCache(cacheKey, response, 300);
+
+    return NextResponse.json(response, {
+      status: 200,
+      headers: { 'X-Cache': 'MISS' },
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error('Failed to fetch magazine content:', errorMsg);
+    return NextResponse.json(
+      { error: errorMsg, articles: [], tools: [], modules: [], collections: [] },
       { status: 500 }
     );
   }
