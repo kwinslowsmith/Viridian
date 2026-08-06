@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { PolymathButton } from './PolymathButton';
 import { StatusBadge } from './StatusBadge';
 import { ContentForm } from './ContentForm';
+import { Toast } from './Toast';
+import { validateEventArticle, hasErrors, FormErrors } from '@/lib/polymath/form-validation';
 
 interface EventOption {
   id: string;
@@ -45,6 +47,10 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Fetch user's events
   useEffect(() => {
@@ -88,14 +94,60 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
 
   const selectedEvent = events.find((e) => e.id === formData.eventId);
 
+  // Validate form on field change
+  const validateForm = (data: FormData) => {
+    return validateEventArticle({
+      eventId: data.eventId,
+      title: data.title,
+      content: data.content,
+      resourceType: data.resourceType,
+      visibility: data.visibility,
+    });
+  };
+
+  // Handle field blur - validate and mark as touched
+  const handleFieldBlur = (fieldName: string) => {
+    setTouchedFields((prev) => new Set(prev).add(fieldName));
+    const newErrors = validateForm(formData);
+    setErrors(newErrors);
+  };
+
+  // Handle field change with debounced validation
+  const handleFieldChange = (field: keyof FormData, value: any) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+
+    // Validate only if field has been touched
+    if (touchedFields.has(field)) {
+      const newErrors = validateForm(newFormData);
+      setErrors(newErrors);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.eventId || !formData.title.trim() || !formData.content.trim()) {
-      setErrorMessage('Please fill in all required fields');
-      setStatus('error');
+    // Mark all fields as touched
+    setTouchedFields(new Set(['eventId', 'title', 'content', 'resourceType', 'visibility']));
+
+    // Validate form
+    const formErrors = validateForm(formData);
+    setErrors(formErrors);
+
+    if (hasErrors(formErrors)) {
+      setToast({
+        message: 'Please fix validation errors before submitting',
+        type: 'error',
+      });
       return;
     }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    setShowConfirmDialog(false);
 
     try {
       setStatus('loading');
@@ -125,6 +177,12 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
       const post = await response.json();
       setStatus('success');
 
+      // Show success toast
+      setToast({
+        message: 'Resource published successfully!',
+        type: 'success',
+      });
+
       // Reset form
       setFormData({
         eventId: '',
@@ -133,21 +191,36 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
         resourceType: 'Keynote',
         visibility: 'attendees_only',
       });
+      setErrors({});
+      setTouchedFields(new Set());
 
       onSuccess?.(post.id);
 
       // Clear success message after 3 seconds
       setTimeout(() => setStatus('idle'), 3000);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
+      const errorMsg = error instanceof Error ? error.message : 'An error occurred while publishing';
+      setErrorMessage(errorMsg);
       setStatus('error');
+      setToast({
+        message: errorMsg,
+        type: 'error',
+      });
     }
   };
 
   const resourceTypes: ResourceType[] = ['Keynote', 'Handout', 'Recording', 'Slides', 'Transcript', 'Other'];
 
   return (
-    <div className="space-y-6">
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      <div className="space-y-6">
       {/* Event Selection Header */}
       {selectedEvent && (
         <div className="bg-[#F5F3F0] border border-[#B8A899]/20 rounded-lg p-4">
@@ -175,8 +248,15 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
           <select
             id="event"
             value={formData.eventId}
-            onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-            className="w-full px-4 py-2 border border-[#B8A899]/20 rounded-lg font-sans text-sm text-[#3C3C3C] focus:outline-none focus:ring-2 focus:ring-[#8B3A3A] focus:border-transparent"
+            onChange={(e) => {
+              handleFieldChange('eventId', e.target.value);
+              handleFieldBlur('eventId');
+            }}
+            className={`w-full px-4 py-2 border rounded-lg font-sans text-sm text-[#3C3C3C] focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              touchedFields.has('eventId') && errors.eventId
+                ? 'border-red-300 focus:ring-red-300 bg-red-50'
+                : 'border-[#B8A899]/20 focus:ring-[#8B3A3A]'
+            }`}
           >
             <option value="">Choose an event...</option>
             {loadingEvents ? (
@@ -191,6 +271,9 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
               ))
             )}
           </select>
+          {touchedFields.has('eventId') && errors.eventId && (
+            <p className="text-xs text-red-600 font-medium mt-1">✕ {errors.eventId}</p>
+          )}
           <p className="text-xs text-[#B8A899] mt-2">
             💡 Select the event this resource is associated with
           </p>
@@ -204,8 +287,15 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
           <select
             id="resourceType"
             value={formData.resourceType}
-            onChange={(e) => setFormData({ ...formData, resourceType: e.target.value as ResourceType })}
-            className="w-full px-4 py-2 border border-[#B8A899]/20 rounded-lg font-sans text-sm text-[#3C3C3C] focus:outline-none focus:ring-2 focus:ring-[#8B3A3A] focus:border-transparent"
+            onChange={(e) => {
+              handleFieldChange('resourceType', e.target.value as ResourceType);
+              handleFieldBlur('resourceType');
+            }}
+            className={`w-full px-4 py-2 border rounded-lg font-sans text-sm text-[#3C3C3C] focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              touchedFields.has('resourceType') && errors.resourceType
+                ? 'border-red-300 focus:ring-red-300 bg-red-50'
+                : 'border-[#B8A899]/20 focus:ring-[#8B3A3A]'
+            }`}
           >
             {resourceTypes.map((type) => (
               <option key={type} value={type}>
@@ -213,6 +303,9 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
               </option>
             ))}
           </select>
+          {touchedFields.has('resourceType') && errors.resourceType && (
+            <p className="text-xs text-red-600 font-medium mt-1">✕ {errors.resourceType}</p>
+          )}
         </div>
 
         {/* Title */}
@@ -224,12 +317,22 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
             id="title"
             type="text"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) => handleFieldChange('title', e.target.value)}
+            onBlur={() => handleFieldBlur('title')}
             placeholder="Give your event resource a descriptive title"
-            className="w-full px-4 py-2 border border-[#B8A899]/20 rounded-lg font-sans text-sm text-[#3C3C3C] placeholder-[#B8A899] focus:outline-none focus:ring-2 focus:ring-[#8B3A3A] focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded-lg font-sans text-sm text-[#3C3C3C] placeholder-[#B8A899] focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              touchedFields.has('title') && errors.title
+                ? 'border-red-300 focus:ring-red-300 bg-red-50'
+                : 'border-[#B8A899]/20 focus:ring-[#8B3A3A]'
+            }`}
             maxLength={200}
           />
-          <p className="text-xs text-[#B8A899] mt-1">{formData.title.length}/200 characters</p>
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-[#B8A899]">{formData.title.length}/200 characters</p>
+            {touchedFields.has('title') && errors.title && (
+              <p className="text-xs text-red-600 font-medium">✕ {errors.title}</p>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -237,11 +340,24 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
           <label htmlFor="content" className="block text-sm font-medium text-[#3C3C3C] mb-2">
             Content / Description <span className="text-red-500">*</span>
           </label>
-          <ContentForm
-            value={formData.content}
-            onChange={(content) => setFormData({ ...formData, content })}
-            placeholder="Describe your event resource, include key takeaways, links, or instructions..."
-          />
+          <div className={`rounded-lg overflow-hidden border ${
+            touchedFields.has('content') && errors.content
+              ? 'border-red-300 bg-red-50'
+              : 'border-[#B8A899]/20'
+          }`}>
+            <ContentForm
+              value={formData.content}
+              onChange={(content) => handleFieldChange('content', content)}
+              onBlur={() => handleFieldBlur('content')}
+              placeholder="Describe your event resource, include key takeaways, links, or instructions..."
+            />
+          </div>
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-[#B8A899]">{formData.content.length} characters</p>
+            {touchedFields.has('content') && errors.content && (
+              <p className="text-xs text-red-600 font-medium">✕ {errors.content}</p>
+            )}
+          </div>
         </div>
 
         {/* Visibility Toggle */}
@@ -256,7 +372,10 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
                 name="visibility"
                 value="attendees_only"
                 checked={formData.visibility === 'attendees_only'}
-                onChange={(e) => setFormData({ ...formData, visibility: e.target.value as VisibilityType })}
+                onChange={(e) => {
+                  handleFieldChange('visibility', e.target.value as VisibilityType);
+                  handleFieldBlur('visibility');
+                }}
                 className="w-4 h-4"
               />
               <div>
@@ -270,7 +389,10 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
                 name="visibility"
                 value="public"
                 checked={formData.visibility === 'public'}
-                onChange={(e) => setFormData({ ...formData, visibility: e.target.value as VisibilityType })}
+                onChange={(e) => {
+                  handleFieldChange('visibility', e.target.value as VisibilityType);
+                  handleFieldBlur('visibility');
+                }}
                 className="w-4 h-4"
               />
               <div>
@@ -279,20 +401,19 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
               </div>
             </label>
           </div>
+          {touchedFields.has('visibility') && errors.visibility && (
+            <p className="text-xs text-red-600 font-medium mt-2">✕ {errors.visibility}</p>
+          )}
         </div>
 
         {/* Error Message */}
-        {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Success Message */}
-        {status === 'success' && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg flex items-center gap-2">
-            <span>⏳ Pending Approval</span>
-            <span className="text-xs">Your resource has been submitted for review by the event organizer.</span>
+        {status === 'error' && errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg flex items-start gap-2">
+            <span className="text-lg">✕</span>
+            <div className="flex-1">
+              <p className="font-medium mb-1">Error Publishing Resource</p>
+              <p>{errorMessage}</p>
+            </div>
           </div>
         )}
 
@@ -303,11 +424,47 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
             variant="primary"
             size="lg"
             isFullWidth
-            disabled={status === 'loading' || !formData.eventId}
+            disabled={status === 'loading' || hasErrors(errors)}
           >
             {status === 'loading' ? '⏳ Publishing...' : '✓ Publish Now'}
           </PolymathButton>
         </div>
+
+        {/* Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[#3C3C3C] mb-2">Publish Resource?</h3>
+                <p className="text-sm text-[#B8A899]">
+                  Your event resource will be published and available to {formData.visibility === 'attendees_only' ? 'event attendees only' : 'everyone'}.
+                </p>
+              </div>
+
+              <div className="bg-[#F5F3F0] rounded-lg p-3 text-sm text-[#3C3C3C]">
+                <p className="font-medium mb-2">Preview:</p>
+                <p className="line-clamp-2">{formData.title}</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-4 py-2 border border-[#B8A899]/20 rounded-lg text-[#3C3C3C] font-medium hover:bg-[#F5F3F0] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmedSubmit}
+                  className="flex-1 px-4 py-2 bg-[#8B3A3A] text-white rounded-lg font-medium hover:bg-[#6B2A2A] transition-colors"
+                >
+                  Publish
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Info text */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
@@ -320,6 +477,7 @@ export const EventPostForm: React.FC<EventPostFormProps> = ({
           </ul>
         </div>
       </form>
-    </div>
+      </div>
+    </>
   );
 };
