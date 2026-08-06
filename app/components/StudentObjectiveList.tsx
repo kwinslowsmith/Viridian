@@ -104,6 +104,25 @@ export function StudentObjectiveList({
     }
   };
 
+  const calculateSkillProgress = (skillId: string) => {
+    const skillGroup = groupedBySkill[skillId];
+    if (!skillGroup || !skillGroup.objectives.length) {
+      return { mastered: 0, total: 0, percentage: 0 };
+    }
+
+    const objectives = skillGroup.objectives;
+    const masteredCount = objectives.filter((obj: any) => {
+      const assessment = assessmentStatus[obj.id];
+      return assessment?.status === 'graded' || assessment?.teacherRating === 'pass';
+    }).length;
+
+    return {
+      mastered: masteredCount,
+      total: objectives.length,
+      percentage: Math.round((masteredCount / objectives.length) * 100),
+    };
+  };
+
   return (
     <div style={{ maxWidth: '900px' }}>
       <h2 style={{ color: colors.text, fontSize: '20px', fontWeight: '600', marginBottom: '1.5rem' }}>
@@ -117,6 +136,8 @@ export function StudentObjectiveList({
           {Object.entries(groupedBySkill).map(([skillId, group]: any) => {
             const mandatoryCount = group.classSkill.mandatoryObjectiveCount;
             const totalRequired = group.classSkill.totalObjectivesRequired;
+            const progress = calculateSkillProgress(skillId);
+            const isExpanded = expandedSkills.has(skillId);
 
             return (
               <div
@@ -149,18 +170,35 @@ export function StudentObjectiveList({
                     alignItems: 'center',
                   }}
                 >
-                  <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: 0 }}>
-                      {group.classSkill.skill.name}
-                    </h3>
-                    <p style={{ color: colors.text2, fontSize: '13px', margin: '0.25rem 0 0 0' }}>
-                      {mandatoryCount > 0 || totalRequired > 0
-                        ? `${mandatoryCount} core + ${totalRequired} challenge objectives`
-                        : `${group.objectives.length} objectives`}
-                    </p>
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem' }}>
+                      <h3 style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: 0 }}>
+                        {group.classSkill.skill.name}
+                      </h3>
+                      <span style={{ color: colors.text, fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                        {progress.mastered} of {progress.total} mastered
+                      </span>
+                    </div>
+                    <div style={{ marginTop: '0.75rem', display: 'grid', gap: '0.5rem' }}>
+                      <div style={{ backgroundColor: colors.border, borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            backgroundColor: progress.percentage >= 75 ? '#10b981' : progress.percentage >= 50 ? '#f59e0b' : '#ef4444',
+                            height: '100%',
+                            width: `${progress.percentage}%`,
+                            transition: 'width 0.3s ease',
+                          }}
+                        />
+                      </div>
+                      <p style={{ color: colors.text2, fontSize: '12px', margin: '0.25rem 0 0 0' }}>
+                        {mandatoryCount > 0 || totalRequired > 0
+                          ? `${mandatoryCount} core + ${totalRequired} challenge objectives`
+                          : `${group.objectives.length} objectives`}
+                      </p>
+                    </div>
                   </div>
-                  <span style={{ color: colors.text2, fontSize: '16px' }}>
-                    {expandedSkills.has(skillId) ? '▼' : '▶'}
+                  <span style={{ color: colors.text2, fontSize: '16px', marginLeft: '1rem' }}>
+                    {isExpanded ? '▼' : '▶'}
                   </span>
                 </button>
 
