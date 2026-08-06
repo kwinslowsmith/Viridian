@@ -40,20 +40,21 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const whereClause: any = {
+    const baseWhereClause: any = {
       status: 'published',
       visibility: {
         in: [visibility, 'public'],
       },
     };
 
+    const articleWhereClause = { ...baseWhereClause };
     if (topic) {
-      whereClause.topic = topic;
+      articleWhereClause.topic = topic;
     }
 
     const [articles, tools, modules, collections] = await Promise.all([
       prisma.polymathArticle.findMany({
-        where: whereClause,
+        where: articleWhereClause,
         select: {
           id: true,
           title: true,
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
         take: 20,
       }),
       prisma.polymathTool.findMany({
-        where: whereClause,
+        where: baseWhereClause,
         select: {
           id: true,
           name: true,
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
         take: 20,
       }),
       prisma.polymathModule.findMany({
-        where: whereClause,
+        where: baseWhereClause,
         select: {
           id: true,
           title: true,
@@ -112,7 +113,7 @@ export async function GET(request: NextRequest) {
         take: 20,
       }),
       prisma.polymathResourceCollection.findMany({
-        where: whereClause,
+        where: baseWhereClause,
         select: {
           id: true,
           name: true,

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-08-06T19:02:23Z",
+  "tests": {
+    "magazine_first_load_ms": 15,
+    "magazine_cached_load_ms": 16,
+    "filtered_magazine_ms": 14,
+    "collections_list_ms": 94,
+    "articles_list_ms": 257,
+    "response_size_kb": 11,
+    "articles_count": 20,
+    "filtered_articles_count": 20,
+    "collections_count": 0
+  },
+  "benchmarks": {
+    "first_load_pass": true,
+    "cache_working": false,
+    "filtered_query_pass": true,
+    "collections_pass": true,
+    "overall_pass": false
+  },
+  "pass_count": 3,
+  "total_benchmarks": 4
+}
