@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { verifyParentChildRelationship } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
@@ -15,18 +16,14 @@ export async function GET(
 
   try {
     // Verify parent-child relationship
-    const parentChild = await prisma.parentChild.findUnique({
-      where: {
-        parentId_childId: {
-          parentId: session.user.id,
-          childId: params.childId,
-        },
-      },
-    });
+    const authResult = await verifyParentChildRelationship(
+      session.user.id,
+      params.childId
+    );
 
-    if (!parentChild) {
+    if (!authResult.valid) {
       return NextResponse.json(
-        { error: 'Not authorized to view this child\'s progress' },
+        { error: authResult.error },
         { status: 403 }
       );
     }

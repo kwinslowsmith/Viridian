@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { verifyTeacherOwnsClass, verifyStudentInClass } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +15,23 @@ export async function GET(
   }
 
   try {
+    // Verify access: user must be teacher OR student in this class
+    const teacherAuth = await verifyTeacherOwnsClass(session.user.id, params.classId);
+    const isTeacher = teacherAuth.valid;
+
+    let isStudent = false;
+    if (!isTeacher) {
+      const studentAuth = await verifyStudentInClass(session.user.id, params.classId);
+      isStudent = studentAuth.valid;
+    }
+
+    if (!isTeacher && !isStudent) {
+      return NextResponse.json(
+        { error: 'Not authorized to view this calendar' },
+        { status: 403 }
+      );
+    }
+
     // Get class
     const k12Class = await prisma.k12Class.findUnique({
       where: { id: params.classId },
@@ -26,26 +44,6 @@ export async function GET(
 
     if (!k12Class) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
-    }
-
-    // Verify access (student, teacher, or admin)
-    // For now, allow access if user is instructor or student in class
-    const isInstructor = k12Class.instructorId === session.user.id;
-
-    if (!isInstructor) {
-      const isEnrolled = await prisma.k12Enrollment.findFirst({
-        where: {
-          classId: params.classId,
-          studentId: session.user.id,
-        },
-      });
-
-      if (!isEnrolled) {
-        return NextResponse.json(
-          { error: 'Not authorized to view this calendar' },
-          { status: 403 }
-        );
-      }
     }
 
     // Get school assessments (master calendar events)

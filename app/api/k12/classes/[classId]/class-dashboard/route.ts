@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { verifyTeacherOwnsClass } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +15,18 @@ export async function GET(
   }
 
   try {
-    // Get class and verify teacher
+    // Verify user is the teacher of this class
+    const authResult = await verifyTeacherOwnsClass(session.user.id, params.classId);
+    if (!authResult.valid) {
+      return NextResponse.json(
+        { error: authResult.error },
+        {
+          status: authResult.error === 'Class not found' ? 404 : 403,
+        }
+      );
+    }
+
+    // Get class info
     const k12Class = await prisma.k12Class.findUnique({
       where: { id: params.classId },
       include: {
@@ -29,14 +41,6 @@ export async function GET(
 
     if (!k12Class) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
-    }
-
-    // Verify user is the instructor
-    if (k12Class.instructorId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Not authorized to view this class' },
-        { status: 403 }
-      );
     }
 
     // Get class standards
