@@ -74,10 +74,18 @@ export function K12StudentProgressDashboard({ classId }: { classId: string }) {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const res = await fetch(`/api/k12-classes/${classId}/student-progress`);
+        if (!session?.user?.id) {
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(
+          `/api/k12/classes/${classId}/student-progress?studentId=${session.user.id}`
+        );
         if (res.ok) {
           const data = await res.json();
           setProgress(data);
+        } else if (res.status === 404) {
+          console.log('No progress data available yet');
         }
       } catch (error) {
         console.error('Failed to fetch progress:', error);
@@ -87,7 +95,7 @@ export function K12StudentProgressDashboard({ classId }: { classId: string }) {
     };
 
     fetchProgress();
-  }, [classId]);
+  }, [classId, session?.user?.id]);
 
   // Auto-dismiss celebration after 3 seconds
   useEffect(() => {

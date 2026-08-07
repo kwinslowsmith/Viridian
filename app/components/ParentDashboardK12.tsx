@@ -1,16 +1,80 @@
 'use client';
 
-import React, { useState } from 'react';
-import { mockParentProgress } from '@/mocks/k12-api-responses';
+import React, { useState, useEffect } from 'react';
 import styles from './ParentDashboardK12.module.css';
 
 interface ExpandedStandard {
   [key: string]: boolean;
 }
 
-export default function ParentDashboardK12() {
-  const data = mockParentProgress;
+interface ParentProgress {
+  childId: string;
+  childName: string;
+  gradeLevel: number;
+  classId: string;
+  className: string;
+  teacher: { name: string; email: string };
+  standards: Array<{
+    id: string;
+    name: string;
+    code: string;
+    masteryPercent: number;
+    status: string;
+    description: string;
+    whatItMeans: string;
+    howToHelp: string[];
+    objectives: Array<{
+      text: string;
+      status: string;
+      isMandatory: boolean;
+    }>;
+    recommendedResources: Array<{
+      title: string;
+      type: string;
+      url: string;
+    }>;
+  }>;
+  masterCalendarEvents: Array<{
+    id: string;
+    name: string;
+    date: string;
+    type: string;
+    standardsAssessed: string[];
+  }>;
+  lastUpdate: string;
+}
+
+export default function ParentDashboardK12({ childId }: { childId: string }) {
+  const [data, setData] = useState<ParentProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedStandards, setExpandedStandards] = useState<ExpandedStandard>({});
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(
+          `/api/k12/parents/children/${childId}/progress`
+        );
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load progress data');
+        console.error('Error fetching parent progress:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (childId) {
+      fetchProgress();
+    }
+  }, [childId]);
 
   const toggleStandard = (standardId: string) => {
     setExpandedStandards((prev) => ({
@@ -52,6 +116,32 @@ export default function ParentDashboardK12() {
       day: 'numeric',
     });
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+            <p style={{ fontSize: '16px', color: '#6b7280' }}>Loading learning progress...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+            <p style={{ fontSize: '16px', color: '#dc2626' }}>
+              {error || 'Unable to load progress data. Please try again.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const lastUpdated = new Date(data.lastUpdate).toLocaleString('en-US', {
     month: 'short',

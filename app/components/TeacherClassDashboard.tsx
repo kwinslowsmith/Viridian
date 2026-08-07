@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useTeacherClassDashboard } from '@/mocks/k12-api-responses';
+import React, { useState, useEffect } from 'react';
 import { colors } from '@/app/design/colors';
 
 interface TeacherClassDashboardProps {
@@ -9,10 +8,47 @@ interface TeacherClassDashboardProps {
 }
 
 export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
-  const { data, loading } = useTeacherClassDashboard(classId);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [dashResp, calResp] = await Promise.all([
+          fetch(`/api/k12/classes/${classId}/class-dashboard`),
+          fetch(`/api/k12/classes/${classId}/master-calendar`)
+        ]);
+
+        if (!dashResp.ok || !calResp.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+
+        const dashData = await dashResp.json();
+        const calData = await calResp.json();
+
+        setData({
+          ...dashData,
+          masterCalendar: calData.events || []
+        });
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [classId]);
 
   if (loading) {
     return <div style={{ padding: '24px', textAlign: 'center', color: colors.text2 }}>Loading dashboard...</div>;
+  }
+
+  if (error) {
+    return <div style={{ padding: '24px', textAlign: 'center', color: '#ef4444' }}>Error: {error}</div>;
   }
 
   if (!data) {

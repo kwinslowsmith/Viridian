@@ -11,5 +11,5 @@ export default function ParentDashboardPage({
 }: {
   params: { childId: string };
 }) {
-  return <ParentDashboardK12 />;
+  return <ParentDashboardK12 childId={params.childId} />;
 }
