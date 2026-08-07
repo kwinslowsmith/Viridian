@@ -1,0 +1,267 @@
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Empty State */
+.emptyState {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.emptyState p {
+  color: #666;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Children Grid */
+.childrenGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Child Card */
+.childCard {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.childCard:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.childCard:active {
+  transform: translateY(0);
+}
+
+.childCardContent {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.childInfo {
+  margin-bottom: 1.5rem;
+}
+
+.childName {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.className {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+.classNameEmpty {
+  font-size: 0.95rem;
+  color: #999;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Progress Area */
+.progressArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.noDataArea {
+  padding: 1rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.noDataText {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.masteryNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  text-align: center;
+}
+
+.progressBar {
+  width: 100%;
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.progressFill.status-excellent {
+  background: linear-gradient(90deg, #059669, #10b981);
+}
+
+.progressFill.status-on-track {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+.progressFill.status-needs-support {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.statusLabel {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.statusExcellent {
+  color: #059669;
+}
+
+.statusOnTrack {
+  color: #2563eb;
+}
+
+.statusNeedsSupport {
+  color: #f59e0b;
+}
+
+/* Card Footer */
+.cardFooter {
+  padding: 0.75rem 1.5rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.viewLink {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2563eb;
+  transition: color 0.2s;
+}
+
+.childCard:hover .viewLink {
+  color: #1e40af;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Loading & Error */
+.loading,
+.error {
+  padding: 2rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
+.loading {
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .childrenGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .childCardContent {
+    padding: 1rem;
+  }
+
+  .masteryNumber {
+    font-size: 2rem;
+  }
+
+  .childName {
+    font-size: 1.2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .childrenGrid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}

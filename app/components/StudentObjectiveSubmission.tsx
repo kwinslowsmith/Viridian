@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { colors } from '@/app/modules/improv/design/colors';
 import { terminology, getMandatoryBadgeInfo } from '@/app/config/terminology';
+import { PostGradeFeedback } from './PostGradeFeedback';
 
 export function StudentObjectiveSubmission({
   classId,
@@ -282,15 +283,13 @@ export function StudentObjectiveSubmission({
         </div>
 
         {/* Teacher Feedback (if graded) */}
-        {isGraded && assessment?.teacherFeedback && (
-          <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#10b98120', borderLeft: '4px solid #10b981', borderRadius: '4px' }}>
-            <h3 style={{ color: colors.text, fontSize: '13px', fontWeight: '600', marginBottom: '0.5rem' }}>
-              Teacher Feedback
-            </h3>
-            <p style={{ color: colors.text, fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap' }}>
-              {assessment.teacherFeedback}
-            </p>
-          </div>
+        {isGraded && (
+          <PostGradeFeedback
+            teacherFeedback={assessment?.teacherFeedback}
+            teacherRating={assessment?.teacherRating}
+            isMastered={assessment?.teacherRating === 1}
+            objectiveText={objective.text}
+          />
         )}
 
         {/* Submit Button */}
@@ -315,20 +314,28 @@ export function StudentObjectiveSubmission({
           </button>
         )}
 
-        {isSubmitted && (
+        {isSubmitted && !isGraded && (
           <div
             style={{
-              padding: '12px',
-              backgroundColor: '#10b98120',
-              color: '#10b981',
-              border: 'none',
+              padding: '1rem',
+              backgroundColor: '#3b82f620',
+              borderLeft: `4px solid #3b82f6`,
               borderRadius: '6px',
-              fontWeight: '600',
-              fontSize: '14px',
               textAlign: 'center',
             }}
           >
-            ✓ Submitted {assessment?.submittedAt ? new Date(assessment.submittedAt).toLocaleDateString() : ''}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '18px' }}>✓</span>
+              <span style={{ color: '#3b82f6', fontWeight: '600', fontSize: '14px' }}>
+                Submitted!
+              </span>
+            </div>
+            <p style={{ color: colors.text2, fontSize: '12px', margin: 0 }}>
+              {assessment?.submittedAt ? `Submitted ${new Date(assessment.submittedAt).toLocaleDateString()}` : 'Your work is submitted'}
+            </p>
+            <p style={{ color: colors.text2, fontSize: '12px', margin: '0.5rem 0 0 0', fontStyle: 'italic' }}>
+              Your teacher will review this soon. Great job submitting your work!
+            </p>
           </div>
         )}
       </div>
