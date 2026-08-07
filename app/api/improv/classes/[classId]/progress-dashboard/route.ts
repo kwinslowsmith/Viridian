@@ -14,16 +14,21 @@ export async function GET(
     }
 
     const { classId } = await params;
+    if (!classId || typeof classId !== 'string' || classId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid class ID' }, { status: 400 });
+    }
 
     // Verify user is the instructor for this class
     const improvClass = await prisma.improvClass.findUnique({
       where: { id: classId },
       include: {
-        enrollments: true,
+        enrollments: {
+          select: { studentId: true },
+        },
         weeks: {
-          include: {
+          select: {
             weekSkills: {
-              include: { skill: true },
+              select: { skillId: true },
             },
           },
         },
@@ -34,7 +39,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Get all unique skills in the class
+    if (!improvClass.enrollments || improvClass.enrollments.length === 0) {
+      return NextResponse.json({
+        classId,
+        className: improvClass.name,
+        classOverallMastery: 0,
+        skills: [],
+        objectives: [],
+        studentMasteryGrid: [],
+        students: [],
+      });
+    }
+
+    // Get all unique skills and objectives in one query
     const skillIds = new Set<string>();
     improvClass.weeks.forEach(week => {
       week.weekSkills.forEach(ws => {
@@ -42,30 +59,69 @@ export async function GET(
       });
     });
 
-    // Fetch all objectives for these skills
-    const objectives = await prisma.improvObjective.findMany({
-      where: {
-        skillId: { in: Array.from(skillIds) },
-      },
-      include: {
-        skill: true,
-      },
-    });
+    if (skillIds.size === 0) {
+      return NextResponse.json({
+        classId,
+        className: improvClass.name,
+        classOverallMastery: 0,
+        skills: [],
+        objectives: [],
+        studentMasteryGrid: improvClass.enrollments.map(e => ({
+          studentId: e.studentId,
+          skillMastery: {},
+        })),
+        students: improvClass.enrollments.map(e => ({
+          id: e.studentId,
+        })),
+      });
+    }
 
-    // Get all student assessments
-    const assessments = await prisma.improvObjectiveAssessment.findMany({
-      where: { classId },
-      include: {
-        student: { select: { id: true, name: true } },
-        objective: true,
-      },
+    const skillIds_array = Array.from(skillIds);
+    const studentIds = improvClass.enrollments.map(e => e.studentId);
+
+    // Fetch objectives and assessments in parallel
+    const [objectives, assessments, skills] = await Promise.all([
+      prisma.improvObjective.findMany({
+        where: { skillId: { in: skillIds_array } },
+        include: { skill: true },
+      }),
+      prisma.improvObjectiveAssessment.findMany({
+        where: { classId },
+        select: {
+          id: true,
+          studentId: true,
+          objectiveId: true,
+          status: true,
+          teacherRating: true,
+          submittedAt: true,
+        },
+      }),
+      prisma.improvSkill.findMany({
+        where: { id: { in: skillIds_array } },
+      }),
+    ]);
+
+    // Index assessments by objectiveId for efficient lookup
+    const assessmentsByObjective: Record<string, typeof assessments> = {};
+    const assessmentsByStudent: Record<string, typeof assessments> = {};
+
+    assessments.forEach(a => {
+      if (!assessmentsByObjective[a.objectiveId]) {
+        assessmentsByObjective[a.objectiveId] = [];
+      }
+      assessmentsByObjective[a.objectiveId].push(a);
+
+      if (!assessmentsByStudent[a.studentId]) {
+        assessmentsByStudent[a.studentId] = [];
+      }
+      assessmentsByStudent[a.studentId].push(a);
     });
 
     // Calculate mastery stats for each objective
     const objectiveStats = objectives.map(obj => {
-      const objAssessments = assessments.filter(a => a.objectiveId === obj.id);
+      const objAssessments = assessmentsByObjective[obj.id] || [];
       const masteredCount = objAssessments.filter(
-        a => a.status === 'graded' || a.teacherRating === 1
+        a => a.status === 'graded' && a.teacherRating === 1
       ).length;
       const totalAttempts = objAssessments.filter(a => a.submittedAt).length;
 
@@ -85,16 +141,24 @@ export async function GET(
     });
 
     // Build student mastery grid
-    const students = improvClass.enrollments.map(e => e.studentId);
-    const studentMasteryGrid = students.map(studentId => {
-      const studentAssessments = assessments.filter(a => a.studentId === studentId);
+    const skillObjectivesBySkillId: Record<string, typeof objectives> = {};
+    objectives.forEach(obj => {
+      if (!skillObjectivesBySkillId[obj.skillId]) {
+        skillObjectivesBySkillId[obj.skillId] = [];
+      }
+      skillObjectivesBySkillId[obj.skillId].push(obj);
+    });
+
+    const studentMasteryGrid = studentIds.map(studentId => {
+      const studentAssessments = assessmentsByStudent[studentId] || [];
+      const assessmentMap = new Map(studentAssessments.map(a => [a.objectiveId, a]));
 
       const skillMastery: Record<string, number> = {};
-      skillIds.forEach(skillId => {
-        const skillObjectives = objectives.filter(o => o.skillId === skillId);
+      skillIds_array.forEach(skillId => {
+        const skillObjectives = skillObjectivesBySkillId[skillId] || [];
         const masteredCount = skillObjectives.filter(obj => {
-          const assessment = studentAssessments.find(a => a.objectiveId === obj.id);
-          return assessment?.status === 'graded' || assessment?.teacherRating === 1;
+          const assessment = assessmentMap.get(obj.id);
+          return assessment?.status === 'graded' && assessment?.teacherRating === 1;
         }).length;
 
         skillMastery[skillId] = skillObjectives.length > 0
@@ -102,30 +166,23 @@ export async function GET(
           : 0;
       });
 
-      return {
-        studentId,
-        skillMastery,
-      };
+      return { studentId, skillMastery };
     });
 
     // Calculate class averages
     const classAverageBySkill: Record<string, number> = {};
-    skillIds.forEach(skillId => {
+    skillIds_array.forEach(skillId => {
       const skillMasteryValues = studentMasteryGrid.map(s => s.skillMastery[skillId] || 0);
-      classAverageBySkill[skillId] = Math.round(
-        skillMasteryValues.reduce((a, b) => a + b, 0) / skillMasteryValues.length
-      );
+      const avgValue = skillMasteryValues.length > 0
+        ? Math.round(skillMasteryValues.reduce((a, b) => a + b, 0) / skillMasteryValues.length)
+        : 0;
+      classAverageBySkill[skillId] = avgValue;
     });
 
-    // Get skill details
-    const skills = await prisma.improvSkill.findMany({
-      where: { id: { in: Array.from(skillIds) } },
-    });
-
-    const classOverallMastery = Math.round(
-      Object.values(classAverageBySkill).reduce((a, b) => a + b, 0) /
-      Object.values(classAverageBySkill).length
-    );
+    const classOverallMasteryValues = Object.values(classAverageBySkill);
+    const classOverallMastery = classOverallMasteryValues.length > 0
+      ? Math.round(classOverallMasteryValues.reduce((a, b) => a + b, 0) / classOverallMasteryValues.length)
+      : 0;
 
     return NextResponse.json({
       classId,

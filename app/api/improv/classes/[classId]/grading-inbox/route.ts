@@ -14,6 +14,9 @@ export async function GET(
     }
 
     const { classId } = await params;
+    if (!classId || typeof classId !== 'string' || classId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid class ID' }, { status: 400 });
+    }
 
     // Verify user is the instructor for this class
     const improvClass = await prisma.improvClass.findUnique({

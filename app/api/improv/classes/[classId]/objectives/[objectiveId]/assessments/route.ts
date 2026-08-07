@@ -16,14 +16,26 @@ export async function GET(
     }
 
     const { classId, objectiveId } = await params;
+    if (!classId || !objectiveId || typeof classId !== 'string' || typeof objectiveId !== 'string') {
+      return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
+    }
 
-    // Check if user is the instructor
+    // Check if user is the instructor and class exists
     const improvClass = await prisma.improvClass.findUnique({
       where: { id: classId },
     });
 
     if (!improvClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+    }
+
+    // Verify objective exists
+    const objective = await prisma.improvObjective.findUnique({
+      where: { id: objectiveId },
+    });
+
+    if (!objective) {
+      return NextResponse.json({ error: 'Objective not found' }, { status: 404 });
     }
 
     const isTeacher = improvClass.instructorId === session.user.id;
@@ -44,7 +56,10 @@ export async function GET(
             },
           },
         },
-        orderBy: { submittedAt: 'desc' },
+        orderBy: [
+          { status: 'desc' }, // graded first
+          { submittedAt: 'desc' },
+        ],
       });
 
       return NextResponse.json({ assessments });
@@ -65,19 +80,6 @@ export async function GET(
       });
 
       if (!assessment) {
-        // Return empty assessment structure
-        const objective = await prisma.improvObjective.findUnique({
-          where: { id: objectiveId },
-          include: { skill: true },
-        });
-
-        if (!objective) {
-          return NextResponse.json(
-            { error: 'Objective not found' },
-            { status: 404 }
-          );
-        }
-
         return NextResponse.json({
           assessment: {
             objectiveId,
@@ -112,6 +114,10 @@ export async function POST(
     }
 
     const { classId, objectiveId } = await params;
+    if (!classId || !objectiveId || typeof classId !== 'string' || typeof objectiveId !== 'string') {
+      return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
+    }
+
     const body = await request.json();
     const {
       submissionType,
@@ -122,7 +128,16 @@ export async function POST(
       studentFeedback,
     } = body;
 
-    // Verify objective exists and is in this class
+    // Validate submissionType
+    const validTypes = ['text', 'google-doc', 'url', 'file'];
+    if (submissionType && !validTypes.includes(submissionType)) {
+      return NextResponse.json(
+        { error: 'Invalid submission type' },
+        { status: 400 }
+      );
+    }
+
+    // Verify objective exists
     const objective = await prisma.improvObjective.findUnique({
       where: { id: objectiveId },
     });
@@ -160,10 +175,10 @@ export async function POST(
       },
       update: {
         submissionType,
-        submissionUrl,
-        submissionText,
+        submissionUrl: submissionType === 'google-doc' || submissionType === 'url' ? submissionUrl : null,
+        submissionText: submissionType === 'text' ? submissionText : null,
         studentRubricType,
-        studentRating,
+        studentRating: typeof studentRating === 'number' && studentRating >= 0 && studentRating <= 5 ? studentRating : null,
         studentFeedback,
         submittedAt: new Date(),
         status: 'submitted',
@@ -173,10 +188,10 @@ export async function POST(
         studentId: session.user.id,
         classId,
         submissionType,
-        submissionUrl,
-        submissionText,
+        submissionUrl: submissionType === 'google-doc' || submissionType === 'url' ? submissionUrl : null,
+        submissionText: submissionType === 'text' ? submissionText : null,
         studentRubricType,
-        studentRating,
+        studentRating: typeof studentRating === 'number' && studentRating >= 0 && studentRating <= 5 ? studentRating : null,
         studentFeedback,
         submittedAt: new Date(),
         status: 'submitted',
@@ -210,6 +225,10 @@ export async function PUT(
     }
 
     const { classId, objectiveId } = await params;
+    if (!classId || !objectiveId || typeof classId !== 'string' || typeof objectiveId !== 'string') {
+      return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
+    }
+
     const body = await request.json();
     const {
       studentId,
@@ -219,14 +238,22 @@ export async function PUT(
       rubricName,
     } = body;
 
-    if (!studentId) {
+    if (!studentId || typeof studentId !== 'string') {
       return NextResponse.json(
         { error: 'studentId required' },
         { status: 400 }
       );
     }
 
-    // Verify instructor
+    // Validate teacherRating
+    if (typeof teacherRating !== 'number' || (teacherRating !== 0 && teacherRating !== 1)) {
+      return NextResponse.json(
+        { error: 'teacherRating must be 0 or 1' },
+        { status: 400 }
+      );
+    }
+
+    // Verify instructor and class exists
     const improvClass = await prisma.improvClass.findUnique({
       where: { id: classId },
     });
@@ -235,6 +262,32 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Only instructor can provide feedback' },
         { status: 403 }
+      );
+    }
+
+    // Verify objective exists
+    const objective = await prisma.improvObjective.findUnique({
+      where: { id: objectiveId },
+    });
+
+    if (!objective) {
+      return NextResponse.json({ error: 'Objective not found' }, { status: 404 });
+    }
+
+    // Check if assessment exists before updating
+    const existingAssessment = await prisma.improvObjectiveAssessment.findUnique({
+      where: {
+        objectiveId_studentId: {
+          objectiveId,
+          studentId,
+        },
+      },
+    });
+
+    if (!existingAssessment) {
+      return NextResponse.json(
+        { error: 'Assessment not found' },
+        { status: 404 }
       );
     }
 

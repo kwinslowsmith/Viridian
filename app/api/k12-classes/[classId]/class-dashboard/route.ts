@@ -14,13 +14,19 @@ export async function GET(
     }
 
     const { classId } = await params;
+    if (!classId || typeof classId !== 'string' || classId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid class ID' }, { status: 400 });
+    }
 
     // Verify user is the instructor for this class
     const k12Class = await prisma.k12Class.findUnique({
       where: { id: classId },
-      include: {
-        enrollments: true,
-        instructor: { select: { name: true } },
+      select: {
+        id: true,
+        name: true,
+        organizationId: true,
+        instructorId: true,
+        enrollments: { select: { studentId: true } },
       },
     });
 
@@ -31,43 +37,81 @@ export async function GET(
     const classSize = k12Class.enrollments.length;
     const studentIds = k12Class.enrollments.map(e => e.studentId);
 
-    // Get all standards that might be assigned to this class
-    // For now, get all standards from the organization
+    if (classSize === 0) {
+      return NextResponse.json({
+        className: k12Class.name,
+        classSize: 0,
+        classOverallMastery: 0,
+        standards: [],
+        strugglingSkills: [],
+        studentsNeedingSupportCount: 0,
+        classTrendPercent: 0,
+        studentsNeedingSupportPercent: 0,
+      });
+    }
+
+    // Get all standards from the organization
     const standards = await prisma.standard.findMany({
       where: {
         organizationId: k12Class.organizationId,
         type: 'content', // Content standards, not skills
       },
+      take: 100, // Pagination limit
     });
+
+    if (standards.length === 0) {
+      return NextResponse.json({
+        className: k12Class.name,
+        classSize,
+        classOverallMastery: 0,
+        standards: [],
+        strugglingSkills: [],
+        studentsNeedingSupportCount: 0,
+        classTrendPercent: 0,
+        studentsNeedingSupportPercent: 0,
+      });
+    }
+
+    const standardIds = standards.map(s => s.id);
 
     // Get student progress for these standards
     const studentProgress = await prisma.studentStandardProgress.findMany({
       where: {
         organizationId: k12Class.organizationId,
         userId: { in: studentIds },
-        standardId: { in: standards.map(s => s.id) },
+        standardId: { in: standardIds },
       },
-      include: {
-        standard: true,
-      },
+    });
+
+    // Index by standardId for efficient lookup
+    const progressByStandard: Record<string, typeof studentProgress> = {};
+    const progressByStudent: Record<string, typeof studentProgress> = {};
+
+    studentProgress.forEach(sp => {
+      if (!progressByStandard[sp.standardId]) {
+        progressByStandard[sp.standardId] = [];
+      }
+      progressByStandard[sp.standardId].push(sp);
+
+      if (!progressByStudent[sp.userId]) {
+        progressByStudent[sp.userId] = [];
+      }
+      progressByStudent[sp.userId].push(sp);
     });
 
     // Calculate mastery stats per standard
     const standardStats = standards.map(standard => {
-      const progressForStandard = studentProgress.filter(
-        sp => sp.standardId === standard.id
-      );
+      const progressForStandard = progressByStandard[standard.id] || [];
 
       // Count students with >= passPercentage as mastered
       const masteredCount = progressForStandard.filter(sp => {
-        // For content standards, check completed status or level
+        // For content standards, check completed status or level (3+ is mastered)
         return sp.completed || (sp.level && sp.level >= 3);
       }).length;
 
-      const mastery = classSize > 0 ? Math.round((masteredCount / classSize) * 100) : 0;
+      const mastery = Math.round((masteredCount / classSize) * 100);
       const strugglingCount = classSize - masteredCount;
-      const strugglingPercent =
-        classSize > 0 ? Math.round((strugglingCount / classSize) * 100) : 0;
+      const strugglingPercent = Math.round((strugglingCount / classSize) * 100);
 
       return {
         standardId: standard.id,
@@ -78,7 +122,7 @@ export async function GET(
         totalStudents: classSize,
         strugglingStudents: strugglingCount,
         strugglingPercent,
-        isStrugglingSkill: strugglingPercent > 40, // More than 40% struggling
+        isStrugglingSkill: strugglingPercent > 40,
       };
     });
 
@@ -97,37 +141,32 @@ export async function GET(
         mastery: s.classMasteryPercent,
       }));
 
-    // Count students needing support (< 60% mastery on any standard)
+    // Count students needing support (< 60% mastery overall)
     const studentsNeedingSupport = new Set<string>();
     studentIds.forEach(studentId => {
-      const studentStandards = studentProgress.filter(
-        sp => sp.userId === studentId
-      );
-      const avg =
-        studentStandards.length > 0
-          ? Math.round(
-              studentStandards.reduce((sum, sp) => {
-                const mastery = sp.completed ? 100 : sp.level ? sp.level * 25 : 0;
-                return sum + mastery;
-              }, 0) / studentStandards.length
-            )
-          : 0;
-
-      if (avg < 60) {
+      const studentStandards = progressByStudent[studentId] || [];
+      if (studentStandards.length === 0) {
         studentsNeedingSupport.add(studentId);
+      } else {
+        const avg = Math.round(
+          studentStandards.reduce((sum, sp) => {
+            const mastery = sp.completed ? 100 : sp.level ? Math.min(sp.level * 25, 100) : 0;
+            return sum + mastery;
+          }, 0) / studentStandards.length
+        );
+        if (avg < 60) {
+          studentsNeedingSupport.add(studentId);
+        }
       }
     });
 
-    // Calculate class trend (for now, returning 0 as we don't have historical data)
-    // In a real implementation, you'd compare to previous week's data
-    const classTrendPercent = 0;
-    const classOverallMastery =
-      standardStats.length > 0
-        ? Math.round(
-            standardStats.reduce((sum, s) => sum + s.classMasteryPercent, 0) /
-              standardStats.length
-          )
-        : 0;
+    // Calculate class overall mastery
+    const classOverallMastery = standardStats.length > 0
+      ? Math.round(
+          standardStats.reduce((sum, s) => sum + s.classMasteryPercent, 0) /
+            standardStats.length
+        )
+      : 0;
 
     return NextResponse.json({
       className: k12Class.name,
@@ -136,7 +175,7 @@ export async function GET(
       standards: sortedStandards,
       strugglingSkills,
       studentsNeedingSupportCount: studentsNeedingSupport.size,
-      classTrendPercent,
+      classTrendPercent: 0, // TODO: Compare to previous week's data for trend
       studentsNeedingSupportPercent: Math.round(
         (studentsNeedingSupport.size / classSize) * 100
       ),
