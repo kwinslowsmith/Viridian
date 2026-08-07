@@ -55,6 +55,8 @@ model User {
   projectsLead              Project[] @relation("ProjectLead")
   projectMemberships        ProjectMember[] @relation("ProjectMemberships")
   postsCreated              PolymathPost[] @relation("PolymathPostsCreated")
+  childrenRelations         ParentChild[] @relation("ParentChildren")
+  parentRelations           ParentChild[] @relation("ChildrenOf")
 
   // For NextAuth
   accounts                  Account[]
@@ -1878,4 +1880,80 @@ model PolymathPost {
   @@index([creatorId])
   @@index([status])
   @@index([publishedAt])
+}
+
+// ============================================
+// PARENT-CHILD RELATIONSHIPS & NOTIFICATIONS
+// ============================================
+
+model LinkingCode {
+  code        String   @id @unique
+  parentId    String
+  childId     String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([parentId])
+  @@index([childId])
+  @@index([expiresAt])
+}
+
+model ParentChild {
+  id            String   @id @default(cuid())
+  parentId      String
+  parent        User     @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+
+  childId       String
+  child         User     @relation("ChildrenOf", fields: [childId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  // Relations
+  notificationPreferences ParentNotificationPreference?
+  sentNotifications       SentNotification[]
+
+  @@unique([parentId, childId])
+  @@index([parentId])
+  @@index([childId])
+}
+
+model ParentNotificationPreference {
+  id                      String   @id @default(cuid())
+  parentChildId           String   @unique
+  parentChild             ParentChild @relation(fields: [parentChildId], references: [id], onDelete: Cascade)
+
+  enableWeeklyDigest      Boolean  @default(true)
+  enableCelebrations      Boolean  @default(true)
+  enableAlerts            Boolean  @default(true)
+
+  digestFrequency         String   @default("weekly") // "daily" | "weekly" | "biweekly"
+  digestDay               Int      @default(0)  // 0=Sunday, 1=Monday, ..., 6=Saturday
+  digestHour              Int      @default(18) // 0-23
+  digestMinute            Int      @default(0)  // 0-59
+
+  alertThreshold          Int      @default(60) // 0-100 (%)
+  minDaysBetweenAlerts    Int      @default(7)  // 1, 3, 7, or 14
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([parentChildId])
+}
+
+model SentNotification {
+  id                      String   @id @default(cuid())
+  parentChildId           String
+  parentChild             ParentChild @relation(fields: [parentChildId], references: [id], onDelete: Cascade)
+
+  type                    String   // "digest" | "celebration" | "alert"
+  subject                 String
+  sentAt                  DateTime @default(now())
+
+  status                  String   @default("sent") // "sent" | "failed" | "bounced"
+  errorMessage            String?
+
+  @@index([parentChildId])
+  @@index([type])
+  @@index([sentAt])
+  @@index([status])
 }
