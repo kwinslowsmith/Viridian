@@ -113,7 +113,7 @@ export function StudentObjectiveList({
     const objectives = skillGroup.objectives;
     const masteredCount = objectives.filter((obj: any) => {
       const assessment = assessmentStatus[obj.id];
-      return assessment?.status === 'graded' || assessment?.teacherRating === 'pass';
+      return assessment?.status === 'graded' && assessment?.teacherRating === 1;
     }).length;
 
     return {
