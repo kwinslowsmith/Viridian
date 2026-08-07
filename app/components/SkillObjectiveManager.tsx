@@ -227,7 +227,7 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                 onChange={(e) => setAddForm({ ...addForm, isMandatory: e.target.checked })}
                 style={{ cursor: 'pointer' }}
               />
-              <span style={{ color: colors.text2, fontSize: '13px' }}>Mark as mandatory objective</span>
+              <span style={{ color: colors.text2, fontSize: '13px' }}>Mark as core skill</span>
             </label>
             <button
               onClick={handleAddObjective}
@@ -357,7 +357,7 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                               checked={editForm.isMandatory}
                               onChange={(e) => setEditForm({ ...editForm, isMandatory: e.target.checked })}
                             />
-                            <span style={{ color: colors.text2, fontSize: '13px' }}>Mandatory</span>
+                            <span style={{ color: colors.text2, fontSize: '13px' }}>Core Skill</span>
                           </label>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
@@ -442,7 +442,7 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                                 <span
                                   style={{
                                     display: 'inline-block',
-                                    backgroundColor: '#ef4444',
+                                    backgroundColor: '#3b82f6',
                                     color: 'white',
                                     padding: '4px 10px',
                                     borderRadius: '3px',
@@ -450,7 +450,7 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                                     fontWeight: '600',
                                   }}
                                 >
-                                  Mandatory
+                                  Core Skill
                                 </span>
                               )}
                             </div>
@@ -545,7 +545,7 @@ export function SkillObjectiveManager({ classId }: { classId: string }) {
                                         checked={editForm.isMandatory}
                                         onChange={(e) => setEditForm({ ...editForm, isMandatory: e.target.checked })}
                                       />
-                                      <span style={{ color: colors.text2, fontSize: '13px' }}>Mandatory</span>
+                                      <span style={{ color: colors.text2, fontSize: '13px' }}>Core Skill</span>
                                     </label>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                       <button

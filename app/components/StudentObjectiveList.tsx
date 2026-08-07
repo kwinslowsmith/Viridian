@@ -125,9 +125,14 @@ export function StudentObjectiveList({
 
   return (
     <div style={{ maxWidth: '900px' }}>
-      <h2 style={{ color: colors.text, fontSize: '20px', fontWeight: '600', marginBottom: '1.5rem' }}>
-        {terminology.student.headers.learningObjectives}
-      </h2>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ color: colors.text, fontSize: '20px', fontWeight: '600', marginBottom: '0.5rem' }}>
+          {terminology.student.headers.learningObjectives}
+        </h2>
+        <p style={{ color: colors.text2, fontSize: '13px', margin: 0, maxWidth: '600px' }}>
+          Master each skill by completing the required objectives. You'll see your progress update as you submit work.
+        </p>
+      </div>
 
       {classSkills.length === 0 ? (
         <p style={{ color: colors.text2 }}>No skills assigned yet. Check back soon!</p>
@@ -190,11 +195,23 @@ export function StudentObjectiveList({
                           }}
                         />
                       </div>
-                      <p style={{ color: colors.text2, fontSize: '12px', margin: '0.25rem 0 0 0' }}>
-                        {mandatoryCount > 0 || totalRequired > 0
-                          ? `${mandatoryCount} core + ${totalRequired} challenge objectives`
-                          : `${group.objectives.length} objectives`}
-                      </p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <p style={{ color: colors.text2, fontSize: '12px', margin: 0 }}>
+                          {mandatoryCount > 0 || totalRequired > 0
+                            ? `${mandatoryCount} core + ${totalRequired} challenge objectives`
+                            : `${group.objectives.length} objectives`}
+                        </p>
+                        <span
+                          style={{
+                            color: progress.percentage >= 75 ? '#10b981' : progress.percentage >= 50 ? '#f59e0b' : colors.text2,
+                            fontSize: '12px',
+                            fontWeight: '600',
+                          }}
+                          title={`${progress.percentage}% mastery means ${progress.mastered} of ${progress.total} objectives completed`}
+                        >
+                          {progress.percentage >= 75 ? '✓ Close to mastery!' : progress.percentage >= 50 ? 'Making progress...' : 'Keep going!'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span style={{ color: colors.text2, fontSize: '16px', marginLeft: '1rem' }}>
