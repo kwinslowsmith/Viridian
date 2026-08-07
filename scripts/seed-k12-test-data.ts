@@ -53,7 +53,7 @@ async function seedTestData() {
 
     // 3. CREATE K12 CLASSES
     console.log('🎓 Creating K12 classes...');
-    const classes = [];
+    const classes: Array<{ id: string; name: string; instructorId: string }> = [];
 
     const classConfigs = [
       {
@@ -298,6 +298,7 @@ async function seedTestData() {
         await prisma.k12Submission.create({
           data: {
             assessmentId: assessments[scenario.assessmentIdx].id,
+            studentId: enrollments[scenario.enrollmentIdx].studentId,
             enrollmentId: enrollments[scenario.enrollmentIdx].id,
             grade: scenario.grade,
             status: status,
