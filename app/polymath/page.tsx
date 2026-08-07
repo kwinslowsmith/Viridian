@@ -67,6 +67,7 @@ export default function PolymathMagazine() {
   }>({ articles: [], tools: [], modules: [], collections: [] });
   const [loading, setLoading] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMagazineContent();
@@ -114,12 +115,17 @@ export default function PolymathMagazine() {
     'professional-development',
   ];
 
-  const allContent = [
+  let allContent = [
     ...content.articles,
     ...content.tools,
     ...content.modules,
     ...content.collections,
   ];
+
+  // Filter by content type if selected
+  if (selectedContentType) {
+    allContent = allContent.filter(item => item.type === selectedContentType);
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -207,8 +213,113 @@ export default function PolymathMagazine() {
         </div>
       </section>
 
+      {/* Content Type Navigation */}
+      <section className="bg-gradient-to-r from-amber-50 to-orange-50 py-12 px-4 sm:px-6 lg:px-8 border-b border-amber-100">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-serif text-amber-950 mb-8">Browse by Content Type</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Articles */}
+            <div className="bg-white rounded-lg p-4 border-2 border-blue-200 hover:shadow-md transition-shadow">
+              <div className="text-3xl mb-3">📄</div>
+              <h3 className="font-semibold text-amber-950 mb-2">Articles</h3>
+              <p className="text-sm text-stone-600 mb-4">In-depth guides and insights</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContentType('article')}
+                  className="flex-1 px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                >
+                  Browse
+                </button>
+                <a
+                  href="/test/polymath-posting"
+                  className="flex-1 px-3 py-2 border border-blue-600 text-blue-600 text-xs font-medium rounded hover:bg-blue-50 text-center"
+                >
+                  Create
+                </a>
+              </div>
+            </div>
+
+            {/* Tools */}
+            <div className="bg-white rounded-lg p-4 border-2 border-green-200 hover:shadow-md transition-shadow">
+              <div className="text-3xl mb-3">🛠️</div>
+              <h3 className="font-semibold text-amber-950 mb-2">Tools</h3>
+              <p className="text-sm text-stone-600 mb-4">Interactive utilities</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContentType('tool')}
+                  className="flex-1 px-3 py-2 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors"
+                >
+                  Browse
+                </button>
+                <a
+                  href="/test/polymath-posting"
+                  className="flex-1 px-3 py-2 border border-green-600 text-green-600 text-xs font-medium rounded hover:bg-green-50 text-center"
+                >
+                  Create
+                </a>
+              </div>
+            </div>
+
+            {/* Learning Modules */}
+            <div className="bg-white rounded-lg p-4 border-2 border-purple-200 hover:shadow-md transition-shadow">
+              <div className="text-3xl mb-3">📚</div>
+              <h3 className="font-semibold text-amber-950 mb-2">Learning Modules</h3>
+              <p className="text-sm text-stone-600 mb-4">Structured courses</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContentType('module')}
+                  className="flex-1 px-3 py-2 bg-purple-600 text-white text-xs font-medium rounded hover:bg-purple-700 transition-colors"
+                >
+                  Browse
+                </button>
+                <a
+                  href="/test/polymath-posting"
+                  className="flex-1 px-3 py-2 border border-purple-600 text-purple-600 text-xs font-medium rounded hover:bg-purple-50 text-center"
+                >
+                  Create
+                </a>
+              </div>
+            </div>
+
+            {/* Collections */}
+            <div className="bg-white rounded-lg p-4 border-2 border-amber-200 hover:shadow-md transition-shadow">
+              <div className="text-3xl mb-3">✨</div>
+              <h3 className="font-semibold text-amber-950 mb-2">Collections</h3>
+              <p className="text-sm text-stone-600 mb-4">Curated resources</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContentType('collection')}
+                  className="flex-1 px-3 py-2 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
+                >
+                  Browse
+                </button>
+                <a
+                  href="/test/polymath-posting"
+                  className="flex-1 px-3 py-2 border border-amber-600 text-amber-600 text-xs font-medium rounded hover:bg-amber-50 text-center"
+                >
+                  Create
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Magazine Feed */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {selectedContentType && (
+          <div className="mb-6 flex items-center justify-between">
+            <p className="text-stone-600">
+              Showing {selectedContentType}s {selectedTopic && `in ${selectedTopic}`}
+            </p>
+            <button
+              onClick={() => setSelectedContentType(null)}
+              className="text-sm text-amber-700 hover:text-amber-900 font-medium"
+            >
+              Clear filter
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="text-center py-12 text-stone-600">Loading magazine...</div>
         ) : allContent.length === 0 ? (
