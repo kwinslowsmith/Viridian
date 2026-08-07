@@ -8,7 +8,8 @@ import { TeacherSkillSelector } from '@/app/components/TeacherSkillSelector';
 import { SkillObjectiveManager } from '@/app/components/SkillObjectiveManager';
 import { StudentObjectiveList } from '@/app/components/StudentObjectiveList';
 import { StudentObjectiveSubmission } from '@/app/components/StudentObjectiveSubmission';
-import { TeacherGradingDashboard } from '@/app/components/TeacherGradingDashboard';
+import { GradingInbox } from '@/app/components/GradingInbox';
+import { ClassProgressDashboard } from '@/app/components/ClassProgressDashboard';
 import { ClassResourcesPanel } from '@/app/components/ClassResourcesPanel';
 import { ClassScheduleManager } from '@/app/components/ClassScheduleManager';
 import { K12ObjectivesGrid } from '@/app/modules/k12/components/K12ObjectivesGrid';
@@ -23,7 +24,7 @@ export default function ClassDetailPage() {
   const [classData, setClassData] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'standards' | 'schedule' | 'students' | 'feedback' | 'objectives' | 'skills' | 'grading' | 'resources'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'standards' | 'schedule' | 'students' | 'feedback' | 'objectives' | 'skills' | 'grading' | 'progress' | 'resources'>('overview');
   const [selectedWeek, setSelectedWeek] = useState<any>(null);
   const [showWeekModal, setShowWeekModal] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<any>(null);
@@ -75,8 +76,9 @@ export default function ClassDetailPage() {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'objectives', label: 'Objectives' },
+    ...(userRole === 'Teacher' ? [{ id: 'progress', label: 'Class Progress' }] : []),
+    ...(userRole === 'Teacher' ? [{ id: 'grading', label: 'Grading Inbox' }] : []),
     ...(userRole === 'Teacher' ? [{ id: 'skills', label: 'Skill Setup' }] : []),
-    ...(userRole === 'Teacher' ? [{ id: 'grading', label: 'Grading' }] : []),
     { id: 'standards', label: 'Standards' },
     { id: 'schedule', label: 'Schedule' },
     ...(userRole === 'Teacher' ? [{ id: 'students', label: 'Students' }] : []),
@@ -96,8 +98,10 @@ export default function ClassDetailPage() {
         );
       case 'skills':
         return <TeacherSkillSelector classId={classId} />;
+      case 'progress':
+        return <ClassProgressDashboard classId={classId} />;
       case 'grading':
-        return <TeacherGradingDashboard classId={classId} />;
+        return <GradingInbox classId={classId} />;
       case 'standards':
         return <StandardsTab classData={classData} userRole={userRole} orgSlug={slug} />;
       case 'schedule':
