@@ -377,6 +377,35 @@ function SubmissionGradingModal({
             </p>
           </div>
 
+          {submission.objective?.assessmentGuidance && (
+            <div
+              style={{
+                padding: '1rem',
+                backgroundColor: colors.teal.accent + '15',
+                borderLeft: `3px solid ${colors.teal.accent}`,
+                borderRadius: '4px',
+              }}
+            >
+              <p style={{ color: colors.text2, fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', margin: '0 0 0.5rem 0' }}>
+                Success Criteria
+              </p>
+              <p style={{ color: colors.text, fontSize: '13px', margin: 0 }}>
+                {submission.objective.assessmentGuidance.startsWith('http') ? (
+                  <a
+                    href={submission.objective.assessmentGuidance}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: colors.teal.accent, textDecoration: 'underline' }}
+                  >
+                    View rubric →
+                  </a>
+                ) : (
+                  submission.objective.assessmentGuidance
+                )}
+              </p>
+            </div>
+          )}
+
           {submission.submissionType === 'text' ? (
             <div>
               <p style={{ color: colors.text2, fontSize: '12px', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
