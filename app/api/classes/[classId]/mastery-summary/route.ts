@@ -30,14 +30,27 @@ export async function GET(
     }
 
     const { classId } = await params;
+
+    if (!classId || typeof classId !== 'string' || classId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid class ID' }, { status: 400 });
+    }
+
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get("domain");
     const type = searchParams.get("type");
     const unitId = searchParams.get("unitId");
 
-    if (!domain) {
+    if (!domain || typeof domain !== 'string' || domain.trim() === '') {
       return NextResponse.json(
         { error: "Missing required query parameter: domain (organizationId)" },
+        { status: 400 }
+      );
+    }
+
+    // Validate type parameter if provided
+    if (type && !['skill', 'content'].includes(type)) {
+      return NextResponse.json(
+        { error: "Invalid type parameter. Must be 'skill' or 'content'" },
         { status: 400 }
       );
     }
@@ -324,12 +337,31 @@ export async function POST(
     }
 
     const { classId } = await params;
+
+    if (!classId || typeof classId !== 'string' || classId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid class ID' }, { status: 400 });
+    }
+
     const body = await request.json();
     const { domain, updates } = body;
 
-    if (!domain || !Array.isArray(updates)) {
+    if (!domain || typeof domain !== 'string' || domain.trim() === '') {
       return NextResponse.json(
-        { error: "Missing required fields: domain, updates" },
+        { error: "Missing required field: domain (organizationId)" },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return NextResponse.json(
+        { error: "Missing required field: updates (non-empty array)" },
+        { status: 400 }
+      );
+    }
+
+    if (updates.length > 1000) {
+      return NextResponse.json(
+        { error: "Bulk update limit exceeded. Maximum 1000 updates per request" },
         { status: 400 }
       );
     }
@@ -350,97 +382,125 @@ export async function POST(
       );
     }
 
-    // Process bulk updates
-    const updateResults = [];
-    for (const update of updates) {
+    // Validate all updates first
+    const validationErrors: any[] = [];
+    const validUpdates: any[] = [];
+
+    for (let i = 0; i < updates.length; i++) {
+      const update = updates[i];
       const { studentId, standardId, level } = update;
 
-      if (!studentId || !standardId || level === undefined) {
-        updateResults.push({
+      if (!studentId || typeof studentId !== 'string' || !standardId || typeof standardId !== 'string' || level === undefined) {
+        validationErrors.push({
+          index: i,
           studentId,
           standardId,
           status: "error",
-          message: "Missing required fields",
+          message: "Missing or invalid required fields",
         });
         continue;
       }
 
-      if (level < 0 || level > 4) {
-        updateResults.push({
+      if (typeof level !== 'number' || level < 0 || level > 4) {
+        validationErrors.push({
+          index: i,
           studentId,
           standardId,
           status: "error",
-          message: "Level must be between 0 and 4",
+          message: "Level must be a number between 0 and 4",
         });
         continue;
       }
 
-      try {
-        // Verify student is enrolled in this class
-        const enrollment = await prisma.k12Enrollment.findUnique({
-          where: {
-            classId_studentId: {
-              classId,
-              studentId,
-            },
-          },
+      validUpdates.push(update);
+    }
+
+    // Verify all students are enrolled in this class
+    const studentIds = [...new Set(validUpdates.map(u => u.studentId))];
+    const enrollments = await prisma.k12Enrollment.findMany({
+      where: {
+        classId,
+        studentId: { in: studentIds },
+      },
+      select: { studentId: true },
+    });
+    const enrolledStudentIds = new Set(enrollments.map(e => e.studentId));
+
+    // Process valid updates
+    const updateResults: any[] = [];
+    const batchUpdates: any[] = [];
+    const now = new Date();
+
+    for (const update of validUpdates) {
+      const { studentId, standardId, level } = update;
+
+      if (!enrolledStudentIds.has(studentId)) {
+        updateResults.push({
+          studentId,
+          standardId,
+          status: "error",
+          message: "Student not enrolled in this class",
         });
+        continue;
+      }
 
-        if (!enrollment) {
-          updateResults.push({
-            studentId,
-            standardId,
-            status: "error",
-            message: "Student not enrolled in this class",
-          });
-          continue;
-        }
-
-        // Upsert progress
-        await prisma.studentStandardProgress.upsert({
-          where: {
-            userId_standardId_organizationId: {
-              userId: studentId,
-              standardId,
-              organizationId: domain,
-            },
-          },
-          create: {
+      batchUpdates.push({
+        where: {
+          userId_standardId_organizationId: {
             userId: studentId,
             standardId,
             organizationId: domain,
-            classId,
-            level: level || null,
-            lastScoredAt: new Date(),
           },
-          update: {
-            level: level || null,
-            lastScoredAt: new Date(),
-          },
-        });
-
-        updateResults.push({
-          studentId,
+        },
+        create: {
+          userId: studentId,
           standardId,
-          status: "success",
-          level,
-        });
-      } catch (err) {
-        updateResults.push({
-          studentId,
-          standardId,
-          status: "error",
-          message: "Database error",
-        });
-      }
+          organizationId: domain,
+          classId,
+          level: level || null,
+          lastScoredAt: now,
+        },
+        update: {
+          level: level || null,
+          lastScoredAt: now,
+        },
+      });
     }
+
+    // Execute batch updates
+    try {
+      for (const update of batchUpdates) {
+        await prisma.studentStandardProgress.upsert(update);
+      }
+
+      // Add success results
+      for (const update of validUpdates) {
+        if (enrolledStudentIds.has(update.studentId)) {
+          updateResults.push({
+            studentId: update.studentId,
+            standardId: update.standardId,
+            status: "success",
+            level: update.level,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Database error during bulk update:', err);
+      return NextResponse.json(
+        { error: "Database error during bulk update" },
+        { status: 500 }
+      );
+    }
+
+    // Combine validation errors with update results
+    const allResults = [...validationErrors, ...updateResults];
 
     return NextResponse.json(
       {
         message: "Bulk update complete",
-        results: updateResults,
-        successCount: updateResults.filter(r => r.status === "success").length,
-        errorCount: updateResults.filter(r => r.status === "error").length,
+        results: allResults,
+        successCount: allResults.filter(r => r.status === "success").length,
+        errorCount: allResults.filter(r => r.status === "error").length,
       },
       { status: 200 }
     );
