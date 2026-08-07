@@ -1,0 +1,612 @@
+.container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 32px 24px;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 16px;
+  opacity: 0.95;
+  margin: 8px 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.teacherInfo {
+  text-align: right;
+}
+
+.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.teacherName {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.emailLink {
+  display: inline-block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  transition: border-color 0.2s;
+}
+
+.emailLink:hover {
+  border-bottom-color: white;
+}
+
+.lastUpdate {
+  font-size: 12px;
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Sections */
+.section {
+  padding: 32px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section:last-of-type {
+  border-bottom: none;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+}
+
+.sectionSubtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+/* Standards List */
+.standardsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.standardCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.standardCard:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.standardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+}
+
+.standardLeft {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.statusPill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusOnTrack {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusNeedsSupport {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.statusNotStarted {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.standardName {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.standardDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 6px 0 0 0;
+}
+
+.standardRight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.masteryPercent {
+  font-size: 28px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.progressBarContainer {
+  width: 100px;
+}
+
+.progressBar {
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #667eea;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.expandIcon {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Expanded Details */
+.standardDetails {
+  padding: 0 20px 20px 20px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.detailText {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}
+
+.tipsList {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.tipItem {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.6;
+  padding-left: 8px;
+  position: relative;
+}
+
+.tipItem::before {
+  content: '✓';
+  position: absolute;
+  left: -20px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.objectivesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.objectiveItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.objectiveStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.masteredIcon {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.inProgressIcon {
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+.notStartedIcon {
+  color: #9ca3af;
+}
+
+.objectiveText {
+  flex: 1;
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.coreBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.resourcesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resourceItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #667eea;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.resourceItem:hover {
+  background-color: #f3f4f6;
+}
+
+.resourceIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Calendar */
+.calendarTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendarHeader {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 1fr;
+  gap: 0;
+  background-color: #f3f4f6;
+  padding: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.calendarRow {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 1fr;
+  gap: 0;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.calendarCol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeTag {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #ede9fe;
+  color: #6d28d9;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* CTA Section */
+.ctaSection {
+  padding: 32px 24px;
+  background-color: #f0f4ff;
+  border-top: 2px solid #e0e7ff;
+}
+
+.ctaBox {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ctaTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.ctaText {
+  font-size: 16px;
+  color: #4b5563;
+  margin: 0;
+}
+
+.ctaButton {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #667eea;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  width: fit-content;
+}
+
+.ctaButton:hover {
+  background-color: #5568d3;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .header {
+    padding: 24px 16px;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .teacherInfo {
+    text-align: left;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .section {
+    padding: 20px 16px;
+  }
+
+  .sectionTitle {
+    font-size: 20px;
+  }
+
+  .sectionSubtitle {
+    font-size: 15px;
+  }
+
+  .standardHeader {
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  .standardLeft {
+    width: 100%;
+    order: 1;
+  }
+
+  .standardRight {
+    width: 100%;
+    order: 2;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .progressBarContainer {
+    width: 80px;
+  }
+
+  .standardName {
+    font-size: 16px;
+  }
+
+  .detailText {
+    font-size: 15px;
+  }
+
+  .tipItem {
+    font-size: 14px;
+  }
+
+  .objectiveText {
+    font-size: 14px;
+  }
+
+  .calendarHeader {
+    grid-template-columns: 100px 1fr 100px 1fr;
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .calendarRow {
+    grid-template-columns: 100px 1fr 100px 1fr;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .ctaTitle {
+    font-size: 18px;
+  }
+
+  .ctaText {
+    font-size: 15px;
+  }
+
+  .ctaButton {
+    font-size: 15px;
+    padding: 10px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .standardName {
+    font-size: 15px;
+  }
+
+  .standardDescription {
+    font-size: 13px;
+  }
+
+  .masteryPercent {
+    font-size: 24px;
+  }
+
+  .detailTitle {
+    font-size: 15px;
+  }
+
+  .calendarHeader,
+  .calendarRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .calendarCol {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .calendarCol::before {
+    font-weight: 600;
+    color: #6b7280;
+    width: 100px;
+    text-align: left;
+  }
+
+  .calendarHeader .calendarCol::before {
+    display: none;
+  }
+
+  .calendarRow .calendarCol:nth-child(1)::before {
+    content: 'Date:';
+  }
+
+  .calendarRow .calendarCol:nth-child(2)::before {
+    content: 'Assessment:';
+  }
+
+  .calendarRow .calendarCol:nth-child(3)::before {
+    content: 'Type:';
+  }
+
+  .calendarRow .calendarCol:nth-child(4)::before {
+    content: 'Standards:';
+  }
+}

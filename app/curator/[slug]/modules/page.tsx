@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 
 export default function ModulesPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter();

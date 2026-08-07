@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 
 export default function DiscoverOrganizationsPage() {
   const { data: session } = useSession();

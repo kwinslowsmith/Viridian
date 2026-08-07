@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 
 export default function VerifyEmailContent() {
   const searchParams = useSearchParams();

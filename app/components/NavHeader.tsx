@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 import { useState, useEffect } from 'react';
 
 export function NavHeader() {

@@ -41,46 +41,67 @@ export async function GET(
       where: { userId: studentId },
     });
 
+    // Fetch teacher of this class for message
+    const classWithTeacher = await prisma.k12Class.findUnique({
+      where: { id: classId },
+      include: { teacher: true },
+    });
+
     // Build response grouped by standard
     const standards = classStandards.map((classStandard) => {
       const standard = classStandard.standard;
-      const skills = standard.exampleObjectives.map((objective) => {
+      const objectives = standard.exampleObjectives.map((objective) => {
         const studentProgress = progress.find((p) => p.objectiveId === objective.id);
-        const masteryPercent = studentProgress?.completed ? 100 : 0;
 
         return {
           id: objective.id,
-          label: objective.label || objective.text,
           text: objective.text,
-          masteryPercent,
           status: studentProgress?.completed
-            ? 'Mastered'
+            ? 'mastered'
             : studentProgress
-              ? 'In Progress'
-              : 'Not Started',
-          trend: masteryPercent === 100 ? '↑' : masteryPercent > 0 ? '=' : '↓',
-          lastActivityAt: studentProgress?.completedAt || null,
-          nextDeadlineAt: null, // Can add deadline tracking later
+              ? 'in-progress'
+              : 'not-started',
           isMandatory: objective.isMandatory,
+          submittedAt: studentProgress?.completedAt?.toISOString() || null,
+          grade: studentProgress?.grade || null,
         };
       });
 
-      const masteredSkills = skills.filter((s) => s.masteryPercent >= 80).length;
+      // Calculate standard mastery
+      const masteredCount = objectives.filter((o) => o.status === 'mastered').length;
+      const masteryPercent = objectives.length > 0 ? Math.round((masteredCount / objectives.length) * 100) : 0;
+
+      // Determine trend (simplified: check if most recent submissions improved)
+      const recentProgress = progress
+        .filter((p) => standard.exampleObjectives.some((obj) => obj.id === p.objectiveId))
+        .sort((a, b) => (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0))
+        .slice(0, 3);
+
+      const trend = masteredCount > recentProgress.length / 2 ? 'up' : masteredCount > 0 ? 'stable' : 'down';
+
       return {
         id: standard.id,
         name: standard.name,
-        description: standard.description,
-        passPercentage: standard.passPercentage,
-        skills,
-        masteredCount: masteredSkills,
-        totalCount: skills.length,
+        code: standard.code || `STD-${standard.id.substring(0, 8).toUpperCase()}`,
+        masteryPercent,
+        status: masteryPercent >= 75 ? 'mastered' : masteryPercent > 0 ? 'in-progress' : 'not-started',
+        trend,
+        objectives,
+        celebration: null, // Can add celebration detection logic later
       };
     });
 
+    const messageFromTeacher = classWithTeacher?.teacher?.name
+      ? `Keep up the great work! - ${classWithTeacher.teacher.name}`
+      : 'Keep up the great work!';
+
     return NextResponse.json({
-      student: { id: studentId, name: session.user.name || 'Student' },
-      class: { id: k12Class.id, name: k12Class.name },
+      studentId,
+      studentName: session.user.name || 'Student',
+      classId: k12Class.id,
+      className: k12Class.name,
       standards,
+      messageFromTeacher,
     });
   } catch (error) {
     console.error('Failed to fetch student progress:', error);

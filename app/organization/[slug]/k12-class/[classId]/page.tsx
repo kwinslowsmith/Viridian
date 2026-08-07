@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 import { K12StandardsHierarchy } from '@/app/modules/k12/components/K12StandardsHierarchy';
 
 interface K12Class {

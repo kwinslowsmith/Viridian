@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 import { MessagingCenter } from '@/app/components/MessagingCenter';
 
 import { TeacherObjectivePicker } from '@/app/components/TeacherObjectivePicker';

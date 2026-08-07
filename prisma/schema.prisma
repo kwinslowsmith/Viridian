@@ -53,6 +53,13 @@ model User {
   postsCreated              PolymathPost[] @relation("PolymathPostsCreated")
   childrenRelations         ParentChild[] @relation("ParentChildren")
   parentRelations           ParentChild[] @relation("ChildrenOf")
+  domainStewardships        DomainSteward[] @relation("DomainStewards")
+  domainsSteward            StandardsDomain[] @relation("DomainPrimarySteward")
+  standardAudits            StandardAudit[]
+  interventionGroupsCreated InterventionGroup[]
+  studyGuidesCreated        StudyGuide[] @relation("StudyGuidesCreated")
+  k12AssessmentsCreated     K12Assessment[] @relation("K12AssessmentsCreated")
+  teacherRatings            TeacherRating[]
 
   // For NextAuth
   accounts                  Account[]
@@ -140,6 +147,8 @@ model Organization {
   projects            Project[]
   announcements       Announcement[]
   polymathPosts       PolymathPost[] @relation("PolymathPosts")
+  standardsDomains    StandardsDomain[] @relation("StandardsDomainStewards")
+  schoolAssessments   SchoolAssessment[] @relation("SchoolAssessments")
 
   @@index([name])
   @@index([slug])
@@ -275,6 +284,24 @@ model Standard {
   passPercentage Int @default(80) // % of objectives needed to demonstrate standard
   mandatoryObjectiveIds String? // JSON array of mandatory ExampleObjective IDs
 
+  // Federation & verification
+  domainId      String?  // Which StandardsDomain this belongs to (for federated standards)
+  domain        StandardsDomain? @relation(fields: [domainId], references: [id], onDelete: SetNull)
+
+  verificationLevel String @default("unreviewed") // "unreviewed" | "peer-reviewed" | "official"
+  endorsedBy    String?  // User ID of steward who endorsed this
+
+  // Aliases (for merging synonymous standards)
+  aliases       Standard[] @relation("StandardSynonyms")
+  aliasOf       Standard? @relation("StandardSynonyms", fields: [aliasOfId], references: [id], onDelete: SetNull)
+  aliasOfId     String?
+
+  // Deprecation
+  supersededBy  String?  // Standard ID that replaces this one
+
+  // Visibility & sharing
+  visibility    String @default("private") // "private" | "organization" | "public"
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -285,6 +312,10 @@ model Standard {
   teacherAssignments TeacherStandardAssignment[]
   studentProgress StudentStandardProgress[]
   classStandards ClassStandard[]
+  tags        Tag[]
+  studyGuides StudyGuide[] @relation("StudyGuidesForStandard")
+  k12Assessments K12Assessment[]
+  teacherRatings TeacherRating[]
 
   @@unique([standardsBankId, code])
   @@index([standardsBankId])
@@ -292,6 +323,9 @@ model Standard {
   @@index([type])
   @@index([unitId])
   @@index([skillCategoryId])
+  @@index([domainId])
+  @@index([verificationLevel])
+  @@index([visibility])
 }
 
 model ClassStandard {
@@ -333,6 +367,8 @@ model ExampleObjective {
   // Relations
   classObjectives ClassObjective[]
   studentProgress StudentObjectiveProgress[]
+  interventionGroups InterventionGroup[]
+  studentRatings StudentRating[]
 
   @@unique([standardId, label])
   @@index([standardId])
@@ -401,6 +437,299 @@ model TeacherStandardAssignment {
 }
 
 // ============================================
+// FEDERATION & STANDARDS GOVERNANCE
+// ============================================
+
+model StandardsDomain {
+  id              String   @id @default(cuid())
+  name            String   // "Woodworking", "Improv", "STEM"
+  description     String?
+
+  organizationId  String   // Steward organization
+  organization    Organization @relation("StandardsDomainStewards", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  visibility      String   @default("public") // "private" | "organization" | "public"
+
+  // Stewardship
+  primaryStewardId String?
+  primarySteward  User? @relation("DomainPrimarySteward", fields: [primaryStewardId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  standards       Standard[]
+  stewards        DomainSteward[]
+  auditLog        StandardAudit[]
+
+  @@index([organizationId])
+  @@index([visibility])
+  @@index([primaryStewardId])
+}
+
+model DomainSteward {
+  id              String   @id @default(cuid())
+  domainId        String
+  domain          StandardsDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation("DomainStewards", fields: [userId], references: [id], onDelete: Cascade)
+
+  role            String   @default("steward") // "steward" | "reviewer"
+  verificationAuthority Boolean @default(false) // Can mark standards as "official"
+
+  approvedAt      DateTime @default(now())
+  approvedBy      String   // ID of user who approved this steward
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([domainId, userId])
+  @@index([domainId])
+  @@index([userId])
+}
+
+model StandardAudit {
+  id              String   @id @default(cuid())
+  standardId      String
+  domainId        String
+  domain          StandardsDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  action          String   // "created" | "updated" | "verified" | "merged" | "deprecated"
+  changeDetails   String   @db.Text // JSON of what changed
+
+  changedBy       String
+  changedByUser   User @relation(fields: [changedBy], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@index([standardId])
+  @@index([domainId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Tag {
+  id              String   @id @default(cuid())
+  name            String   // "foundational", "extension", "high-stakes"
+
+  standards       Standard[]
+
+  @@unique([name])
+}
+
+// ============================================
+// K12 MASTER CALENDAR & ASSESSMENTS
+// ============================================
+
+model SchoolAssessment {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+
+  organizationId  String
+  organization    Organization @relation("SchoolAssessments", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  type            String   @default("major-assessment") // "major-assessment" | "high-stakes" | "quiz" | "project"
+
+  assessmentDate  DateTime
+  standardsAssessed String? // JSON array of standard IDs
+
+  visibility      String   @default("organization") // "private" | "organization" | "public"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([assessmentDate])
+  @@index([type])
+  @@index([visibility])
+}
+
+// ============================================
+// K12 INTERVENTION & SUPPORT
+// ============================================
+
+model InterventionGroup {
+  id              String   @id @default(cuid())
+  classId         String
+  class           K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  name            String   // "Reteach - Fractions"
+  objectiveId     String
+  objective       ExampleObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  meetingSchedule String? // "Tuesday/Thursday after school"
+  startDate       DateTime
+  endDate         DateTime?
+
+  notes           String?
+
+  createdBy       String
+  createdByUser   User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  students        InterventionGroupStudent[]
+
+  @@index([classId])
+  @@index([objectiveId])
+  @@index([createdBy])
+  @@index([startDate])
+}
+
+model InterventionGroupStudent {
+  id                  String   @id @default(cuid())
+  groupId             String
+  group               InterventionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  studentId           String
+  enrollmentId        String
+  enrollment          K12Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  status              String   @default("active") // "active" | "completed" | "exited"
+
+  @@unique([groupId, enrollmentId])
+  @@index([groupId])
+  @@index([enrollmentId])
+}
+
+// ============================================
+// STUDY GUIDES & PERSONALIZED PATHS
+// ============================================
+
+model StudyGuide {
+  id              String   @id @default(cuid())
+  studentId       String
+  classId         String
+
+  standardId      String?
+  standard        Standard? @relation("StudyGuidesForStandard", fields: [standardId], references: [id], onDelete: SetNull)
+
+  title           String
+  description     String?
+
+  focusObjectives String? // JSON array of objective IDs to prioritize
+  resourceIds     String? // JSON array of resource IDs
+
+  status          String   @default("active") // "active" | "completed" | "archived"
+  visibility      String   @default("private") // "private" | "class" | "organization"
+
+  createdBy       String
+  createdByUser   User @relation("StudyGuidesCreated", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([classId])
+  @@index([standardId])
+  @@index([status])
+  @@index([visibility])
+}
+
+// ============================================
+// K12 ASSESSMENT & GRADING
+// ============================================
+
+model K12Assessment {
+  id              String   @id @default(cuid())
+  classId         String
+  class           K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  standardId      String
+  standard        Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  objectiveIds    String? // JSON array of objective IDs tested
+
+  title           String
+  description     String?
+  type            String   @default("formative") // "formative" | "summative"
+  dueDate         DateTime?
+
+  visibility      String   @default("class") // "private" | "class" | "organization"
+
+  createdBy       String
+  createdByUser   User @relation("K12AssessmentsCreated", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  submissions     K12Submission[]
+
+  @@index([classId])
+  @@index([standardId])
+  @@index([type])
+  @@index([dueDate])
+  @@index([visibility])
+}
+
+model K12Submission {
+  id              String   @id @default(cuid())
+  assessmentId    String
+  assessment      K12Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  studentId       String
+  enrollmentId    String
+  enrollment      K12Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  submittedAt     DateTime?
+  grade           Int?     // 0-100
+  feedback        String?
+  status          String   @default("not-submitted") // "not-submitted" | "submitted" | "graded" | "returned"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([assessmentId, enrollmentId])
+  @@index([assessmentId])
+  @@index([enrollmentId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+// ============================================
+// RATINGS & FEEDBACK
+// ============================================
+
+model StudentRating {
+  id              String   @id @default(cuid())
+  studentId       String
+
+  objectiveId     String
+  objective       ExampleObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  rating          Int      // 1-5 or 0-100
+  ratedAt         DateTime @default(now())
+  ratedBy         String   // userId of teacher
+
+  @@index([studentId])
+  @@index([objectiveId])
+  @@index([ratedAt])
+}
+
+model TeacherRating {
+  id              String   @id @default(cuid())
+  teacherId       String
+  teacher         User @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  standardId      String
+  standard        Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  rating          Int      // 1-5
+  feedback        String?
+  ratedAt         DateTime @default(now())
+  ratedBy         String   // userId (admin or fellow teacher)
+
+  @@index([teacherId])
+  @@index([standardId])
+  @@index([ratedAt])
+}
+
+// ============================================
 // IMPROV MASTERY TRACKER SCHEMA (P1)
 // ============================================
 
@@ -436,6 +765,11 @@ model K12Class {
   enrollments K12Enrollment[]
   projects    ProjectClass[]
   polymathPosts PolymathPost[] @relation("PolymathPosts")
+  assessments K12Assessment[]
+  interventionGroups InterventionGroup[]
+  events      Event[]
+  conversations Conversation[]
+  resources   Resource[]
 
   @@index([instructorId])
   @@index([organizationId])
@@ -453,10 +787,9 @@ model K12Enrollment {
   status     String   @default("active")
   createdAt  DateTime @default(now())
 
-  // Placeholder for Phase 2 rating models
-  // studentRatings K12StudentRating[]
-  // teacherRatings K12TeacherRating[]
-  // feedback       K12Feedback[]
+  // Relations
+  submissions K12Submission[]
+  interventionGroupMemberships InterventionGroupStudent[]
 
   @@unique([classId, studentId])
   @@index([classId])
@@ -929,7 +1262,7 @@ model Conversation {
   messages          Message[]
 
   @@index([type])
-  @@index([classId])
+  @@index([k12ClassId])
   @@index([eventId])
   @@index([organizationId])
   @@index([createdById])
@@ -1019,7 +1352,7 @@ model Resource {
   updatedAt     DateTime @updatedAt
 
   @@index([organizationId])
-  @@index([classId])
+  @@index([k12ClassId])
   @@index([communityId])
   @@index([resourceLibraryId])
   @@index([visibility])

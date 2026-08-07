@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 
 export function TeacherSkillSelector({ classId, onComplete }: { classId: string; onComplete?: () => void }) {
   const { data: session } = useSession();

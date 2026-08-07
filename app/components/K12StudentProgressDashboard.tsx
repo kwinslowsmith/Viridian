@@ -3,42 +3,65 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
-interface Skill {
+interface Objective {
   id: string;
-  label: string;
   text: string;
-  masteryPercent: number;
-  status: string;
-  trend: string;
-  lastActivityAt: string | null;
-  nextDeadlineAt: string | null;
+  status: 'not-started' | 'in-progress' | 'mastered';
   isMandatory: boolean;
+  submittedAt: string | null;
+  grade: number | null;
+}
+
+interface Celebration {
+  objectiveId: string;
+  objectiveText: string;
+  celebrationType: 'mastered' | 'first-submission' | 'high-score';
+  message: string;
+  timestamp: string;
 }
 
 interface Standard {
   id: string;
   name: string;
-  description: string;
-  passPercentage: number;
-  skills: Skill[];
+  code: string;
+  masteryPercent: number;
+  status: 'not-started' | 'in-progress' | 'mastered';
+  trend: 'up' | 'stable' | 'down';
+  objectives: Objective[];
+  celebration: Celebration | null;
 }
 
 interface ProgressData {
-  student: { id: string; name: string };
-  class: { id: string; name: string };
+  studentId: string;
+  studentName: string;
+  classId: string;
+  className: string;
   standards: Standard[];
+  messageFromTeacher?: string;
 }
 
 const getProgressColor = (percent: number) => {
-  if (percent >= 75) return '#22c55e'; // green
-  if (percent >= 50) return '#eab308'; // yellow
+  if (percent >= 75) return '#10b981'; // green
+  if (percent >= 50) return '#f59e0b'; // yellow
   return '#ef4444'; // red
 };
 
 const getProgressBackground = (percent: number) => {
-  if (percent >= 75) return '#dcfce7'; // light green
-  if (percent >= 50) return '#fef3c7'; // light yellow
-  return '#fee2e2'; // light red
+  if (percent >= 75) return '#ecfdf5'; // light green
+  if (percent >= 50) return '#fffbeb'; // light yellow
+  return '#fef2f2'; // light red
+};
+
+const getStatusLabel = (percent: number) => {
+  if (percent >= 75) return 'On track!';
+  if (percent >= 50) return 'Almost there';
+  return 'Just started';
+};
+
+const getTrendIcon = (trend: string) => {
+  if (trend === 'up') return '↑';
+  if (trend === 'down') return '↓';
+  return '=';
 };
 
 export function K12StudentProgressDashboard({ classId }: { classId: string }) {
@@ -46,6 +69,7 @@ export function K12StudentProgressDashboard({ classId }: { classId: string }) {
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedStandard, setExpandedStandard] = useState<string | null>(null);
+  const [dismissedCelebration, setDismissedCelebration] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -65,6 +89,19 @@ export function K12StudentProgressDashboard({ classId }: { classId: string }) {
     fetchProgress();
   }, [classId]);
 
+  // Auto-dismiss celebration after 3 seconds
+  useEffect(() => {
+    if (progress && dismissedCelebration === null) {
+      const celebration = progress.standards.find(s => s.celebration)?.celebration;
+      if (celebration) {
+        const timer = setTimeout(() => {
+          setDismissedCelebration(celebration.objectiveId);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [progress, dismissedCelebration]);
+
   if (loading) {
     return <div style={{ padding: '20px', color: '#666' }}>Loading your progress...</div>;
   }
@@ -73,263 +110,261 @@ export function K12StudentProgressDashboard({ classId }: { classId: string }) {
     return <div style={{ padding: '20px', color: '#666' }}>No progress data found</div>;
   }
 
-  const { student, class: cls, standards } = progress;
+  const { studentName, className, standards, messageFromTeacher } = progress;
 
   // Calculate overall mastery
-  const allSkills = standards.flatMap((s) => s.skills);
-  const masteredSkills = allSkills.filter((s) => s.masteryPercent >= 80).length;
-  const overallMastery = allSkills.length > 0 ? Math.round((masteredSkills / allSkills.length) * 100) : 0;
+  const allObjectives = standards.flatMap((s) => s.objectives);
+  const masteredObjectives = allObjectives.filter((o) => o.status === 'mastered').length;
+  const overallMastery = allObjectives.length > 0 ? Math.round((masteredObjectives / allObjectives.length) * 100) : 0;
 
-  // Find newly mastered skills (for celebration)
-  const masteredSkillsList = allSkills.filter((s) => s.masteryPercent === 100);
+  // Find celebration
+  const activeCelebration = progress.standards.find(s => s.celebration && s.celebration.objectiveId !== dismissedCelebration)?.celebration;
 
   return (
-    <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#1c1917' }}>
-          Your Progress
+          {studentName}
         </h1>
-        <p style={{ fontSize: '14px', color: '#666', margin: '0' }}>
-          {cls.name}
+        <p style={{ fontSize: '14px', color: '#666', margin: '0 0 8px 0' }}>
+          {className}
         </p>
+        {messageFromTeacher && (
+          <p style={{ fontSize: '13px', color: '#666', margin: '0', fontStyle: 'italic' }}>
+            📝 {messageFromTeacher}
+          </p>
+        )}
       </div>
 
-      {/* Overall Progress Card */}
-      <div
-        style={{
-          backgroundColor: '#f5f5f0',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '20px',
-          border: '1px solid #e5e0d8',
-        }}
-      >
-        <div style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-          OVERALL PROGRESS
-        </div>
+      {/* Celebration Banner */}
+      {activeCelebration && (
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
+            backgroundColor: '#fef3c7',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            border: '2px solid #fcd34d',
+            textAlign: 'center',
+            animation: 'fadeIn 0.3s ease',
           }}
         >
-          <div style={{ flex: 1 }}>
-            <div
-              style={{
-                height: '12px',
-                backgroundColor: '#e5e0d8',
-                borderRadius: '6px',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  backgroundColor: getProgressColor(overallMastery),
-                  width: `${overallMastery}%`,
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
+          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1c1917', marginBottom: '4px' }}>
+            {activeCelebration.message}
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1c1917', minWidth: '45px' }}>
-            {overallMastery}%
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            You've mastered: {activeCelebration.objectiveText}
           </div>
-        </div>
-        <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-          {masteredSkills} of {allSkills.length} skills mastered
-        </div>
-      </div>
-
-      {/* Celebrations */}
-      {masteredSkillsList.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          {masteredSkillsList.map((skill) => (
-            <div
-              key={skill.id}
-              style={{
-                backgroundColor: '#fef3c7',
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '12px',
-                border: '2px solid #fcd34d',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1c1917' }}>
-                You mastered: <strong>{skill.label}</strong>
-              </div>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                Excellent work! Keep it up!
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
-      {/* Standards List */}
+      {/* Standards Grid */}
       <div>
-        {standards.map((standard) => (
+        {standards.length === 0 ? (
           <div
-            key={standard.id}
             style={{
-              marginBottom: '12px',
-              borderRadius: '10px',
-              border: '1px solid #e5e0d8',
-              overflow: 'hidden',
-              backgroundColor: '#fff',
+              textAlign: 'center',
+              padding: '40px 20px',
+              backgroundColor: '#fafaf7',
+              borderRadius: '12px',
+              color: '#999',
             }}
           >
-            {/* Standard Header */}
-            <div
-              onClick={() =>
-                setExpandedStandard(expandedStandard === standard.id ? null : standard.id)
-              }
-              style={{
-                padding: '12px 16px',
-                cursor: 'pointer',
-                backgroundColor: expandedStandard === standard.id ? '#f9f7f4' : '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '14px' }}>
-                  {standard.name}
-                </div>
-                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                  {standard.skills.filter((s) => s.masteryPercent >= 80).length}/{standard.skills.length} mastered
-                </div>
-              </div>
-              <div style={{ fontSize: '14px', color: '#999' }}>
-                {expandedStandard === standard.id ? '▼' : '▶'}
-              </div>
-            </div>
+            No standards in this class yet. Check back soon!
+          </div>
+        ) : (
+          standards.map((standard) => {
+            const masteredCount = standard.objectives.filter(o => o.status === 'mastered').length;
+            const standardMastery = standard.masteryPercent;
+            const statusLabel = getStatusLabel(standardMastery);
 
-            {/* Skills List */}
-            {expandedStandard === standard.id && (
-              <div style={{ backgroundColor: '#fafaf7', borderTop: '1px solid #e5e0d8' }}>
-                {standard.skills.map((skill, idx) => (
-                  <div
-                    key={skill.id}
-                    style={{
-                      padding: '12px 16px',
-                      borderTop: idx > 0 ? '1px solid #e5e0d8' : 'none',
-                      backgroundColor: skill.masteryPercent >= 80 ? '#f0fdf4' : '#fafaf7',
-                    }}
-                  >
-                    {/* Skill Label */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontWeight: skill.isMandatory ? '600' : '500',
-                            color: '#1c1917',
-                            fontSize: '13px',
-                          }}
-                        >
-                          {skill.label}
-                          {skill.isMandatory && (
-                            <span style={{ marginLeft: '6px', color: '#3b82f6', fontSize: '10px' }}>
-                              CORE
-                            </span>
-                          )}
-                        </div>
-                        {skill.lastActivityAt && (
-                          <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
-                            Last activity: {new Date(skill.lastActivityAt).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '16px', color: '#999' }}>
-                        {skill.trend}
-                      </div>
+            return (
+              <div
+                key={standard.id}
+                style={{
+                  marginBottom: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #e5e0d8',
+                  overflow: 'hidden',
+                  backgroundColor: '#fff',
+                }}
+              >
+                {/* Standard Header */}
+                <div
+                  onClick={() =>
+                    setExpandedStandard(expandedStandard === standard.id ? null : standard.id)
+                  }
+                  style={{
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    backgroundColor: expandedStandard === standard.id ? '#f9f7f4' : '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '14px' }}>
+                      {standard.name}
                     </div>
-
-                    {/* Progress Bar */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          flex: 1,
-                          height: '8px',
-                          backgroundColor: '#e5e0d8',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: '100%',
-                            backgroundColor: getProgressColor(skill.masteryPercent),
-                            width: `${skill.masteryPercent}%`,
-                            transition: 'width 0.3s ease',
-                          }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: '#1c1917',
-                          minWidth: '32px',
-                          textAlign: 'right',
-                        }}
-                      >
-                        {skill.masteryPercent}%
-                      </div>
+                    <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                      {standard.code}
                     </div>
-
-                    {/* Status Text */}
-                    <div
-                      style={{
-                        fontSize: '11px',
-                        color: '#666',
-                        marginTop: '6px',
-                      }}
-                    >
-                      {skill.status === 'Mastered' && '✓ Mastered'}
-                      {skill.status === 'In Progress' && 'In Progress'}
-                      {skill.status === 'Not Started' && 'Not Started'}
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                      {masteredCount}/{standard.objectives.length} objectives mastered
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                  <div style={{ fontSize: '14px', color: '#999', marginLeft: '8px' }}>
+                    {expandedStandard === standard.id ? '▼' : '▶'}
+                  </div>
+                </div>
 
-      {/* Empty State */}
-      {standards.length === 0 && (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '40px 20px',
-            backgroundColor: '#fafaf7',
-            borderRadius: '12px',
-            color: '#999',
-          }}
-        >
-          No standards in this class yet. Check back soon!
-        </div>
-      )}
+                {/* Progress Bar and Status */}
+                <div style={{ padding: '8px 16px', backgroundColor: getProgressBackground(standardMastery) }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        flex: 1,
+                        height: '8px',
+                        backgroundColor: '#e5e0d8',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: '100%',
+                          backgroundColor: getProgressColor(standardMastery),
+                          width: `${standardMastery}%`,
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#1c1917',
+                        minWidth: '35px',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {standardMastery}%
+                    </div>
+                    <div style={{ fontSize: '14px' }}>
+                      {getTrendIcon(standard.trend)}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+                    {statusLabel}
+                  </div>
+                </div>
+
+                {/* Objectives List */}
+                {expandedStandard === standard.id && (
+                  <div style={{ backgroundColor: '#fafaf7', borderTop: '1px solid #e5e0d8' }}>
+                    {standard.objectives.map((objective, idx) => {
+                      const statusDotColor =
+                        objective.status === 'mastered'
+                          ? '#10b981'
+                          : objective.status === 'in-progress'
+                            ? '#f59e0b'
+                            : '#d1d5db';
+
+                      return (
+                        <div
+                          key={objective.id}
+                          style={{
+                            padding: '12px 16px',
+                            borderTop: idx > 0 ? '1px solid #e5e0d8' : 'none',
+                            backgroundColor: objective.status === 'mastered' ? '#f0fdf4' : '#fafaf7',
+                          }}
+                        >
+                          {/* Objective with Badge */}
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                            {/* Status Dot */}
+                            <div
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                backgroundColor: statusDotColor,
+                                flexShrink: 0,
+                                marginTop: '2px',
+                              }}
+                            />
+
+                            {/* Objective Text and Badge */}
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '13px', color: '#1c1917', marginBottom: '4px' }}>
+                                {objective.text}
+                              </div>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {objective.isMandatory && (
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      backgroundColor: '#3b82f6',
+                                      color: '#fff',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    Core Skill
+                                  </span>
+                                )}
+                                {!objective.isMandatory && (
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      backgroundColor: '#8b5cf6',
+                                      color: '#fff',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    Challenge
+                                  </span>
+                                )}
+                                {objective.grade !== null && (
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      backgroundColor: '#e5e7eb',
+                                      color: '#374151',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    Grade: {objective.grade}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { colors } from '@/app/modules/improv/design/colors';
+import { colors } from '@/app/design/colors';
 
 interface ResourceCardProps {
   resource: {
