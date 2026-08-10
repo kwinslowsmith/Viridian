@@ -23,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    // Find user's role in this organization
+    // Find user's role in this organization via organizationRole
     const roleRecord = await prisma.organizationRole.findUnique({
       where: {
         userId_organizationId: {
@@ -33,11 +33,39 @@ export async function GET(
       },
     });
 
-    if (!roleRecord) {
-      return NextResponse.json({ role: null }, { status: 200 });
+    if (roleRecord) {
+      return NextResponse.json({ role: roleRecord.role }, { status: 200 });
     }
 
-    return NextResponse.json({ role: roleRecord.role }, { status: 200 });
+    // Check if user is a teacher (instructor of any K12Class in this org)
+    const teacherClass = await prisma.k12Class.findFirst({
+      where: {
+        organizationId: org.id,
+        instructorId: userId,
+      },
+      select: { id: true },
+    });
+
+    if (teacherClass) {
+      return NextResponse.json({ role: 'Teacher' }, { status: 200 });
+    }
+
+    // Check if user is a student (enrolled in any K12Class in this org)
+    const studentEnrollment = await prisma.k12Enrollment.findFirst({
+      where: {
+        studentId: userId,
+        class: {
+          organizationId: org.id,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (studentEnrollment) {
+      return NextResponse.json({ role: 'Student' }, { status: 200 });
+    }
+
+    return NextResponse.json({ role: null }, { status: 200 });
   } catch (error) {
     console.error('Failed to fetch user role:', error);
     return NextResponse.json(
