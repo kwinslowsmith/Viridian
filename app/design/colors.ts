@@ -23,6 +23,7 @@ export const colors = {
   // Teal (accent)
   teal: {
     accent: '#20B2AA',
+    border: '#2DD4BF',
   },
 
   // Developing (status color)
@@ -71,6 +72,14 @@ export const colors = {
     bg: '#D1FAE5',
     text: '#065F46',
     border: '#A7F3D0',
+  },
+
+  // Orange (secondary accent)
+  orange: {
+    accent: '#FB923C',
+    bg: '#FFEDD5',
+    text: '#7C2D12',
+    border: '#FEDBA8',
   },
 
   // Legacy category colors

@@ -424,34 +424,8 @@ async function main() {
   console.log(`✓ Created Polymath article for demo`);
 
   // ============================================
-  // CREATE IMPROV CLASS (for completeness)
+  // NOTE: Improv classes deprecated, using K12 classes only
   // ============================================
-  console.log("🎭 Creating Improv class...");
-
-  const improvClass = await prisma.improvClass.create({
-    data: {
-      name: "Improv Basics - Demo",
-      organizationId: organization.id,
-      instructorId: teacher.id,
-      startDate: new Date("2026-09-01"),
-      endDate: new Date("2026-12-01"),
-      numWeeks: 12,
-      status: "active",
-    },
-  });
-
-  // Enroll students in Improv class
-  for (const student of students) {
-    await prisma.improvEnrollment.create({
-      data: {
-        classId: improvClass.id,
-        studentId: student.id,
-        status: "active",
-      },
-    });
-  }
-
-  console.log(`✓ Created Improv class with ${students.length} students`);
 
   // ============================================
   // SUMMARY
@@ -467,7 +441,6 @@ async function main() {
   console.log(`   K12 Class: ${k12Class.name}`);
   console.log(`   Students: ${students.length} enrolled`);
   console.log(`   Standards: 2 with 5 objectives`);
-  console.log(`   Improv Class: ${improvClass.name}`);
   console.log("\n⚠️  This is DEMO DATA ONLY - not for production use!");
 }
 
