@@ -350,5 +350,85 @@ Last Updated: 2026-08-10 20:00 (✅ PHASE 2 BACKEND COMPLETE: Consolidated Stand
 ✅ No console errors  
 
 ### Next Step
-👉 **Browser-based E2E testing** — Open http://localhost:3000/auth/login and follow E2E_TESTING_GUIDE.md
+👉 **Browser-based E2E testing** — Open https://viridian.vercel.app/auth/login and follow Phase 2 marching orders below
+
+---
+
+## Phase 2: Standards & Objectives E2E Testing (T4 Marching Orders)
+
+**Status:** 🚀 Ready for Browser Testing  
+**Components:** StandardsObjectivesTeacher.tsx + route page  
+**APIs:** Both endpoints live (`GET /api/k12/classes/[classId]/standards-objectives-teacher` and student endpoint)  
+**Test Class:** American Literature, Period 3 (`cmsjazbw0000augct6nyutf9e`)
+
+### Teacher Standards & Objectives Testing Procedure
+
+**Login:**
+1. Go to https://viridian.vercel.app/auth/login
+2. Email: `teacher1@riverside.edu`
+3. Password: `TestPassword123!`
+4. Click "Sign In"
+
+**Navigate to Standards & Objectives:**
+1. After login, go to: `https://viridian.vercel.app/teachers/class/cmsjazbw0000augct6nyutf9e/standards-objectives`
+2. Should see "📚 Standards & Objectives" header
+
+**Test Standard Card (Expandable):**
+- [ ] Page loads without errors (check browser console)
+- [ ] At least 1 standard displays
+- [ ] Standard shows: code, name, unit name, required count, total count, pass %
+- [ ] Click standard → expands to show objectives
+- [ ] Click again → collapses
+
+**Test Objective Details:**
+- [ ] Each objective shows: label, text, required/optional badge
+- [ ] Required badges are RED, optional are gray
+- [ ] Assessment frequency warning displays (yellow badge) if needed
+- [ ] "⚠️ Needs Assessment (X days ago)" message visible
+
+**Test Student Progress Grid:**
+- [ ] Grid shows all students from American Literature class
+- [ ] Each student card shows: name, mastery %, icon (✓/⏳/⚠️), grade
+- [ ] Color coding: ✓ green (proficient), ⏳ yellow (developing), ⚠️ orange (approaching)
+- [ ] Grid is responsive (wraps on mobile)
+
+**Test Materials Section:**
+- [ ] Materials display with icons (📄 material, 📝 assessment, 🎥 video, 🔗 link)
+- [ ] Each material has title and [View] button
+
+**Test Teacher Notes:**
+- [ ] Teacher notes section visible and readable
+- [ ] Italic formatting applied correctly
+
+**Performance Check:**
+- [ ] Page loads in < 3 seconds
+- [ ] No console errors (F12 → Console)
+- [ ] No TypeScript errors in build
+
+**Mobile Responsive (if testing on mobile):**
+- [ ] Page readable at 600px+ width
+- [ ] Expandable sections work on touch
+- [ ] Text is legible (16px+ font)
+
+### Success Criteria
+✅ Page loads without errors  
+✅ Standards expand/collapse  
+✅ All objectives display with mastery data  
+✅ Student progress grid shows all students  
+✅ Required/optional badges display correctly  
+✅ Assessment frequency warning shows (if applicable)  
+✅ Materials and teacher notes visible  
+✅ Responsive on all breakpoints  
+✅ Performance < 3s load time  
+✅ No console errors  
+
+### Report Results
+After testing, update this WORK_LOG with:
+- **Passing Criteria Met:** Y/N for each item above
+- **Issues Found:** (if any)
+- **Performance Metrics:** (actual load time, etc.)
+- **Mobile Testing:** Y/N, any issues?
+- **Next Steps:** (integration into tabs, etc.)
+
+---
 
