@@ -10,10 +10,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (session.user.role !== 'parent') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
   try {
     // Get all children for this parent
     const parentChildren = await prisma.parentChild.findMany({
