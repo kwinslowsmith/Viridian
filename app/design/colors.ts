@@ -29,6 +29,48 @@ export const colors = {
   developing: {
     accent: '#F59E0B',
     bg: '#FEF3C7',
+    text: '#92400E',
+    border: '#FCD34D',
+  },
+
+  // Approaching (status color)
+  approaching: {
+    accent: '#EF4444',
+    bg: '#FEE2E2',
+    text: '#7F1D1D',
+    border: '#FECACA',
+  },
+
+  // Red (error/alert color)
+  red: {
+    accent: '#DC2626',
+    bg: '#FEE2E2',
+    text: '#7F1D1D',
+    border: '#FECACA',
+  },
+
+  // Amber (warning color)
+  amber: {
+    accent: '#F59E0B',
+    bg: '#FEF3C7',
+    text: '#92400E',
+    border: '#FCD34D',
+  },
+
+  // Green (success color)
+  green: {
+    accent: '#10B981',
+    bg: '#D1FAE5',
+    text: '#065F46',
+    border: '#A7F3D0',
+  },
+
+  // Proficient (competency color)
+  proficient: {
+    accent: '#059669',
+    bg: '#D1FAE5',
+    text: '#065F46',
+    border: '#A7F3D0',
   },
 
   // Legacy category colors

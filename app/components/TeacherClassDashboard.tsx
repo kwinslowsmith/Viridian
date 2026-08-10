@@ -108,8 +108,8 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
   const formatTime = (timestamp: string) =>
     new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-  const hasCriticalSkills = data.strugglingSkills.some((s) => s.severity === 'critical');
-  const avgMastery = Math.round(data.classMasteryByStandard.reduce((sum, s) => sum + s.classMasteryPercent, 0) / data.classMasteryByStandard.length);
+  const hasCriticalSkills = data.strugglingSkills.some((s: any) => s.severity === 'critical');
+  const avgMastery = Math.round(data.classMasteryByStandard.reduce((sum: number, s: any) => sum + s.classMasteryPercent, 0) / data.classMasteryByStandard.length);
 
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh', padding: '24px' }}>
@@ -141,7 +141,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
           </div>
           <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
             <div style={{ color: colors.text3, fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px' }}>Students Needing Support</div>
-            <div style={{ color: colors.text, fontSize: '32px', fontWeight: 'bold' }}>{data.strugglingSkills.reduce((sum, s) => sum + s.studentCount, 0)}</div>
+            <div style={{ color: colors.text, fontSize: '32px', fontWeight: 'bold' }}>{data.strugglingSkills.reduce((sum: number, s: any) => sum + s.studentCount, 0)}</div>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
         {hasCriticalSkills && (
           <div style={{ backgroundColor: '#fee2e2', borderLeft: '4px solid #ef4444', borderRadius: '8px', padding: '16px', marginBottom: '24px' }}>
             <div style={{ color: '#7f1d1d', fontSize: '14px', fontWeight: '600' }}>🚨 Critical Skills Need Attention</div>
-            <div style={{ color: '#9f1239', fontSize: '13px', marginTop: '4px' }}>{data.strugglingSkills.filter((s) => s.severity === 'critical').length} skill(s) with &gt;60% students stuck</div>
+            <div style={{ color: '#9f1239', fontSize: '13px', marginTop: '4px' }}>{data.strugglingSkills.filter((s: any) => s.severity === 'critical').length} skill(s) with &gt;60% students stuck</div>
           </div>
         )}
 
@@ -157,7 +157,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
         <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
           <h2 style={{ color: colors.text, fontSize: '18px', fontWeight: 'bold', margin: '0 0 16px' }}>Class Mastery by Standard</h2>
           <div style={{ display: 'grid', gap: '12px' }}>
-            {data.classMasteryByStandard.map((standard) => (
+            {data.classMasteryByStandard.map((standard: any) => (
               <div key={standard.standardId} style={{ backgroundColor: colors.bg, borderRadius: '8px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0' }}>{standard.standardName}</h3>
@@ -183,7 +183,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
             <p style={{ color: colors.text2, fontSize: '14px', margin: '0' }}>No struggling skills!</p>
           ) : (
             <div style={{ display: 'grid', gap: '12px' }}>
-              {data.strugglingSkills.map((skill) => (
+              {data.strugglingSkills.map((skill: any) => (
                 <div key={skill.objectiveId} style={{ backgroundColor: colors.bg, borderRadius: '8px', padding: '16px', border: `2px solid ${getSeverityColor(skill.severity)}`, borderLeft: `6px solid ${getSeverityColor(skill.severity)}` }}>
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -214,7 +214,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
             <p style={{ color: colors.text2, fontSize: '14px', margin: '0' }}>No active groups.</p>
           ) : (
             <div style={{ display: 'grid', gap: '12px' }}>
-              {data.interventionGroups.map((group) => (
+              {data.interventionGroups.map((group: any) => (
                 <div key={group.id} style={{ backgroundColor: colors.bg, borderRadius: '8px', padding: '16px', border: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <h3 style={{ color: colors.text, fontSize: '15px', fontWeight: '600', margin: '0 0 8px' }}>{group.name}</h3>
@@ -234,7 +234,7 @@ export function TeacherClassDashboard({ classId }: TeacherClassDashboardProps) {
             <p style={{ color: colors.text2, fontSize: '14px', margin: '0' }}>No upcoming events.</p>
           ) : (
             <div style={{ display: 'grid', gap: '12px' }}>
-              {data.masterCalendar.map((event) => (
+              {data.masterCalendar.map((event: any) => (
                 <div key={event.id} style={{ backgroundColor: colors.bg, borderRadius: '8px', padding: '16px', border: `1px solid ${colors.border}`, borderLeft: `6px solid ${getEventTypeColor(event.type)}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                     <div>
