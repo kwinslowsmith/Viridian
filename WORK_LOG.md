@@ -3,8 +3,9 @@
 **Purpose**: Track active work across parallel Claude instances to prevent duplicate effort and maintain project awareness.
 
 **Current Focus:** Phase 1 K12 LMS Dashboard — End-to-End Testing (T1-T4 Verification)  
-**Phase 1 Status:** ✅ Component Build Complete, 🚀 E2E Testing Initiated  
+**Phase 1 Status:** ✅ Component Build Complete, ✅ Vercel Deployment Successful, 🚀 E2E Testing Initiated  
 **Test Credentials:** Ready (password: TestPassword123! for all roles)
+**Live URL:** https://viridian.vercel.app (auto-deployed on main branch push)
 
 **Format**: 
 - Task name and description
@@ -106,59 +107,64 @@
 
 ## Status Summary
 
-✅ **ALL TASKS UNBLOCKED** — Phase 1 Backend + Build Fixes Complete
+✅ **ALL SYSTEMS LIVE** — Phase 1 Deployed to Vercel
 
-- **T1 (Orchestrator)** — ✅ Delivered: K12 foundation complete, build type-checked and passing
-- **T2 (Student Experience)** — 📋 Ready: Component + API integrated, awaiting verification testing
-- **T3 (Parent Experience)** — 📋 Ready: Component + API integrated, awaiting verification testing  
-- **T4 (Teacher Experience)** — ✅ Complete: Already verified production-ready, may do final smoke test
+- **T1 (Orchestrator)** — ✅ Build Complete: K12 foundation type-checked, TypeScript passing, Vercel build successful
+- **T2 (Student Experience)** — 🚀 READY: Component + API integrated, live on Vercel, awaiting browser verification
+- **T3 (Parent Experience)** — 🚀 READY: Phase 1 + 2 complete, live on Vercel, awaiting browser verification  
+- **T4 (Teacher Experience)** — 🚀 READY: Component + API verified, live on Vercel, ready for smoke test
 
 ## Next Priorities (By Window)
 
-### **T1: Orchestrator** 🚨 CRITICAL PATH
-1. **[IMMEDIATE] Integrate Architectural Work** (See ARCHITECTURE_SPEC.md in memory)
-   - Add federation models to Prisma (StandardsDomain, DomainSteward, verification levels, aliases, audit log)
-   - Add Master Calendar model (SchoolAssessment for school-wide assessments)
-   - Add visibility enum to all content models (private/organization/public)
-   - Review and validate schema changes against ARCHITECTURE_SPEC.md
-2. Build Phase 1 K12 LMS foundation APIs:
-   - Core endpoints: classes, objectives, assessments, progress, mastery-summary
-   - Visibility/authorization layer (visibility-first checks)
-   - Grading inbox API
-   - Intervention groups API
-3. After T1 foundation: Integrate T2-T4 dashboard components
-4. Phase 2: Parent-Teacher Messaging System
+### **T1: Orchestrator** — Foundation Delivered, Monitoring E2E Testing
+1. ✅ Phase 1 K12 LMS foundation deployed to Vercel
+2. 🔄 Monitor T2-T4 browser verification testing
+3. 📋 Phase 2 Planning:
+   - **Mandatory/Optional Objectives** (add UI to ObjectivesPanel, update mastery calculation)
+   - **Advanced Standards Features** (federation integration, domain stewards, taxonomy merging)
+   - **Grading & Intervention Tools** (teacher inbox, intervention group management)
 
-### **T2: Student Experience** 📋 READY TO START
-1. ✅ Component + API integration already complete (StudentProgressDashboard.tsx)
-2. **[MARCHING ORDERS]** Verify with live API + test data:
-   - Run dev server: `npm run dev`, navigate to `/app/students/dashboard-mock/page.tsx` OR call API directly with test class ID from seeded data
-   - Verify all standards load + render progress bars correctly
+### **T2: Student Experience** 🚀 BROWSER VERIFICATION LIVE
+1. ✅ Component + API integration complete (StudentProgressDashboard.tsx)
+2. **[MARCHING ORDERS]** Browser-based verification on https://viridian.vercel.app:
+   - Login: student1@riverside.edu / TestPassword123!
+   - Navigate to student dashboard (class progress)
+   - Verify all standards load + render progress bars correctly with live API data
    - Expand objectives, check Core Skill/Challenge badges + grades display properly
    - Test mobile viewport (600px width) — ensure responsive layout
    - Verify trend indicators (↑↓=) display for each standard
-   - **REPORT:** Screenshots + any API data shape mismatches to T1
+   - Check celebration banner behavior (if any standards at mastery)
+   - **REPORT:** Screenshots + any issues/mismatches to T1 (Slack/Discord)
    - **ETA:** 1-2 hours
 
-### **T3: Parent Experience** ✅ PHASE 1 + 2 COMPLETE
+### **T3: Parent Experience** 🚀 BROWSER VERIFICATION LIVE
 1. ✅ Phase 1: Parent Dashboard (all 5 sections + live API integration)
-2. ✅ Phase 2: Parent-Teacher Messaging
-   - Full messaging page at `/app/parents/messages`
-   - Quick messaging widget on dashboard
-   - Teacher list with unread counts
-   - Message thread view + sending
-3. 📋 Next: Phase 3 Parent Features (e.g., parent-to-parent discussions, resource sharing)
-   - Verify plain-language throughout (no K12 jargon)
-   - **REPORT:** Screenshots + any plain-language phrasing issues to T1
+2. ✅ Phase 2: Parent-Teacher Messaging (complete + integrated)
+3. **[MARCHING ORDERS]** Browser-based verification on https://viridian.vercel.app:
+   - Login: parent0@example.com / TestPassword123!
+   - Navigate to parent dashboard → select child "Student Name"
+   - Verify header loads (child name, grade, class, teacher contact)
+   - Check standards overview (status pills, mastery %, progress bars)
+   - Expand standard detail sections (what/why/how + Core Skill badges)
+   - Test plain-language throughout (no K12 jargon in any text)
+   - Navigate to Messages → verify teacher list + unread counts load
+   - Send a test message to a teacher → verify delivery
+   - Test mobile viewport (375px width) — ensure responsive layout
+   - **REPORT:** Screenshots + plain-language phrasing issues to T1 (Slack/Discord)
    - **ETA:** 1-2 hours
 
-### **T4: Teacher Experience** 📋 READY TO CONTINUE
-1. ✅ Component + API integration already complete (TeacherClassDashboard.tsx)
-2. ✅ Full verification already done (see T4_MARCHING_ORDERS_VERIFICATION.md)
-3. **[NEXT PHASE]** If needed:
-   - Run final browser smoke test (all sections load, no JS errors)
-   - Verify data freshness with latest test seeding
-   - **Phase 2:** Teacher Intervention Tools (group management, student assignment, progress tracking)
+### **T4: Teacher Experience** 🚀 SMOKE TEST READY
+1. ✅ Component + API integration complete (TeacherClassDashboard.tsx)
+2. ✅ Full API verification already done (see T4_MARCHING_ORDERS_VERIFICATION.md)
+3. **[MARCHING ORDERS]** Final browser smoke test on https://viridian.vercel.app:
+   - Login: teacher1@riverside.edu / TestPassword123!
+   - Navigate to class dashboard (American Literature, Period 3)
+   - Verify all 6 sections load: health score, struggling skills, intervention groups, calendar, etc.
+   - Check no JS console errors (F12 → Console tab)
+   - Verify data matches test seeding (2 classes, 6 students, 4 standards)
+   - Test responsive tablet layout (800px width) — all sections scannable in <5 seconds
+   - **REPORT:** Pass/fail + any issues to T1 (Slack/Discord)
+   - **ETA:** 30 minutes
 
 ---
 
@@ -191,7 +197,7 @@
 
 ---
 
-Last Updated: 2026-08-10 17:00 (✅ T3 PHASE 2 MESSAGING COMPLETE: Parent-teacher direct messaging fully implemented. ParentTeacherMessaging component (1-on-1 thread), ParentMessagesView (multi-child hub), ParentDashboardMessagingWidget (quick access). API endpoints for children + teachers with unread counts. Integrated into dashboard. Production ready. T1-T4: Phase 1 complete + production dashboards + Phase 2 messaging live.)
+Last Updated: 2026-08-10 18:30 (✅ PHASE 1 DEPLOYED TO VERCEL: All K12 LMS foundation APIs live. TypeScript build passing. Phase 1 + Phase 2 (parent-teacher messaging) fully integrated. T2-T4 ready for browser-based verification testing on https://viridian.vercel.app. Test users configured and live. Marching orders updated above for each team.)
 
 ---
 
