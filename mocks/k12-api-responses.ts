@@ -369,3 +369,298 @@ export const useTeacherClassDashboard = (classId: string) => {
     error: null,
   };
 };
+
+// ============================================================================
+// T2: STUDENT STANDARDS & OBJECTIVES (Phase 2)
+// ============================================================================
+
+export const mockStudentStandardsObjectives: {
+  standards: Array<{
+    standardId: string;
+    standardCode: string;
+    standardName: string;
+    unitId: string;
+    unitName: string;
+    description: string;
+    requiredObjectiveCount: number;
+    totalObjectiveCount: number;
+    classPassPercentage: number;
+    standardMasteryPercent: number;
+    standardMasteryStatus: 'proficient' | 'developing' | 'approaching' | 'needs_support';
+    objectives: Array<{
+      objectiveId: string;
+      label: string;
+      text: string;
+      description: string;
+      sequenceNum: number;
+      isMandatory: boolean;
+      studentProgress: {
+        masteryStatus: 'proficient' | 'developing' | 'approaching' | 'needs_support';
+        masteryPercent: number;
+        submittedAt: string | null;
+        grade: string | null;
+        submissions: Array<{
+          id: string;
+          score: number;
+          feedback: string;
+          submittedAt: string;
+        }>;
+      };
+      materials: Array<{
+        id: string;
+        title: string;
+        type: 'material' | 'assessment' | 'video' | 'link';
+        url: string;
+        uploadedAt: string;
+      }>;
+      teacherNotes: string;
+      masterySummary: string;
+    }>;
+  }>;
+} = {
+  standards: [
+    {
+      standardId: "std_lit_001",
+      standardCode: "CCSS.ELA-LITERACY.RL.9-10.2",
+      standardName: "Analyze Literary Themes",
+      unitId: "unit_002",
+      unitName: "Unit 2: Literary Analysis",
+      description: "Students analyze development of themes throughout a text",
+      requiredObjectiveCount: 3,
+      totalObjectiveCount: 8,
+      classPassPercentage: 80,
+      standardMasteryPercent: 82,
+      standardMasteryStatus: "proficient", // proficient, developing, approaching, needs_support
+      objectives: [
+        {
+          objectiveId: "obj_lit_001",
+          label: "Obj 2.1.A",
+          text: "Identify theme statements",
+          description: "Students can articulate explicit and implicit themes",
+          sequenceNum: 1,
+          isMandatory: true,
+          studentProgress: {
+            masteryStatus: "proficient",
+            masteryPercent: 85,
+            submittedAt: "2026-08-08T10:30:00Z",
+            grade: "A",
+            submissions: [
+              {
+                id: "sub_001",
+                score: 85,
+                feedback: "Excellent analysis of character motivation",
+                submittedAt: "2026-08-08T10:30:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_001",
+              title: "Theme Analysis Guide",
+              type: "material",
+              url: "https://example.com/theme-guide.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+            {
+              id: "mat_002",
+              title: "Example Essay",
+              type: "material",
+              url: "https://example.com/example.pdf",
+              uploadedAt: "2026-08-02T14:00:00Z",
+            },
+          ],
+          teacherNotes: "Focus on symbolism when analyzing themes. Great work connecting author's intent to textual evidence.",
+          masterySummary: "You've mastered this objective! Keep building on these strong analysis skills.",
+        },
+        {
+          objectiveId: "obj_lit_002",
+          label: "Obj 2.1.B",
+          text: "Trace theme development across plot",
+          description: "Students can track how themes evolve through major plot events",
+          sequenceNum: 2,
+          isMandatory: true,
+          studentProgress: {
+            masteryStatus: "developing",
+            masteryPercent: 72,
+            submittedAt: "2026-08-07T14:15:00Z",
+            grade: "C+",
+            submissions: [
+              {
+                id: "sub_002",
+                score: 72,
+                feedback: "Good effort tracking events. Need to explicitly connect each event to theme change.",
+                submittedAt: "2026-08-07T14:15:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_003",
+              title: "Plot Mapping Template",
+              type: "material",
+              url: "https://example.com/plot-map.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+          ],
+          teacherNotes: "You're on the right track. Practice making explicit connections between plot events and theme shifts.",
+          masterySummary: "You're developing this skill. Keep practicing connecting plot events to thematic meaning.",
+        },
+        {
+          objectiveId: "obj_lit_003",
+          label: "Obj 2.1.C",
+          text: "Compare themes across texts",
+          description: "Students can identify and analyze similar themes in different works",
+          sequenceNum: 3,
+          isMandatory: true,
+          studentProgress: {
+            masteryStatus: "proficient",
+            masteryPercent: 88,
+            submittedAt: "2026-08-09T11:00:00Z",
+            grade: "A-",
+            submissions: [
+              {
+                id: "sub_003",
+                score: 88,
+                feedback: "Sophisticated analysis. Love how you connected the modern film to the classic novel.",
+                submittedAt: "2026-08-09T11:00:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_004",
+              title: "Comparative Analysis Rubric",
+              type: "material",
+              url: "https://example.com/compare-rubric.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+          ],
+          teacherNotes: "Excellent comparative work! This is exactly the level of analysis we're aiming for.",
+          masterySummary: "Excellent work! Your comparative analysis shows sophisticated thinking.",
+        },
+        {
+          objectiveId: "obj_lit_004",
+          label: "Obj 2.1.D",
+          text: "Analyze author's purpose in theme development (OPTIONAL)",
+          description: "Students can infer author's underlying purpose when developing themes",
+          sequenceNum: 4,
+          isMandatory: false,
+          studentProgress: {
+            masteryStatus: "approaching",
+            masteryPercent: 65,
+            submittedAt: "2026-08-06T09:30:00Z",
+            grade: "D+",
+            submissions: [
+              {
+                id: "sub_004",
+                score: 65,
+                feedback: "Good attempt at inferring purpose. Remember to look for patterns across multiple theme instances.",
+                submittedAt: "2026-08-06T09:30:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_005",
+              title: "Author's Purpose Guide",
+              type: "material",
+              url: "https://example.com/purpose.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+          ],
+          teacherNotes: "This is a challenging objective. Use examples from class discussions to strengthen your inferences.",
+          masterySummary: "You're still working on this. Challenge objectives build deeper thinking—keep at it!",
+        },
+      ],
+    },
+    {
+      standardId: "std_essay_001",
+      standardCode: "CCSS.ELA-LITERACY.W.9-10.1",
+      standardName: "Write Arguments",
+      unitId: "unit_003",
+      unitName: "Unit 3: Argumentative Writing",
+      description: "Students write arguments to support claims with clear reasons and relevant evidence",
+      requiredObjectiveCount: 2,
+      totalObjectiveCount: 5,
+      classPassPercentage: 75,
+      standardMasteryPercent: 71,
+      standardMasteryStatus: "developing",
+      objectives: [
+        {
+          objectiveId: "obj_essay_001",
+          label: "Obj 3.1.A",
+          text: "Develop strong thesis statement",
+          description: "Students can craft clear, arguable thesis statements",
+          sequenceNum: 1,
+          isMandatory: true,
+          studentProgress: {
+            masteryStatus: "developing",
+            masteryPercent: 76,
+            submittedAt: "2026-08-06T13:45:00Z",
+            grade: "C",
+            submissions: [
+              {
+                id: "sub_005",
+                score: 76,
+                feedback: "Your thesis is clear but could be more specific about your argument.",
+                submittedAt: "2026-08-06T13:45:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_006",
+              title: "Thesis Checklist",
+              type: "material",
+              url: "https://example.com/thesis-check.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+          ],
+          teacherNotes: "Review the thesis examples we discussed in class. Make sure your statement is arguable, not factual.",
+          masterySummary: "You're developing this skill. Your thesis needs to be more specific and debatable.",
+        },
+        {
+          objectiveId: "obj_essay_002",
+          label: "Obj 3.1.B",
+          text: "Support claims with textual evidence",
+          description: "Students can integrate relevant, accurate evidence to support argument",
+          sequenceNum: 2,
+          isMandatory: true,
+          studentProgress: {
+            masteryStatus: "approaching",
+            masteryPercent: 58,
+            submittedAt: "2026-08-05T10:20:00Z",
+            grade: "D",
+            submissions: [
+              {
+                id: "sub_006",
+                score: 58,
+                feedback: "Evidence is relevant but lacks analysis. Always explain how the quote supports your claim.",
+                submittedAt: "2026-08-05T10:20:00Z",
+              },
+            ],
+          },
+          materials: [
+            {
+              id: "mat_007",
+              title: "Evidence Integration Examples",
+              type: "material",
+              url: "https://example.com/evidence.pdf",
+              uploadedAt: "2026-08-01T15:00:00Z",
+            },
+          ],
+          teacherNotes: "Let's schedule office hours to review evidence integration strategies. This is critical for argumentative writing.",
+          masterySummary: "You're approaching this standard. Your evidence needs stronger analysis and explanation.",
+        },
+      ],
+    },
+  ],
+};
+
+export const useStudentStandardsObjectives = (classId: string, studentId: string) => {
+  return {
+    data: mockStudentStandardsObjectives,
+    loading: false,
+    error: null,
+  };
+};
