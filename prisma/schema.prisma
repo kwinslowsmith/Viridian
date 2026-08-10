@@ -369,6 +369,8 @@ model ExampleObjective {
   studentProgress StudentObjectiveProgress[]
   interventionGroups InterventionGroup[]
   studentRatings StudentRating[]
+  teacherNotes TeacherObjectiveNote[]
+  materials ObjectiveMaterial[]
 
   @@unique([standardId, label])
   @@index([standardId])
@@ -434,6 +436,46 @@ model TeacherStandardAssignment {
   @@unique([teacherId, standardId, organizationId])
   @@index([organizationId])
   @@index([teacherId])
+}
+
+model TeacherObjectiveNote {
+  id              String   @id @default(cuid())
+  classId         String
+  k12Class        K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  objectiveId     String
+  exampleObjective ExampleObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  teacherNotes    String?  // Teacher's notes/guidance for this objective in this class
+
+  updatedBy       String   // userId
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@unique([classId, objectiveId])
+  @@index([classId])
+  @@index([objectiveId])
+}
+
+model ObjectiveMaterial {
+  id              String   @id @default(cuid())
+  objectiveId     String
+  exampleObjective ExampleObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  classId         String
+  k12Class        K12Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  title           String
+  type            String   // "material" | "assessment" | "video" | "link" | "template"
+  url             String?  // For external URLs
+  fileId          String?  // For uploaded files
+
+  uploadedBy      String   // userId
+  uploadedAt      DateTime @default(now())
+
+  @@index([objectiveId])
+  @@index([classId])
+  @@index([uploadedBy])
 }
 
 // ============================================
@@ -770,6 +812,8 @@ model K12Class {
   events      Event[]
   conversations Conversation[]
   resources   Resource[]
+  objectiveNotes TeacherObjectiveNote[]
+  objectiveMaterials ObjectiveMaterial[]
 
   @@index([instructorId])
   @@index([organizationId])
