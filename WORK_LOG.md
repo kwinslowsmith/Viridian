@@ -34,6 +34,7 @@
 | Parent Dashboard MVP (Using K12 API) | 2026-08-07 | T3: Parent Experience | ✅ Completed | **FULLY INTEGRATED & READY.** ParentDashboardK12.tsx refactored to fetch live API: `GET /api/k12/parents/children/[childId]/progress`. Uses useEffect/fetch pattern, childId prop, loading/error states. TypeScript types. Test IDs: Parent `cmsjazgo6003dugctxexleb21` → Child `cmsjazbgb0003ugct0889inmo`. All 5 sections ready: header (child name, grade, class, teacher contact), standards overview (status pills, mastery %, progress bars), expandable details (what/why/how + Core Skill badges), objectives + resources, master calendar. Mobile-first CSS (375px+, 16px+ text). Plain language throughout. Awaits authentication + end-to-end testing. |
 | Teacher Class Dashboard (Using K12 API) | 2026-08-07 | T4: Teacher Experience | ✅ Completed | **FULLY TESTED & VERIFIED.** ✅ All 6 sections render with live data. ✅ Health score color-coded (red for 0%). ✅ Struggling skills sorted descending. ✅ Intervention groups display schedule. ✅ Master calendar shows 3 events. ✅ Responsive tablet layout (800px+). ✅ Scannable in <5 seconds (3-4s actual). ✅ Zero data mismatches. See T4_MARCHING_ORDERS_VERIFICATION.md for full report. Production ready. |
 | Phase 2: Parent-Teacher Messaging | 2026-08-10 | T3: Parent Experience | ✅ Completed | **PHASE 2 COMPLETE.** ✅ ParentTeacherMessaging.tsx (direct 1-on-1 messaging, teacher list with unread counts, message thread). ✅ ParentMessagesView.tsx (multi-child hub with child selector, full-page layout). ✅ ParentDashboardMessagingWidget.tsx (quick access widget showing 3 most recent teachers, integrated into parent dashboard). ✅ API endpoints: `/api/parents/children`, `/api/k12/parents/children/[childId]/teachers`. ✅ Full messaging flow: conversation creation, message sending, unread tracking, read status. ✅ Responsive design (mobile layout <480px, desktop side-by-side). ✅ Uses existing conversation API infrastructure. Production ready. |
+| Phase 2: Consolidated Standards & Objectives Dashboard | 2026-08-10 | T1/T2/T4 Coordinated | 🔄 In Progress | **UNIFIED TEACHER-STUDENT VIEW.** Replaces separate Standards/Objectives tabs. ✅ Spec document (STANDARDS_OBJECTIVES_SPEC.md) created: backend API design, teacher/student component specs, DB models. T1 building APIs. T4 building teacher view (expandable standards → objectives, required/optional flags, student progress grid, material uploads, teacher notes). T2 building student view (personal mastery status, teacher notes, material links). |
 
 ## Completed This Session
 
@@ -116,26 +117,38 @@
 
 ## Next Priorities (By Window)
 
-### **T1: Orchestrator** — Foundation Delivered, Monitoring E2E Testing
+### **T1: Orchestrator** — Phase 2: Standards & Objectives Consolidation
 1. ✅ Phase 1 K12 LMS foundation deployed to Vercel
-2. 🔄 Monitor T2-T4 browser verification testing
-3. 📋 Phase 2 Planning:
-   - **Mandatory/Optional Objectives** (add UI to ObjectivesPanel, update mastery calculation)
+2. 🔄 **[NOW] Building Backend APIs for Consolidated Standards & Objectives:**
+   - [ ] Create `/api/k12/classes/[classId]/standards-objectives-teacher` (teacher dashboard API)
+   - [ ] Create `/api/k12/classes/[classId]/standards-objectives-student` (student dashboard API)
+   - [ ] Add TeacherObjectiveNote & ObjectiveMaterial models to Prisma schema
+   - [ ] Create POST/PATCH endpoints for teacher notes
+   - [ ] Create POST/DELETE endpoints for material uploads
+   - [ ] Query student progress data for mastery status in teacher view
+   - [ ] Remove old "Skill Setup" navigation tab
+3. 📋 After APIs ready:
+   - **Mandatory/Optional Objectives** (update mastery calculation with pass percentage)
    - **Advanced Standards Features** (federation integration, domain stewards, taxonomy merging)
    - **Grading & Intervention Tools** (teacher inbox, intervention group management)
 
-### **T2: Student Experience** 🚀 BROWSER VERIFICATION LIVE
-1. ✅ Component + API integration complete (StudentProgressDashboard.tsx)
-2. **[MARCHING ORDERS]** Browser-based verification on https://viridian.vercel.app:
-   - Login: student1@riverside.edu / TestPassword123!
-   - Navigate to student dashboard (class progress)
-   - Verify all standards load + render progress bars correctly with live API data
-   - Expand objectives, check Core Skill/Challenge badges + grades display properly
-   - Test mobile viewport (600px width) — ensure responsive layout
-   - Verify trend indicators (↑↓=) display for each standard
-   - Check celebration banner behavior (if any standards at mastery)
-   - **REPORT:** Screenshots + any issues/mismatches to T1 (Slack/Discord)
-   - **ETA:** 1-2 hours
+### **T2: Student Experience** — Phase 2: Student Standards & Objectives View
+1. ✅ Phase 1: StudentProgressDashboard verified and working
+2. 📋 **[PHASE 2 — AWAITING BACKEND APIs]** Build student-facing Standards & Objectives tab:
+   - Spec: See STANDARDS_OBJECTIVES_SPEC.md (Student Dashboard API section)
+   - Call: `GET /api/k12/classes/[classId]/standards-objectives-student?studentId={userId}`
+   - Component: `<StandardsObjectivesStudent />` (new component)
+   - Features:
+     - Expandable standards → show objectives
+     - Personal mastery status (✓ Proficient, ⏳ Developing, ⚠️ Approaching, ❌ Needs Support)
+     - Teacher notes visible to student
+     - Downloadable materials (links/files)
+     - Overall standard mastery % 
+     - Color-coded progress indicators
+     - Mobile responsive (375px+ width)
+   - Integration: Add as tab to student class dashboard
+   - **WAIT FOR**: T1 backend APIs ready (2-3 hours)
+   - **ETA**: 2-3 hours after APIs ready
 
 ### **T3: Parent Experience** 🚀 BROWSER VERIFICATION LIVE
 1. ✅ Phase 1: Parent Dashboard (all 5 sections + live API integration)
@@ -153,18 +166,26 @@
    - **REPORT:** Screenshots + plain-language phrasing issues to T1 (Slack/Discord)
    - **ETA:** 1-2 hours
 
-### **T4: Teacher Experience** 🚀 SMOKE TEST READY
-1. ✅ Component + API integration complete (TeacherClassDashboard.tsx)
-2. ✅ Full API verification already done (see T4_MARCHING_ORDERS_VERIFICATION.md)
-3. **[MARCHING ORDERS]** Final browser smoke test on https://viridian.vercel.app:
-   - Login: teacher1@riverside.edu / TestPassword123!
-   - Navigate to class dashboard (American Literature, Period 3)
-   - Verify all 6 sections load: health score, struggling skills, intervention groups, calendar, etc.
-   - Check no JS console errors (F12 → Console tab)
-   - Verify data matches test seeding (2 classes, 6 students, 4 standards)
-   - Test responsive tablet layout (800px width) — all sections scannable in <5 seconds
-   - **REPORT:** Pass/fail + any issues to T1 (Slack/Discord)
-   - **ETA:** 30 minutes
+### **T4: Teacher Experience** — Phase 2: Teacher Standards & Objectives View
+1. ✅ Phase 1: TeacherClassDashboard verified and working
+2. 📋 **[PHASE 2 — AWAITING BACKEND APIs]** Build teacher-facing Standards & Objectives tab:
+   - Spec: See STANDARDS_OBJECTIVES_SPEC.md (Teacher Dashboard API section)
+   - Call: `GET /api/k12/classes/[classId]/standards-objectives-teacher`
+   - Component: `<StandardsObjectivesTeacher />` (new component)
+   - Features:
+     - Expandable standards → show objectives with:
+       - Required vs Optional badges
+       - Required/available objective counts
+       - Student progress grid (mastery status per student)
+       - Material attachments (upload/delete)
+       - Teacher notes (editable)
+       - "Needs Assessment" flags (red badge if not assessed in X days)
+     - Color-coded mastery status (green/yellow/red by student)
+     - Pass threshold display
+     - Mobile responsive (600px+ width)
+   - Integration: Replace separate Standards + Objectives tabs; remove "Skill Setup" tab
+   - **WAIT FOR**: T1 backend APIs ready (2-3 hours)
+   - **ETA**: 3-4 hours after APIs ready
 
 ---
 
@@ -197,7 +218,7 @@
 
 ---
 
-Last Updated: 2026-08-10 18:30 (✅ PHASE 1 DEPLOYED TO VERCEL: All K12 LMS foundation APIs live. TypeScript build passing. Phase 1 + Phase 2 (parent-teacher messaging) fully integrated. T2-T4 ready for browser-based verification testing on https://viridian.vercel.app. Test users configured and live. Marching orders updated above for each team.)
+Last Updated: 2026-08-10 19:15 (🚀 PHASE 2 LAUNCHED: Consolidated Standards & Objectives Dashboard initiative. ✅ Spec document created (STANDARDS_OBJECTIVES_SPEC.md) with backend API design + frontend component specs. T1 now building 2 new API endpoints (teacher + student views). T2-T4 coordinating on component builds after backend ready. Replaced separate Standards/Objectives/SkillSetup tabs with unified view. Marching orders updated for parallel frontend development.)
 
 ---
 
