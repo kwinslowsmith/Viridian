@@ -16,10 +16,5 @@ export default async function ParentHomeRoute() {
     redirect('/auth/signin');
   }
 
-  const userRole = (session.user as any)?.role;
-  if (userRole !== 'parent') {
-    redirect('/dashboard');
-  }
-
   return <ParentHomePageClient parentId={session.user.id} />;
 }
