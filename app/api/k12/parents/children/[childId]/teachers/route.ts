@@ -129,7 +129,7 @@ export async function GET(
             senderName:
               lastMessage.senderId === session.user.id
                 ? 'You'
-                : lastMessage.senderName || teacher.name,
+                : teacher.name,
             sentAt: lastMessage.createdAt.toISOString(),
             isFromParent: lastMessage.senderId === session.user.id,
           } : undefined,
