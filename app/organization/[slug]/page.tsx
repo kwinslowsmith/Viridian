@@ -36,6 +36,12 @@ export default function OrganizationPage() {
       return;
     }
 
+    // Redirect parents to their home page
+    if ((session?.user as any)?.role === 'parent') {
+      router.push('/app/parents');
+      return;
+    }
+
     if (!session?.user?.id || !slug) return;
 
     const fetchOrgAndRole = async () => {
