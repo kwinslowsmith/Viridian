@@ -30,7 +30,7 @@ export async function GET(
 
     // Get class info
     const k12Class = await prisma.k12Class.findUnique({
-      where: { id: params.classId },
+      where: { id: classId },
       include: {
         instructor: {
           select: { id: true, name: true },
@@ -63,7 +63,7 @@ export async function GET(
     const allSubmissions = await prisma.k12Submission.findMany({
       where: {
         enrollment: {
-          classId: params.classId,
+          classId: classId,
         },
       },
       include: {
@@ -192,7 +192,7 @@ export async function GET(
 
     // Get intervention groups
     const interventionGroups = await prisma.interventionGroup.findMany({
-      where: { classId: params.classId },
+      where: { classId: classId },
       include: {
         objective: {
           select: { text: true },
@@ -217,14 +217,14 @@ export async function GET(
     const pendingSubmissions = await prisma.k12Submission.count({
       where: {
         enrollment: {
-          classId: params.classId,
+          classId: classId,
         },
         status: { in: ['not-submitted', 'submitted'] },
       },
     });
 
     return NextResponse.json({
-      classId: params.classId,
+      classId: classId,
       className: k12Class.name,
       gradeLevel: parseInt(k12Class.gradeLevel),
       period: `Period ${Math.floor(Math.random() * 7) + 1}`, // TODO: get from actual data

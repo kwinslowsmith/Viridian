@@ -133,7 +133,7 @@ export async function POST(
       }
 
       // Verify class exists in this org
-      const cls = await prisma.improvClass.findUnique({
+      const cls = await prisma.k12Class.findUnique({
         where: { id: classId },
         select: { organizationId: true, instructorId: true },
       });
@@ -196,7 +196,7 @@ export async function POST(
         recurrenceType: recurrenceType || 'none',
         recurrenceEndDate: recurrenceEndDate ? new Date(recurrenceEndDate) : null,
         organizationId: eventOrgId,
-        classId: eventClassId,
+        k12ClassId: eventClassId,
         communityId: eventCommunityId,
         createdById: userId,
       },
@@ -220,7 +220,7 @@ export async function POST(
 
     // If class event, auto-add all enrolled students
     if (eventContext === 'class' && eventClassId) {
-      const classEnrollments = await prisma.improvEnrollment.findMany({
+      const classEnrollments = await prisma.k12Enrollment.findMany({
         where: {
           classId: eventClassId,
           status: 'active',
@@ -250,7 +250,7 @@ export async function POST(
 
     // Add students from attendee classes
     if (attendeeClassIds.length > 0) {
-      const classEnrollments = await prisma.improvEnrollment.findMany({
+      const classEnrollments = await prisma.k12Enrollment.findMany({
         where: {
           classId: { in: attendeeClassIds },
           status: 'active',

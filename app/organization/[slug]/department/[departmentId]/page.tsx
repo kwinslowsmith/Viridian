@@ -181,7 +181,7 @@ export default function DepartmentDetailPage() {
                     <span
                       style={{
                         padding: '0.25rem 0.75rem',
-                        backgroundColor: colors.teal.bg,
+                        backgroundColor: colors.teal.accent,
                         color: colors.teal.accent,
                         borderRadius: '4px',
                         fontSize: '12px',

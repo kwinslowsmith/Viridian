@@ -115,7 +115,7 @@ export default function CommunityDetailPage() {
                   href={`/curator/polymath`}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    backgroundColor: colors.teal.bg,
+                    backgroundColor: colors.teal.accent,
                     color: 'white',
                     textDecoration: 'none',
                     borderRadius: '8px',
@@ -152,7 +152,7 @@ export default function CommunityDetailPage() {
               }}
               style={{
                 padding: '0.75rem 1.5rem',
-                backgroundColor: colors.teal.bg,
+                backgroundColor: colors.teal.accent,
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',

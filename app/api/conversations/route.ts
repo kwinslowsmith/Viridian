@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           orderBy: { createdAt: 'desc' },
           select: { id: true, content: true, createdAt: true, sender: { select: { name: true } } },
         },
-        class: { select: { id: true, name: true } },
+        k12Class: { select: { id: true, name: true } },
         event: { select: { id: true, title: true } },
         organization: { select: { id: true, name: true } },
         createdBy: { select: { id: true, name: true } },
@@ -187,12 +187,12 @@ export async function POST(request: NextRequest) {
         console.log('Found', finalParticipantIds.length, 'community members');
       } else if (classIds.length > 0) {
         console.log('Fetching class members for classes:', classIds);
-        const classEnrollments = await prisma.improvEnrollment.findMany({
+        const classEnrollments = await prisma.k12Enrollment.findMany({
           where: { classId: { in: classIds } },
           select: { studentId: true },
           distinct: ['studentId'],
         });
-        const classInstructors = await prisma.improvClass.findMany({
+        const classInstructors = await prisma.k12Class.findMany({
           where: { id: { in: classIds } },
           select: { instructorId: true },
         });
@@ -239,13 +239,13 @@ export async function POST(request: NextRequest) {
     // For class conversations, add all enrolled students
     if (type === 'class' && classId) {
       console.log('Fetching class enrollments for class:', classId);
-      const enrollments = await prisma.improvEnrollment.findMany({
+      const enrollments = await prisma.k12Enrollment.findMany({
         where: { classId },
         select: { studentId: true },
       });
       finalParticipantIds = enrollments.map((e) => e.studentId);
       // Also add instructor
-      const classData = await prisma.improvClass.findUnique({
+      const classData = await prisma.k12Class.findUnique({
         where: { id: classId },
         select: { instructorId: true },
       });
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     const conversation = await prisma.conversation.create({
       data: {
         type,
-        classId,
+        k12ClassId: classId,
         eventId,
         organizationId,
         title,

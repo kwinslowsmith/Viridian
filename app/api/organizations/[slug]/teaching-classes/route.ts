@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Get classes where user is the instructor in this organization
-    const classes = await prisma.improvClass.findMany({
+    const classes = await prisma.k12Class.findMany({
       where: {
         organizationId: org.id,
         instructorId: userId,

@@ -11,18 +11,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's enrollments
-    const enrolledClasses = await prisma.improvEnrollment.findMany({
+    // Get user's K12 enrollments
+    const enrolledClasses = await prisma.k12Enrollment.findMany({
       where: { studentId: session.user.id },
       select: { classId: true },
     });
 
     const enrolledClassIds = enrolledClasses.map((e) => e.classId);
 
-    // Get all active classes excluding those already enrolled in
-    const classes = await prisma.improvClass.findMany({
+    // Get all K12 classes excluding those already enrolled in
+    const classes = await prisma.k12Class.findMany({
       where: {
-        status: 'active',
         id: { notIn: enrolledClassIds },
       },
       include: {
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest) {
         organization: { select: { id: true, name: true, slug: true } },
         _count: { select: { enrollments: true } },
       },
-      orderBy: { startDate: 'desc' },
+      orderBy: { name: 'asc' },
     });
 
     return NextResponse.json({ classes });

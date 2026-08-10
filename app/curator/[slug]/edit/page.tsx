@@ -219,7 +219,7 @@ export default function EditCommunityPage({ params }: { params: Promise<{ slug: 
             <button
               type="submit"
               className="flex-1 px-6 py-3 rounded font-semibold text-white"
-              style={{ backgroundColor: colors.teal.bg }}
+              style={{ backgroundColor: colors.teal.accent }}
             >
               Save Changes
             </button>

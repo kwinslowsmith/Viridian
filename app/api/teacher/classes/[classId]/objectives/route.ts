@@ -9,7 +9,7 @@ export async function GET(
     const { classId } = await params;
 
     // Get the class and its standards
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
       include: {
         enrollments: true,
@@ -92,7 +92,7 @@ export async function POST(
     }
 
     // Validate class exists
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
     });
 

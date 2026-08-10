@@ -25,6 +25,12 @@ export const colors = {
     accent: '#20B2AA',
   },
 
+  // Developing (status color)
+  developing: {
+    accent: '#F59E0B',
+    bg: '#FEF3C7',
+  },
+
   // Legacy category colors
   a50: '#EFF6FF',
   a600: '#0284C7',

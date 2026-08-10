@@ -11,13 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get enrolled classes
+    // Get enrolled K12 classes
     const k12Enrollments = await prisma.k12Enrollment.findMany({
-      where: { studentId: session.user.id, status: 'active' },
-      include: { class: { select: { id: true, name: true } } },
-    });
-
-    const improvEnrollments = await prisma.improvEnrollment.findMany({
       where: { studentId: session.user.id, status: 'active' },
       include: { class: { select: { id: true, name: true } } },
     });
@@ -27,20 +22,12 @@ export async function GET(request: NextRequest) {
       where: { studentId: session.user.id },
     });
 
-    const enrolledClasses = [
-      ...k12Enrollments.map(e => ({
-        classId: e.class.id,
-        classType: 'k12' as const,
-        className: e.class.name,
-        isVisible: prefs.find(p => p.classId === e.class.id)?.isVisible ?? true,
-      })),
-      ...improvEnrollments.map(e => ({
-        classId: e.class.id,
-        classType: 'improv' as const,
-        className: e.class.name,
-        isVisible: prefs.find(p => p.classId === e.class.id)?.isVisible ?? true,
-      })),
-    ];
+    const enrolledClasses = k12Enrollments.map(e => ({
+      classId: e.class.id,
+      classType: 'k12' as const,
+      className: e.class.name,
+      isVisible: prefs.find(p => p.classId === e.class.id)?.isVisible ?? true,
+    }));
 
     return NextResponse.json({ enrolledClasses });
   } catch (error) {

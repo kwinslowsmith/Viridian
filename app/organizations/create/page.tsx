@@ -151,7 +151,7 @@ export default function CreateOrganizationPage() {
                 disabled={loading}
                 className="flex-1 px-6 py-3 rounded font-semibold text-white"
                 style={{
-                  backgroundColor: loading ? colors.bg : colors.teal.bg,
+                  backgroundColor: loading ? colors.bg : colors.teal.accent,
                   opacity: loading ? 0.6 : 1,
                 }}
               >

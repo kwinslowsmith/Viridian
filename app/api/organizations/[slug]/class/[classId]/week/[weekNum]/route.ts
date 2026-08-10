@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Find class and verify user access
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
       select: {
         id: true,
@@ -39,7 +39,7 @@ export async function GET(
 
     // Check user is instructor or enrolled student
     const userIsInstructor = classData.instructorId === userId;
-    const enrollment = await prisma.improvEnrollment.findUnique({
+    const enrollment = await prisma.k12Enrollment.findUnique({
       where: {
         classId_studentId: {
           classId: classId,
@@ -59,7 +59,7 @@ export async function GET(
     }
 
     // Get week details
-    const week = await prisma.improvWeek.findFirst({
+    const week = await prisma.k12Week.findFirst({
       where: {
         classId: classId,
         weekNum: parseInt(weekNum),
@@ -123,7 +123,7 @@ export async function PUT(
     }
 
     // Find class and verify user is instructor
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
       select: {
         id: true,
@@ -147,7 +147,7 @@ export async function PUT(
     const { agenda, materials } = body;
 
     // Update week
-    const week = await prisma.improvWeek.updateMany({
+    const week = await prisma.k12Week.updateMany({
       where: {
         classId: classId,
         weekNum: parseInt(weekNum),

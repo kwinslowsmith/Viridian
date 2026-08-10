@@ -44,8 +44,6 @@ export async function GET(request: NextRequest) {
       include: {
         createdBy: { select: { id: true, name: true } },
         organization: { select: { id: true, name: true, slug: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
       orderBy: { createdAt: 'desc' },
       take: 100, // Limit to 100 results for performance

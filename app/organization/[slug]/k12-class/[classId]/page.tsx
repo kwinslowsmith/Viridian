@@ -274,7 +274,7 @@ export default function K12ClassDetailPage() {
                       <span
                         style={{
                           padding: '0.25rem 0.75rem',
-                          backgroundColor: std.type === 'skill' ? colors.teal.bg : colors.amber.bg,
+                          backgroundColor: std.type === 'skill' ? colors.teal.accent : colors.amber.bg,
                           color: std.type === 'skill' ? colors.teal.accent : colors.amber.accent,
                           borderRadius: '4px',
                           fontSize: '12px',
@@ -368,7 +368,7 @@ export default function K12ClassDetailPage() {
                 <div style={{ padding: '1rem', backgroundColor: colors.developing.bg, borderRadius: '6px' }}>
                   <p style={{ color: colors.developing.accent, fontWeight: '600', margin: 0 }}>2 — Proficient</p>
                 </div>
-                <div style={{ padding: '1rem', backgroundColor: colors.teal.bg, borderRadius: '6px' }}>
+                <div style={{ padding: '1rem', backgroundColor: colors.teal.accent, borderRadius: '6px' }}>
                   <p style={{ color: colors.teal.accent, fontWeight: '600', margin: 0 }}>3 — Advanced</p>
                 </div>
               </div>

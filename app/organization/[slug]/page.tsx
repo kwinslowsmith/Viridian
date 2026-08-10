@@ -108,7 +108,7 @@ export default function OrganizationPage() {
             onClick={() => router.back()}
             style={{
               padding: '10px 20px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -392,7 +392,7 @@ function CalendarTab({ org, userRole, onEventClick }: { org: any; userRole?: str
               onClick={() => setViewMode('week')}
               style={{
                 padding: '8px 12px',
-                backgroundColor: viewMode === 'week' ? colors.teal.bg : 'transparent',
+                backgroundColor: viewMode === 'week' ? colors.teal.accent : 'transparent',
                 color: viewMode === 'week' ? 'white' : colors.text,
                 border: 'none',
                 borderRadius: '4px',
@@ -408,7 +408,7 @@ function CalendarTab({ org, userRole, onEventClick }: { org: any; userRole?: str
               onClick={() => setViewMode('month')}
               style={{
                 padding: '8px 12px',
-                backgroundColor: viewMode === 'month' ? colors.teal.bg : 'transparent',
+                backgroundColor: viewMode === 'month' ? colors.teal.accent : 'transparent',
                 color: viewMode === 'month' ? 'white' : colors.text,
                 border: 'none',
                 borderRadius: '4px',
@@ -530,7 +530,7 @@ function WeekCalendar({ classes, events, currentWeekStart, onPreviousWeek, onNex
             onClick={onToday}
             style={{
               padding: '8px 12px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -758,7 +758,7 @@ function MonthCalendar({ classes, events, currentMonth, onPreviousMonth, onNextM
             onClick={onToday}
             style={{
               padding: '8px 12px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -1490,7 +1490,7 @@ function TeacherCalendarTab({ org, onEventClick }: { org: any; onEventClick?: (e
             onClick={() => setViewMode('week')}
             style={{
               padding: '8px 12px',
-              backgroundColor: viewMode === 'week' ? colors.teal.bg : 'transparent',
+              backgroundColor: viewMode === 'week' ? colors.teal.accent : 'transparent',
               color: viewMode === 'week' ? 'white' : colors.text,
               border: 'none',
               borderRadius: '4px',
@@ -1506,7 +1506,7 @@ function TeacherCalendarTab({ org, onEventClick }: { org: any; onEventClick?: (e
             onClick={() => setViewMode('month')}
             style={{
               padding: '8px 12px',
-              backgroundColor: viewMode === 'month' ? colors.teal.bg : 'transparent',
+              backgroundColor: viewMode === 'month' ? colors.teal.accent : 'transparent',
               color: viewMode === 'month' ? 'white' : colors.text,
               border: 'none',
               borderRadius: '4px',
@@ -2680,7 +2680,7 @@ function AdminCalendarTab({ org, userRole, onEventClick }: { org: any; userRole?
               onClick={() => setViewMode('hourly')}
               style={{
                 padding: '8px 12px',
-                backgroundColor: viewMode === 'hourly' ? colors.teal.bg : 'transparent',
+                backgroundColor: viewMode === 'hourly' ? colors.teal.accent : 'transparent',
                 color: viewMode === 'hourly' ? 'white' : colors.text,
                 border: 'none',
                 borderRadius: '4px',
@@ -2696,7 +2696,7 @@ function AdminCalendarTab({ org, userRole, onEventClick }: { org: any; userRole?
               onClick={() => setViewMode('week')}
               style={{
                 padding: '8px 12px',
-                backgroundColor: viewMode === 'week' ? colors.teal.bg : 'transparent',
+                backgroundColor: viewMode === 'week' ? colors.teal.accent : 'transparent',
                 color: viewMode === 'week' ? 'white' : colors.text,
                 border: 'none',
                 borderRadius: '4px',
@@ -2712,7 +2712,7 @@ function AdminCalendarTab({ org, userRole, onEventClick }: { org: any; userRole?
               onClick={() => setViewMode('month')}
               style={{
                 padding: '8px 12px',
-                backgroundColor: viewMode === 'month' ? colors.teal.bg : 'transparent',
+                backgroundColor: viewMode === 'month' ? colors.teal.accent : 'transparent',
                 color: viewMode === 'month' ? 'white' : colors.text,
                 border: 'none',
                 borderRadius: '4px',
@@ -3099,7 +3099,7 @@ function PeopleTab({ org, onSwitchTab, onAddClick }: { org: any; onSwitchTab?: (
           onClick={() => setSelectedRole('all')}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: selectedRole === 'all' ? colors.teal.bg : colors.surface,
+            backgroundColor: selectedRole === 'all' ? colors.teal.accent : colors.surface,
             color: selectedRole === 'all' ? 'white' : colors.text,
             border: `1px solid ${colors.border}`,
             borderRadius: '6px',
@@ -3117,7 +3117,7 @@ function PeopleTab({ org, onSwitchTab, onAddClick }: { org: any; onSwitchTab?: (
             onClick={() => setSelectedRole(role)}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: selectedRole === role ? colors.teal.bg : colors.surface,
+              backgroundColor: selectedRole === role ? colors.teal.accent : colors.surface,
               color: selectedRole === role ? 'white' : colors.text,
               border: `1px solid ${colors.border}`,
               borderRadius: '6px',
@@ -3360,7 +3360,7 @@ function PeopleDetailModal({ person, org, onClose, onConversationCreated, onRole
             onClick={handleMessage}
             style={{
               padding: '10px 16px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',

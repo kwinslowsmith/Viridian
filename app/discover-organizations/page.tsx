@@ -154,7 +154,7 @@ export default function DiscoverOrganizationsPage() {
                     {/* View Button */}
                     <button
                       className="w-full px-3 py-2 rounded text-sm font-semibold text-white"
-                      style={{ backgroundColor: colors.teal.bg }}
+                      style={{ backgroundColor: colors.teal.accent }}
                     >
                       View Organization
                     </button>
@@ -170,7 +170,7 @@ export default function DiscoverOrganizationsPage() {
                 disabled={offset === 0}
                 className="px-4 py-2 rounded font-semibold"
                 style={{
-                  backgroundColor: offset === 0 ? colors.bg : colors.teal.bg,
+                  backgroundColor: offset === 0 ? colors.bg : colors.teal.accent,
                   color: colors.text,
                   opacity: offset === 0 ? 0.5 : 1,
                 }}
@@ -187,7 +187,7 @@ export default function DiscoverOrganizationsPage() {
                 disabled={offset + limit >= total}
                 className="px-4 py-2 rounded font-semibold"
                 style={{
-                  backgroundColor: offset + limit >= total ? colors.bg : colors.teal.bg,
+                  backgroundColor: offset + limit >= total ? colors.bg : colors.teal.accent,
                   color: colors.text,
                   opacity: offset + limit >= total ? 0.5 : 1,
                 }}

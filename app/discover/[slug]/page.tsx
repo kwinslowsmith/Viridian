@@ -176,7 +176,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
             <button
               onClick={handleJoin}
               className="px-6 py-3 rounded font-semibold text-white"
-              style={{ backgroundColor: colors.teal.bg }}
+              style={{ backgroundColor: colors.teal.accent }}
             >
               {community.requiresApprovalToJoin ? 'Request to Join' : 'Join Community'}
             </button>

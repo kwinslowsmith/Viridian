@@ -17,7 +17,7 @@ export async function GET(
     }
 
     // Verify student is enrolled
-    const enrollment = await prisma.improvEnrollment.findFirst({
+    const enrollment = await prisma.k12Enrollment.findFirst({
       where: { classId, studentId },
       include: { class: true },
     });
@@ -29,17 +29,10 @@ export async function GET(
       );
     }
 
-    // Get weeks for the class (if applicable to ImprovClass)
-    const weeks = await prisma.improvWeek.findMany({
+    // Get weeks for the class
+    const weeks = await prisma.k12Week.findMany({
       where: { classId },
       orderBy: { weekNum: "asc" },
-      include: {
-        weekSkills: {
-          include: {
-            skill: true,
-          },
-        },
-      },
     });
 
     // Get class standards and objectives
@@ -69,10 +62,8 @@ export async function GET(
       weekNumber: week.weekNum,
       startDate: week.startDate,
       endDate: week.endDate,
-      skills: week.weekSkills.map((ws) => ({
-        skillId: ws.skill.id,
-        skillName: ws.skill.name,
-      })),
+      title: week.title,
+      unit: week.unit,
     }));
 
     // Flatten objectives from all standards

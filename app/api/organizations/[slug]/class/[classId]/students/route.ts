@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Find class and verify user is instructor
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
       select: {
         id: true,
@@ -46,7 +46,7 @@ export async function GET(
     }
 
     // Get enrolled students
-    const students = await prisma.improvEnrollment.findMany({
+    const students = await prisma.k12Enrollment.findMany({
       where: {
         classId: classId,
       },

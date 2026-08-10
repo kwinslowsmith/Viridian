@@ -17,7 +17,7 @@ export async function GET(
     }
 
     // Get student enrollment
-    const enrollment = await prisma.improvEnrollment.findFirst({
+    const enrollment = await prisma.k12Enrollment.findFirst({
       where: { classId, studentId },
       include: {
         student: { select: { id: true, name: true, email: true } },

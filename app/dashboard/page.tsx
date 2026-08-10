@@ -231,7 +231,7 @@ export default function DashboardPage() {
                   onClick={() => setViewMode('week')}
                   style={{
                     padding: '8px 12px',
-                    backgroundColor: viewMode === 'week' ? colors.teal.bg : 'transparent',
+                    backgroundColor: viewMode === 'week' ? colors.teal.accent : 'transparent',
                     color: viewMode === 'week' ? 'white' : colors.text,
                     border: 'none',
                     borderRadius: '4px',
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                   onClick={() => setViewMode('month')}
                   style={{
                     padding: '8px 12px',
-                    backgroundColor: viewMode === 'month' ? colors.teal.bg : 'transparent',
+                    backgroundColor: viewMode === 'month' ? colors.teal.accent : 'transparent',
                     color: viewMode === 'month' ? 'white' : colors.text,
                     border: 'none',
                     borderRadius: '4px',
@@ -386,7 +386,7 @@ export default function DashboardPage() {
             <Link
               href="/organizations/create"
               className="px-4 py-2 rounded font-semibold text-sm text-white"
-              style={{ backgroundColor: colors.teal.bg }}
+              style={{ backgroundColor: colors.teal.accent }}
             >
               + Create Organization
             </Link>
@@ -434,7 +434,7 @@ export default function DashboardPage() {
             <Link
               href="/discover"
               className="px-4 py-2 rounded font-semibold text-sm text-white"
-              style={{ backgroundColor: colors.teal.bg }}
+              style={{ backgroundColor: colors.teal.accent }}
             >
               Discover Communities
             </Link>
@@ -507,7 +507,7 @@ export default function DashboardPage() {
               <Link
                 href="/discover"
                 className="mt-4 inline-block px-6 py-2 rounded font-semibold text-white"
-                style={{ backgroundColor: colors.teal.bg }}
+                style={{ backgroundColor: colors.teal.accent }}
               >
                 Explore Communities
               </Link>
@@ -706,7 +706,7 @@ function DashboardWeekCalendar({ classes, events, currentWeekStart, onPreviousWe
             onClick={onToday}
             style={{
               padding: '8px 12px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -901,7 +901,7 @@ function DashboardMonthCalendar({ classes, events, currentMonth, onPreviousMonth
             onClick={onToday}
             style={{
               padding: '8px 12px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -1775,7 +1775,7 @@ function DashboardCalendar({ events, currentWeekStart, onPreviousWeek, onNextWee
             onClick={onToday}
             style={{
               padding: '8px 12px',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: 'white',
               border: 'none',
               borderRadius: '6px',

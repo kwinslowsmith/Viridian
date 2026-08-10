@@ -82,8 +82,6 @@ export async function GET(
       where: whereClause,
       include: {
         createdBy: { select: { id: true, name: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -165,11 +163,11 @@ export async function POST(
 
     // If visibility is 'class', verify user is the instructor
     if (visibility === 'class' && classId) {
-      const improvClass = await prisma.improvClass.findUnique({
+      const k12Class = await prisma.k12Class.findUnique({
         where: { id: classId },
       });
 
-      if (!improvClass || improvClass.instructorId !== session.user.id) {
+      if (!k12Class || k12Class.instructorId !== session.user.id) {
         return NextResponse.json(
           { error: 'Only the class instructor can create class-scoped resources' },
           { status: 403 }
@@ -190,21 +188,13 @@ export async function POST(
         type,
         format: format || null,
         visibility: visibility || 'org',
-        classId: classId || null,
+        k12ClassId: classId || null,
         tags: tags || null,
         organizationId: org.id,
         createdById: session.user.id,
-        skills: {
-          create: skillIds.map((skillId: string) => ({ skillId })),
-        },
-        objectives: {
-          create: objectiveIds.map((objectiveId: string) => ({ objectiveId })),
-        },
       },
       include: {
         createdBy: { select: { id: true, name: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
     });
 

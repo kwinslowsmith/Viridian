@@ -128,7 +128,7 @@ export default function MyCommunitiesPage() {
                       <Link
                         href={`/discover/${community.slug}`}
                         className="px-4 py-2 rounded font-semibold text-white"
-                        style={{ backgroundColor: colors.teal.bg }}
+                        style={{ backgroundColor: colors.teal.accent }}
                       >
                         View
                       </Link>
@@ -149,7 +149,7 @@ export default function MyCommunitiesPage() {
                 <Link
                   href="/discover"
                   className="mt-4 inline-block px-6 py-3 rounded font-semibold text-white"
-                  style={{ backgroundColor: colors.teal.bg }}
+                  style={{ backgroundColor: colors.teal.accent }}
                 >
                   Explore Communities
                 </Link>

@@ -69,42 +69,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 2. Get ImprovClass daily entries for toggled-on classes
-    const improvClassPrefs = calendarPrefs.filter(p => p.classType === 'improv');
-    if (improvClassPrefs.length > 0) {
-      const improvDays = await prisma.improvDay.findMany({
-        where: {
-          date: { gte: start, lte: end },
-          week: {
-            classId: { in: improvClassPrefs.map(p => p.classId) },
-          },
-        },
-        include: {
-          week: {
-            select: {
-              classId: true,
-              class: { select: { id: true, name: true } },
-            },
-          },
-        },
-      });
-
-      improvDays.forEach(day => {
-        items.push({
-          id: `improvday-${day.id}`,
-          type: 'improv-day',
-          date: day.date,
-          title: day.title || 'Class Schedule',
-          description: day.description,
-          classId: day.week.classId,
-          className: day.week.class.name,
-          homework: day.homework,
-          isMajor: day.isMajor,
-          materials: day.materialsJson ? JSON.parse(day.materialsJson) : [],
-          skills: day.skillsJson ? JSON.parse(day.skillsJson) : [],
-        });
-      });
-    }
 
     // 3. Get major assignments from all enrolled classes (whether toggled or not)
     const enrolledK12Classes = await prisma.k12Enrollment.findMany({
@@ -112,10 +76,6 @@ export async function GET(request: NextRequest) {
       select: { classId: true },
     });
 
-    const enrolledImprovClasses = await prisma.improvEnrollment.findMany({
-      where: { studentId: userId, status: 'active' },
-      select: { classId: true },
-    });
 
     // Get major K12 assignments
     if (enrolledK12Classes.length > 0) {
@@ -156,43 +116,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get major Improv assignments
-    if (enrolledImprovClasses.length > 0) {
-      const majorImprovDays = await prisma.improvDay.findMany({
-        where: {
-          isMajor: true,
-          date: { gte: start, lte: end },
-          week: {
-            classId: { in: enrolledImprovClasses.map(e => e.classId) },
-          },
-        },
-        include: {
-          week: {
-            select: {
-              classId: true,
-              class: { select: { id: true, name: true } },
-            },
-          },
-        },
-      });
-
-      majorImprovDays.forEach(day => {
-        if (!items.find(i => i.id === `improvday-${day.id}`)) {
-          items.push({
-            id: `improvday-${day.id}`,
-            type: 'improv-major-assignment',
-            date: day.date,
-            title: day.title || 'Assignment',
-            description: day.description,
-            classId: day.week.classId,
-            className: day.week.class.name,
-            homework: day.homework,
-            isMajor: true,
-            materials: day.materialsJson ? JSON.parse(day.materialsJson) : [],
-          });
-        }
-      });
-    }
 
     // 4. Get general events visible to this user
     const events = await prisma.event.findMany({

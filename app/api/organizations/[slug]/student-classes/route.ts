@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Get student's enrolled classes in this organization
-    const classes = await prisma.improvClass.findMany({
+    const classes = await prisma.k12Class.findMany({
       where: {
         organizationId: org.id,
         enrollments: {

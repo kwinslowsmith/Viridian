@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Try to find as ImprovClass first
-    let classData: any = await prisma.improvClass.findUnique({
+    let classData: any = await prisma.k12Class.findUnique({
       where: { id: classId },
       include: {
         instructor: {
@@ -86,7 +86,7 @@ export async function GET(
       userRole = 'Teacher';
     } else {
       // Check if user is enrolled as a student
-      const enrollment = await prisma.improvEnrollment.findUnique({
+      const enrollment = await prisma.k12Enrollment.findUnique({
         where: {
           classId_studentId: {
             classId: classId,

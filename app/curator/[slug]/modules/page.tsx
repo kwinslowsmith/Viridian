@@ -227,7 +227,7 @@ export default function ModulesPage({ params }: { params: Promise<{ slug: string
                 <button
                   type="submit"
                   className="flex-1 px-6 py-3 rounded font-semibold text-white"
-                  style={{ backgroundColor: colors.teal.bg }}
+                  style={{ backgroundColor: colors.teal.accent }}
                 >
                   {editingId ? 'Update Module' : 'Create Module'}
                 </button>
@@ -253,7 +253,7 @@ export default function ModulesPage({ params }: { params: Promise<{ slug: string
           <button
             onClick={() => setShowCreateForm(true)}
             className="mb-6 px-6 py-3 rounded font-semibold text-white"
-            style={{ backgroundColor: colors.teal.bg }}
+            style={{ backgroundColor: colors.teal.accent }}
           >
             + Add Module
           </button>

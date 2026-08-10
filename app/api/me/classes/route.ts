@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const orgIds = userOrganizations.map((o) => o.organizationId);
 
     // Get all classes in user's organizations
-    const classes = await prisma.improvClass.findMany({
+    const classes = await prisma.k12Class.findMany({
       where: {
         organizationId: { in: orgIds },
       },

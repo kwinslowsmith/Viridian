@@ -162,7 +162,7 @@ export function ResourceCard({
               key={rs.skill.id}
               style={{
                 display: 'inline-block',
-                backgroundColor: colors.teal.bg,
+                backgroundColor: colors.teal.accent,
                 color: colors.teal.accent,
                 padding: '4px 8px',
                 borderRadius: '4px',

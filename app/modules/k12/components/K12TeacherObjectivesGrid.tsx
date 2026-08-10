@@ -190,7 +190,7 @@ export function K12TeacherObjectivesGrid({ classId, className }: ObjectivesGridP
                           justifyContent: 'center',
                           fontWeight: 'bold',
                           fontSize: '14px',
-                          backgroundColor: colors.teal.bg,
+                          backgroundColor: colors.teal.accent,
                           color: colors.text,
                         }}
                       >
@@ -237,7 +237,7 @@ export function K12TeacherObjectivesGrid({ classId, className }: ObjectivesGridP
                           fontSize: '12px',
                           border: 'none',
                           cursor: 'pointer',
-                          backgroundColor: edited.isActive ? colors.teal.bg : '#ccc',
+                          backgroundColor: edited.isActive ? colors.teal.accent : '#ccc',
                           color: colors.text,
                         }}
                       >
@@ -335,7 +335,7 @@ export function K12TeacherObjectivesGrid({ classId, className }: ObjectivesGridP
                               justifyContent: 'center',
                               fontWeight: 'bold',
                               fontSize: '14px',
-                              backgroundColor: colors.teal.bg,
+                              backgroundColor: colors.teal.accent,
                               color: colors.text,
                             }}
                           >
@@ -382,7 +382,7 @@ export function K12TeacherObjectivesGrid({ classId, className }: ObjectivesGridP
                               fontSize: '12px',
                               border: 'none',
                               cursor: 'pointer',
-                              backgroundColor: edited.isActive ? colors.teal.bg : '#ccc',
+                              backgroundColor: edited.isActive ? colors.teal.accent : '#ccc',
                               color: colors.text,
                             }}
                           >
@@ -427,7 +427,7 @@ export function K12TeacherObjectivesGrid({ classId, className }: ObjectivesGridP
               fontSize: '14px',
               border: 'none',
               cursor: saving ? 'not-allowed' : 'pointer',
-              backgroundColor: colors.teal.bg,
+              backgroundColor: colors.teal.accent,
               color: colors.text,
               opacity: saving ? 0.6 : 1,
             }}

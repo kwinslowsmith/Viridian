@@ -98,7 +98,7 @@ export function K12ObjectivesGrid({ classId, className }: K12ObjectivesGridProps
         style={{
           width: '100%',
           padding: '1rem',
-          backgroundColor: standard.standardType === 'skill' ? colors.teal.bg : colors.amber.bg,
+          backgroundColor: standard.standardType === 'skill' ? colors.teal.accent : colors.amber.bg,
           color: colors.text,
           border: 'none',
           cursor: 'pointer',

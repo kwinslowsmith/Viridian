@@ -85,7 +85,7 @@ export async function GET(
     const submissions = await prisma.k12Submission.findMany({
       where: {
         enrollment: {
-          classId: params.classId,
+          classId: classId,
           studentId: studentIdParam,
         },
       },
@@ -180,7 +180,7 @@ export async function GET(
     return NextResponse.json({
       studentId: studentIdParam,
       studentName: 'Student', // TODO: get from student user record
-      classId: params.classId,
+      classId: classId,
       className: k12Class.name,
       standards,
       messageFromTeacher:

@@ -306,7 +306,7 @@ export default function StudentCalendarPage() {
                   style={{
                     minHeight: '120px',
                     padding: '0.5rem',
-                    backgroundColor: isToday ? colors.teal.bg : colors.surface,
+                    backgroundColor: isToday ? colors.teal.accent : colors.surface,
                     borderTop: `1px solid ${colors.border}`,
                     cursor: dayItems.length > 0 ? 'pointer' : 'default',
                     transition: 'all 0.2s',
@@ -318,7 +318,7 @@ export default function StudentCalendarPage() {
                     }
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = isToday ? colors.teal.bg : colors.surface;
+                    (e.currentTarget as HTMLElement).style.backgroundColor = isToday ? colors.teal.accent : colors.surface;
                     (e.currentTarget as HTMLElement).style.boxShadow = 'none';
                   }}
                 >

@@ -73,11 +73,7 @@ export async function PUT(
       objectiveIds = [],
     } = body;
 
-    // Delete existing skill/objective relations
-    await prisma.$transaction([
-      prisma.resourceSkill.deleteMany({ where: { resourceId } }),
-      prisma.resourceObjective.deleteMany({ where: { resourceId } }),
-    ]);
+    // Note: skill/objective relations are not currently supported in Resource model
 
     // Update resource
     const updatedResource = await prisma.resource.update({
@@ -93,19 +89,11 @@ export async function PUT(
         type: type || resource.type,
         format: format !== undefined ? format : resource.format,
         visibility: visibility || resource.visibility,
-        classId: classId !== undefined ? classId : resource.classId,
+        k12ClassId: classId !== undefined ? classId : resource.k12ClassId,
         tags: tags !== undefined ? tags : resource.tags,
-        skills: {
-          create: skillIds.map((skillId: string) => ({ skillId })),
-        },
-        objectives: {
-          create: objectiveIds.map((objectiveId: string) => ({ objectiveId })),
-        },
       },
       include: {
         createdBy: { select: { id: true, name: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
     });
 

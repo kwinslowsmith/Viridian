@@ -143,7 +143,7 @@ export default function CuratorPanelPage() {
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="px-6 py-3 rounded font-semibold text-white"
-            style={{ backgroundColor: colors.teal.bg }}
+            style={{ backgroundColor: colors.teal.accent }}
           >
             {showCreateForm ? 'Cancel' : '+ Create Community'}
           </button>
@@ -269,7 +269,7 @@ export default function CuratorPanelPage() {
                 <button
                   type="submit"
                   className="flex-1 px-6 py-3 rounded font-semibold text-white"
-                  style={{ backgroundColor: colors.teal.bg }}
+                  style={{ backgroundColor: colors.teal.accent }}
                 >
                   Create Community
                 </button>
@@ -333,7 +333,7 @@ export default function CuratorPanelPage() {
                   <Link
                     href={`/discover/${community.slug}`}
                     className="px-4 py-2 rounded font-semibold text-white text-sm"
-                    style={{ backgroundColor: colors.teal.bg }}
+                    style={{ backgroundColor: colors.teal.accent }}
                   >
                     View Community
                   </Link>
@@ -374,7 +374,7 @@ export default function CuratorPanelPage() {
               <button
                 onClick={() => setShowCreateForm(true)}
                 className="mt-4 px-6 py-3 rounded font-semibold text-white"
-                style={{ backgroundColor: colors.teal.bg }}
+                style={{ backgroundColor: colors.teal.accent }}
               >
                 Create Your First Community
               </button>

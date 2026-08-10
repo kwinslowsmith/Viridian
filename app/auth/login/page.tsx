@@ -65,8 +65,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-4 py-2 rounded font-semibold"
-            style={{ backgroundColor: colors.teal.bg, color: colors.text, opacity: loading ? 0.5 : 1 }}
+            className="w-full px-4 py-2 rounded font-semibold text-white"
+            style={{ backgroundColor: colors.teal.accent, opacity: loading ? 0.5 : 1 }}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>

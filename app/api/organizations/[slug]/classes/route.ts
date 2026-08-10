@@ -21,7 +21,7 @@ export async function GET(
     }
 
     // Get all K12 classes
-    const k12Classes = await prisma.k12Class.findMany({
+    const classes = await prisma.k12Class.findMany({
       where: { organizationId: org.id },
       select: {
         id: true,
@@ -34,25 +34,6 @@ export async function GET(
             name: true,
           },
         },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    // Get all Improv classes
-    const improvClasses = await prisma.improvClass.findMany({
-      where: { organizationId: org.id },
-      select: {
-        id: true,
-        name: true,
-        instructor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        weeks: {
-          select: { id: true },
-        },
         _count: {
           select: { enrollments: true },
         },
@@ -60,29 +41,11 @@ export async function GET(
       orderBy: { name: 'asc' },
     });
 
-    const allClasses = [
-      ...k12Classes.map((cls) => ({
-        id: cls.id,
-        name: cls.name,
-        gradeLevel: cls.gradeLevel,
-        subject: cls.subject,
-        instructor: cls.instructor,
-        type: 'k12',
-        weeks: undefined,
-        _count: { enrollments: 0 },
-      })),
-      ...improvClasses.map((cls) => ({
-        id: cls.id,
-        name: cls.name,
-        instructor: cls.instructor,
-        type: 'improv',
-        weeks: cls.weeks,
-        _count: cls._count,
-      })),
-    ];
-
     return NextResponse.json({
-      classes: allClasses,
+      classes: classes.map((cls) => ({
+        ...cls,
+        type: 'k12',
+      })),
     });
   } catch (error) {
     console.error('Failed to fetch classes:', error);

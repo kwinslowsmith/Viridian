@@ -17,7 +17,7 @@ export async function GET(
     }
 
     // Verify student is enrolled in this class
-    const enrollment = await prisma.improvEnrollment.findFirst({
+    const enrollment = await prisma.k12Enrollment.findFirst({
       where: { classId, studentId },
     });
 
@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Get the class
-    const classData = await prisma.improvClass.findUnique({
+    const classData = await prisma.k12Class.findUnique({
       where: { id: classId },
     });
 
@@ -107,7 +107,7 @@ export async function POST(
     }
 
     // Verify student is enrolled
-    const enrollment = await prisma.improvEnrollment.findFirst({
+    const enrollment = await prisma.k12Enrollment.findFirst({
       where: { classId, studentId },
     });
 

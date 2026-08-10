@@ -196,7 +196,7 @@ export function ClassScheduleManager({
                   style={{
                     minHeight: '100px',
                     padding: '0.5rem',
-                    backgroundColor: isToday ? colors.teal.bg : colors.surface,
+                    backgroundColor: isToday ? colors.teal.accent : colors.surface,
                     borderTop: `1px solid ${colors.border}`,
                     cursor: isTeacher ? 'pointer' : 'default',
                     transition: 'all 0.2s',
@@ -208,7 +208,7 @@ export function ClassScheduleManager({
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = isToday ? colors.teal.bg : colors.surface;
+                    e.currentTarget.style.backgroundColor = isToday ? colors.teal.accent : colors.surface;
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
