@@ -16,9 +16,5 @@ export default async function ParentMessagesPage() {
     redirect('/auth/signin');
   }
 
-  if (session.user.role !== 'parent') {
-    redirect('/dashboard');
-  }
-
   return <ParentMessagesView parentId={session.user.id} />;
 }
