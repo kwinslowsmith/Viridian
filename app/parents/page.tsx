@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ParentHomePage from '@/app/components/ParentHomePage';
+import ParentHomePageClient from '@/app/components/ParentHomePage';
 
 export const metadata: Metadata = {
   title: 'My Children | Viridian Parents',
@@ -16,9 +16,10 @@ export default async function ParentHomeRoute() {
     redirect('/auth/signin');
   }
 
-  if (session.user.role !== 'parent') {
+  const userRole = (session.user as any)?.role;
+  if (userRole !== 'parent') {
     redirect('/dashboard');
   }
 
-  return <ParentHomePage parentId={session.user.id} />;
+  return <ParentHomePageClient parentId={session.user.id} />;
 }
