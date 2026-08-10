@@ -1,0 +1,127 @@
+.widget {
+  padding: 20px;
+  background-color: #f0f4ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background-color: #667eea;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.teachersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.teacherItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.teacherItem:hover {
+  border-color: #667eea;
+  background-color: #f9fafb;
+}
+
+.teacherInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.teacherName {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1f2937;
+}
+
+.preview {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unreadBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.viewAll {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+  transition: all 0.2s;
+}
+
+.viewAll:hover {
+  border-bottom-color: #667eea;
+}
+
+@media (max-width: 480px) {
+  .widget {
+    padding: 16px;
+  }
+
+  .teacherItem {
+    padding: 10px;
+  }
+
+  .teacherName {
+    font-size: 13px;
+  }
+
+  .preview {
+    font-size: 11px;
+  }
+}

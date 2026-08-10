@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './ParentDashboardK12.module.css';
+import ParentDashboardMessagingWidget from './ParentDashboardMessagingWidget';
 
 interface ExpandedStandard {
   [key: string]: boolean;
@@ -345,6 +346,15 @@ export default function ParentDashboardK12({ childId }: { childId: string }) {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Messages Widget */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Messages</h2>
+          <ParentDashboardMessagingWidget
+            childId={childId}
+            childName={data.childName}
+          />
         </section>
 
         {/* Master Calendar */}
