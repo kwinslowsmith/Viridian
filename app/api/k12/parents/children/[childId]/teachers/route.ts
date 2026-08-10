@@ -124,7 +124,7 @@ export async function GET(
           unreadCount,
           lastMessage: lastMessage ? {
             id: lastMessage.id,
-            text: lastMessage.text,
+            text: lastMessage.content,
             senderId: lastMessage.senderId,
             senderName:
               lastMessage.senderId === session.user.id
