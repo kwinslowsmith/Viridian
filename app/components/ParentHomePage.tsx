@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import styles from './ParentHomePage.module.css';
 
 interface Child {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function ParentHomePage({ parentId }: Props) {
+  const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,28 +26,40 @@ export default function ParentHomePage({ parentId }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/parents/children');
-        if (!response.ok) throw new Error('Failed to load children');
+        const response = await fetch('/api/parents/children', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
         const data = await response.json();
-        setChildren(data.children || []);
+        if (data.children && data.children.length > 0) {
+          setChildren(data.children);
+        } else {
+          setError('No children linked to your account');
+        }
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load children'
-        );
         console.error('Error loading children:', err);
+        setError(
+          err instanceof Error ? err.message : 'Failed to load children. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
     };
 
     loadChildren();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingBox}>
-          <p>Loading...</p>
+        <div className={styles.header}>
+          <h1 className={styles.title}>My Children</h1>
+          <p className={styles.subtitle}>Loading...</p>
         </div>
       </div>
     );
@@ -54,8 +68,17 @@ export default function ParentHomePage({ parentId }: Props) {
   if (error) {
     return (
       <div className={styles.container}>
-        <div className={styles.errorBox}>
-          <p>{error}</p>
+        <div className={styles.header}>
+          <h1 className={styles.title}>My Children</h1>
+          <p className={styles.subtitle}>Select a child to view their learning progress</p>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.errorBox}>
+            <p>{error}</p>
+            <p style={{ fontSize: '14px', marginTop: '10px', color: '#9ca3af' }}>
+              Try refreshing the page or contact support.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -64,8 +87,14 @@ export default function ParentHomePage({ parentId }: Props) {
   if (children.length === 0) {
     return (
       <div className={styles.container}>
-        <div className={styles.emptyBox}>
-          <p>No children linked to your account yet.</p>
+        <div className={styles.header}>
+          <h1 className={styles.title}>My Children</h1>
+          <p className={styles.subtitle}>Select a child to view their learning progress</p>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.emptyBox}>
+            <p>No children linked to your account yet.</p>
+          </div>
         </div>
       </div>
     );
@@ -115,6 +144,17 @@ export default function ParentHomePage({ parentId }: Props) {
               ⚙️ Settings (coming soon)
             </a>
           </div>
+        </div>
+
+        {/* Debug: Direct link to test child */}
+        <div style={{ marginTop: '40px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '600', color: '#92400e' }}>Debug Link</p>
+          <Link
+            href="/app/parents/child/cmsjazbgb0003ugct0889inmo/dashboard-k12"
+            style={{ color: '#b45309', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}
+          >
+            → View Student 1 Chen Dashboard (Test)
+          </Link>
         </div>
       </div>
     </div>
