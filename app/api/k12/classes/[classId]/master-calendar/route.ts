@@ -6,7 +6,7 @@ import { verifyTeacherOwnsClass, verifyStudentInClass } from '@/lib/api/k12-auth
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -14,14 +14,16 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { classId } = await params;
+
   try {
     // Verify access: user must be teacher OR student in this class
-    const teacherAuth = await verifyTeacherOwnsClass(session.user.id, params.classId);
+    const teacherAuth = await verifyTeacherOwnsClass(session.user.id, classId);
     const isTeacher = teacherAuth.valid;
 
     let isStudent = false;
     if (!isTeacher) {
-      const studentAuth = await verifyStudentInClass(session.user.id, params.classId);
+      const studentAuth = await verifyStudentInClass(session.user.id, classId);
       isStudent = studentAuth.valid;
     }
 
@@ -34,7 +36,7 @@ export async function GET(
 
     // Get class
     const k12Class = await prisma.k12Class.findUnique({
-      where: { id: params.classId },
+      where: { id: classId },
       select: {
         id: true,
         organizationId: true,
@@ -58,7 +60,7 @@ export async function GET(
     // Get class assessments
     const classAssessments = await prisma.k12Assessment.findMany({
       where: {
-        classId: params.classId,
+        classId,
       },
       orderBy: { dueDate: 'asc' },
     });
@@ -88,7 +90,7 @@ export async function GET(
     ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return NextResponse.json({
-      classId: params.classId,
+      classId,
       events: calendarEvents,
       lastUpdate: new Date().toISOString(),
     });

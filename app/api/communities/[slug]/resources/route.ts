@@ -28,8 +28,6 @@ export async function GET(
       },
       include: {
         createdBy: { select: { id: true, name: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -130,8 +128,6 @@ export async function POST(
       data: resourceData,
       include: {
         createdBy: { select: { id: true, name: true } },
-        skills: { include: { skill: { select: { id: true, name: true } } } },
-        objectives: { include: { objective: { select: { id: true, text: true } } } },
       },
     });
 

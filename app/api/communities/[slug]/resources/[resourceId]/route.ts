@@ -60,10 +60,11 @@ export async function PUT(
 
     const updatedResource = await prisma.$transaction(async (tx) => {
       // Delete existing skills and objectives
-      await tx.resourceSkill.deleteMany({ where: { resourceId } });
-      await tx.resourceObjective.deleteMany({ where: { resourceId } });
+      // Note: These tables may not exist in current schema - commented out
+      // await tx.resourceSkill.deleteMany({ where: { resourceId } });
+      // await tx.resourceObjective.deleteMany({ where: { resourceId } });
 
-      // Update resource and create new relations
+      // Update resource
       return tx.resource.update({
         where: { id: resourceId },
         data: {
@@ -77,21 +78,10 @@ export async function PUT(
           type,
           format,
           tags,
-          skills: {
-            create: skillIds.map((skillId: string) => ({
-              skillId,
-            })),
-          },
-          objectives: {
-            create: objectiveIds.map((objectiveId: string) => ({
-              objectiveId,
-            })),
-          },
+          // Note: skills and objectives relations not in current Resource model
         },
         include: {
           createdBy: { select: { id: true, name: true } },
-          skills: { include: { skill: { select: { id: true, name: true } } } },
-          objectives: { include: { objective: { select: { id: true, text: true } } } },
         },
       });
     });

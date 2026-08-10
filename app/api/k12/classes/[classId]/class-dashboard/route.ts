@@ -6,7 +6,7 @@ import { verifyTeacherOwnsClass } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -14,9 +14,11 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { classId } = await params;
+
   try {
     // Verify user is the teacher of this class
-    const authResult = await verifyTeacherOwnsClass(session.user.id, params.classId);
+    const authResult = await verifyTeacherOwnsClass(session.user.id, classId);
     if (!authResult.valid) {
       return NextResponse.json(
         { error: authResult.error },
@@ -45,7 +47,7 @@ export async function GET(
 
     // Get class standards
     const classStandards = await prisma.classStandard.findMany({
-      where: { classId: params.classId },
+      where: { classId },
       include: {
         standard: {
           include: {

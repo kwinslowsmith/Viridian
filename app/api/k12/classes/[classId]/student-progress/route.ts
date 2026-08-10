@@ -6,7 +6,7 @@ import { verifyStudentInClass } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -24,13 +24,15 @@ export async function GET(
     );
   }
 
+  const { classId } = await params;
+
   try {
     // Authorize: User must be the student OR teacher of the class OR admin
     const isStudent = session.user.id === studentIdParam;
 
     // Get class info (with all needed fields)
     const k12Class = await prisma.k12Class.findUnique({
-      where: { id: params.classId },
+      where: { id: classId },
       include: {
         weeks: {
           select: {
@@ -57,7 +59,7 @@ export async function GET(
     }
 
     // Verify student is enrolled in class
-    const authResult = await verifyStudentInClass(studentIdParam, params.classId);
+    const authResult = await verifyStudentInClass(studentIdParam, classId);
     if (!authResult.valid) {
       return NextResponse.json(
         { error: authResult.error },
@@ -67,7 +69,7 @@ export async function GET(
 
     // Get all standards for the class
     const classStandards = await prisma.classStandard.findMany({
-      where: { classId: params.classId },
+      where: { classId },
       include: {
         standard: {
           include: {

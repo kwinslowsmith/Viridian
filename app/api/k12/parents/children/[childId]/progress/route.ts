@@ -6,7 +6,7 @@ import { verifyParentChildRelationship } from '@/lib/api/k12-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { childId: string } }
+  { params }: { params: Promise<{ childId: string }> }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -14,11 +14,13 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { childId } = await params;
+
   try {
     // Verify parent-child relationship
     const authResult = await verifyParentChildRelationship(
       session.user.id,
-      params.childId
+      childId
     );
 
     if (!authResult.valid) {
@@ -30,7 +32,7 @@ export async function GET(
 
     // Get child info
     const child = await prisma.user.findUnique({
-      where: { id: params.childId },
+      where: { id: childId },
       select: {
         name: true,
         k12Enrollments: {
@@ -176,7 +178,7 @@ export async function GET(
     });
 
     return NextResponse.json({
-      childId: params.childId,
+      childId,
       childName: child.name,
       gradeLevel: parseInt(classInfo.gradeLevel),
       classId: classInfo.id,
