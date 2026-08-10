@@ -27,30 +27,8 @@ export async function GET(
   try {
     // Authorize: User must be the student OR teacher of the class OR admin
     const isStudent = session.user.id === studentIdParam;
-    const k12Class = await prisma.k12Class.findUnique({
-      where: { id: params.classId },
-      select: { instructorId: true },
-    });
 
-    const isTeacher = k12Class?.instructorId === session.user.id;
-
-    if (!isStudent && !isTeacher) {
-      return NextResponse.json(
-        { error: 'Not authorized to view this student\'s progress' },
-        { status: 403 }
-      );
-    }
-
-    // Verify student is enrolled in class
-    const authResult = await verifyStudentInClass(studentIdParam, params.classId);
-    if (!authResult.valid) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: 404 }
-      );
-    }
-
-    // Get class info
+    // Get class info (with all needed fields)
     const k12Class = await prisma.k12Class.findUnique({
       where: { id: params.classId },
       include: {
@@ -67,6 +45,24 @@ export async function GET(
 
     if (!k12Class) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+    }
+
+    const isTeacher = k12Class.instructorId === session.user.id;
+
+    if (!isStudent && !isTeacher) {
+      return NextResponse.json(
+        { error: 'Not authorized to view this student\'s progress' },
+        { status: 403 }
+      );
+    }
+
+    // Verify student is enrolled in class
+    const authResult = await verifyStudentInClass(studentIdParam, params.classId);
+    if (!authResult.valid) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: 404 }
+      );
     }
 
     // Get all standards for the class
