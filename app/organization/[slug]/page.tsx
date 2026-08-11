@@ -159,7 +159,6 @@ function StudentDashboard({ org, userRole }: { org: any; userRole?: string }) {
     { id: 'calendar', label: 'Calendar' },
     { id: 'classes', label: 'Classes' },
     { id: 'resources', label: 'Resources' },
-    { id: 'standards', label: 'Standards' },
     { id: 'events', label: 'Events' },
     { id: 'feedback', label: 'Feedback' },
     { id: 'messages', label: 'Messages' },
