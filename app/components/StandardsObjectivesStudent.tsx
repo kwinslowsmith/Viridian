@@ -101,20 +101,21 @@ export function StandardsObjectivesStudent({ classId }: { classId: string }) {
           return;
         }
 
-        // TODO: Replace with actual API call when T1 provides endpoint
-        // const res = await fetch(
-        //   `/api/k12/classes/${classId}/standards-objectives-student?studentId=${session.user.id}`
-        // );
-        // if (res.ok) {
-        //   const result = await res.json();
-        //   setData(result);
-        // } else {
-        //   setError('Failed to load standards and objectives');
-        // }
-
-        // For now, use mock data
-        const { mockStudentStandardsObjectives } = await import('@/mocks/k12-api-responses');
-        setData(mockStudentStandardsObjectives);
+        const res = await fetch(
+          `/api/k12/classes/${classId}/standards-objectives-student`
+        );
+        if (res.ok) {
+          const result = await res.json();
+          setData(result);
+        } else if (res.status === 401) {
+          setError('Please log in to view standards and objectives');
+        } else if (res.status === 403) {
+          setError('You do not have access to this class');
+        } else if (res.status === 404) {
+          setError('Class not found');
+        } else {
+          setError('Failed to load standards and objectives');
+        }
       } catch (err) {
         console.error('Failed to fetch standards and objectives:', err);
         setError('Failed to load standards and objectives');
