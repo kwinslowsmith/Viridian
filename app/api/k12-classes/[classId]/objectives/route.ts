@@ -15,6 +15,11 @@ export async function GET(
         standard: {
           include: {
             exampleObjectives: {
+              include: {
+                materials: {
+                  where: { classId },
+                },
+              },
               orderBy: { sequenceNum: 'asc' },
             },
             unit: true,
@@ -52,6 +57,12 @@ export async function GET(
           isMandatory: customization?.isMandatory ?? obj.isMandatory,
           classObjectiveId: customization?.id || null,
           sequenceNum: obj.sequenceNum,
+          materials: obj.materials.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            url: m.url,
+            type: m.type,
+          })),
         };
       }),
     }));

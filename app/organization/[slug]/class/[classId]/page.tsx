@@ -13,6 +13,7 @@ import { ClassProgressDashboard } from '@/app/components/ClassProgressDashboard'
 import { ClassResourcesPanel } from '@/app/components/ClassResourcesPanel';
 import { ClassScheduleManager } from '@/app/components/ClassScheduleManager';
 import { K12ObjectivesGrid } from '@/app/modules/k12/components/K12ObjectivesGrid';
+import { StandardsObjectivesTeacher } from '@/app/components/StandardsObjectivesTeacher';
 
 export default function ClassDetailPage() {
   const params = useParams();
@@ -98,7 +99,7 @@ export default function ClassDetailPage() {
         return <OverviewTab classData={classData} userRole={userRole} />;
       case 'objectives':
         return userRole === 'Teacher' ? (
-          <SkillObjectiveManager classId={classId} />
+          <StandardsObjectivesTeacher classId={classId} />
         ) : (
           <StudentObjectiveList classId={classId} onSelectObjective={setSelectedObjective} />
         );
