@@ -384,14 +384,158 @@ Last Updated: 2026-08-10 22:30 (✅ PHASE 2 TEACHER COMPONENT READY FOR BROWSER 
 
 ---
 
-## Phase 2: Standards & Objectives E2E Testing (T4 Marching Orders)
+## 🚀 PHASE 2 E2E TESTING MARCHING ORDERS (T2-T4)
 
-**Status:** 🚀 Ready for Browser Testing  
-**Components:** StandardsObjectivesTeacher.tsx + route page  
-**APIs:** Both endpoints live (`GET /api/k12/classes/[classId]/standards-objectives-teacher` and student endpoint)  
-**Test Class:** American Literature, Period 3 (`cmsjazbw0000augct6nyutf9e`)
+**Status:** 🚀 All components live on Vercel, ready for browser verification  
+**Test Credentials:** All same (TestPassword123!)  
+**Goal:** Verify Phase 2 components work correctly with live APIs on production
 
-### Teacher Standards & Objectives Testing Procedure
+| Team | Component | URL | Test User | ETA |
+|------|-----------|-----|-----------|-----|
+| **T2** | StudentStandardsObjectives | `/students/class/[classId]/dashboard` (Standards tab) | student1@riverside.edu | 45 min |
+| **T3** | ParentTeacherMessaging | `/parents/messages` | parent0@example.com | 30 min |
+| **T4** | TeacherStandardsObjectives | `/teachers/class/[classId]/standards-objectives` | teacher1@riverside.edu | 45 min |
+
+**After testing:** Reply in WORK_LOG with PASS/FAIL + any issues found  
+**All tests should complete by end of day** ✅
+
+---
+
+## T2: Student Standards & Objectives E2E Testing
+
+**Component:** StandardsObjectivesStudent.tsx (328 lines, live on Vercel)  
+**Integration:** `/students/class/[classId]/dashboard` (tabs: Progress + Standards & Objectives)  
+**Test Page:** `/students/standards-objectives-test` (mock data verification)  
+**Test Student:** student1@riverside.edu / TestPassword123!
+
+### Testing Procedure
+
+**Login & Navigation:**
+1. Go to: https://viridian.vercel.app/auth/login
+2. Email: `student1@riverside.edu`
+3. Password: `TestPassword123!`
+4. After login: https://viridian.vercel.app/students/class/cmsjazbw0000augct6nyutf9e/dashboard
+5. Click "Standards & Objectives" tab
+
+**Test Standard Card (Expandable):**
+- [ ] Page loads without errors (F12 → Console check)
+- [ ] At least 2 standards display
+- [ ] Each standard shows: code, name, unit, your mastery %, status badge (✓/⏳/⚠️/❌)
+- [ ] Click standard → expands to show objectives
+- [ ] Click again → collapses
+
+**Test Objective Details:**
+- [ ] Each objective shows: label, text, your mastery %, grade
+- [ ] Status badges color-coded: green (proficient), yellow (developing), orange (approaching), gray (not started)
+- [ ] Teacher notes visible and readable
+- [ ] Materials display with links/download buttons
+
+**Test Overall Standard Mastery:**
+- [ ] Standard shows your personal mastery % and status
+- [ ] Mastery summary message displays (e.g., "You've mastered this objective!")
+
+**Test Materials:**
+- [ ] All materials have titles and are clickable/downloadable
+- [ ] Icons display correctly (📄 material, 🎥 video, 🔗 link)
+
+**Performance & Quality:**
+- [ ] Page loads in < 3 seconds
+- [ ] No console errors (F12 → Console)
+- [ ] Responsive on mobile (375px width)
+- [ ] Text legible (16px+)
+
+### Success Criteria
+✅ Standards expand/collapse  
+✅ Personal mastery status displays  
+✅ Teacher notes visible  
+✅ Materials downloadable  
+✅ Color coding correct  
+✅ No console errors  
+✅ Performance < 3s  
+
+### Report to T1
+After testing, reply in WORK_LOG with:
+- **Status:** PASS or FAIL
+- **Issues Found:** (list any bugs/visual issues)
+- **Performance:** (actual load time)
+- **Mobile Testing:** Y/N, any issues?
+
+---
+
+## T3: Parent-Teacher Messaging E2E Testing
+
+**Components:** ParentMessagesView + ParentTeacherMessaging  
+**Integration:** `/app/parents/messages` (full page) + Parent Dashboard widget  
+**Test Parent:** parent0@example.com / TestPassword123!
+
+### Testing Procedure
+
+**Login & Navigate to Messages:**
+1. Go to: https://viridian.vercel.app/auth/login
+2. Email: `parent0@example.com`
+3. Password: `TestPassword123!`
+4. After login: https://viridian.vercel.app/parents/messages
+
+**Test Child Selector:**
+- [ ] "Select child" dropdown shows your enrolled children
+- [ ] Selecting a child loads their teacher list
+
+**Test Teacher List:**
+- [ ] Teachers for selected child display with names
+- [ ] Unread count badges show (if any unread messages)
+- [ ] Teacher avatars load
+- [ ] Clicking a teacher opens message thread
+
+**Test Message Thread:**
+- [ ] Previous messages load and display chronologically
+- [ ] Message author (you vs teacher) is clear
+- [ ] Timestamps display correctly
+
+**Test Sending Messages:**
+- [ ] Type a test message and click "Send"
+- [ ] Message appears in thread immediately (optimistic update)
+- [ ] Message persists after page reload
+- [ ] No console errors
+
+**Test Dashboard Widget:**
+1. Navigate to: `/parents/dashboard`
+2. Scroll down to "Recent Messages" widget
+- [ ] Widget shows 3 most recent teacher conversations
+- [ ] "View All" link goes to full messages page
+- [ ] Widget updates after sending a message
+
+**Performance & Quality:**
+- [ ] Messages page loads in < 3 seconds
+- [ ] No console errors (F12 → Console)
+- [ ] Responsive on mobile (375px width)
+- [ ] Text legible (16px+)
+
+### Success Criteria
+✅ Teacher list loads  
+✅ Can send messages  
+✅ Messages persist  
+✅ Unread counts accurate  
+✅ Widget shows recent messages  
+✅ No console errors  
+✅ Performance < 3s  
+
+### Report to T1
+After testing, reply in WORK_LOG with:
+- **Status:** PASS or FAIL
+- **Issues Found:** (list any bugs/interaction issues)
+- **Performance:** (actual load time)
+- **Mobile Testing:** Y/N, any issues?
+
+---
+
+## T4: Teacher Standards & Objectives E2E Testing
+
+**Component:** StandardsObjectivesTeacher.tsx (328 lines, live on Vercel)  
+**Route:** `/teachers/class/[classId]/standards-objectives`  
+**Test Class:** American Literature, Period 3 (`cmsjazbw0000augct6nyutf9e`)  
+**Test Teacher:** teacher1@riverside.edu / TestPassword123!
+
+### Testing Procedure
 
 **Login:**
 1. Go to https://viridian.vercel.app/auth/login
