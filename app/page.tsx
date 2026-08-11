@@ -57,7 +57,7 @@ export default function HomePage() {
             padding: "16px",
             cursor: "pointer",
           }}
-          onClick={() => router.push("/organization")}
+          onClick={() => router.push("/discover-organizations")}
         >
           <h2 style={{ color: colors.text, fontWeight: "600", marginBottom: "8px" }}>Organizations</h2>
           <p style={{ color: colors.text2, fontSize: "14px" }}>Manage your schools and organizations</p>
