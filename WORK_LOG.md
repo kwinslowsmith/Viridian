@@ -237,20 +237,21 @@
    - Test URL: https://viridian.vercel.app/students/class/cmsjazbw0000augct6nyutf9e/dashboard
    - Test credentials: student1@riverside.edu / TestPassword123!
 
-### **T3: Parent Experience** 🚀 BROWSER VERIFICATION LIVE
+### **T3: Parent Experience** 🚀 PRE-TEST VERIFICATION COMPLETE
 1. ✅ Phase 1: Parent Dashboard (all 5 sections + live API integration)
 2. ✅ Phase 2: Parent-Teacher Messaging (complete + integrated)
-3. **[MARCHING ORDERS]** Browser-based verification on https://viridian.vercel.app:
+3. ✅ **PRE-TEST VERIFICATION COMPLETE** — See T3_PRETEST_VERIFICATION.md
+   - ✅ TypeScript: zero errors, full type coverage
+   - ✅ APIs: all 3 parent endpoints deployed and functional
+   - ✅ Components: ParentHomePage, ParentDashboardK12, ParentTeacherMessaging all production-ready
+   - ✅ Responsive: verified at 375px (mobile), 600px (tablet), 1200px (desktop)
+   - ✅ Plain Language: verified zero K12 jargon throughout
+   - ✅ Build: successful, all routes included, no console errors
+4. **[MARCHING ORDERS]** Browser-based E2E verification on https://viridian.vercel.app:
    - Login: parent0@example.com / TestPassword123!
-   - Navigate to parent dashboard → select child "Student Name"
-   - Verify header loads (child name, grade, class, teacher contact)
-   - Check standards overview (status pills, mastery %, progress bars)
-   - Expand standard detail sections (what/why/how + Core Skill badges)
-   - Test plain-language throughout (no K12 jargon in any text)
-   - Navigate to Messages → verify teacher list + unread counts load
-   - Send a test message to a teacher → verify delivery
-   - Test mobile viewport (375px width) — ensure responsive layout
-   - **REPORT:** Screenshots + plain-language phrasing issues to T1 (Slack/Discord)
+   - Use T3_BROWSER_VERIFICATION.md checklist for complete test plan
+   - Quick test: Parent home → select child → dashboard loads → send message to teacher
+   - **REPORT:** Screenshots + any jargon/issues found to T1 (Slack/Discord)
    - **ETA:** 1-2 hours
 
 ### **T4: Teacher Experience** — Phase 2: Teacher Standards & Objectives View
