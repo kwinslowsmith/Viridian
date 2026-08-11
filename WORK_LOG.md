@@ -403,206 +403,188 @@ Last Updated: 2026-08-10 22:30 (✅ PHASE 2 TEACHER COMPONENT READY FOR BROWSER 
 
 ## T2: Student Standards & Objectives E2E Testing
 
-**Component:** StandardsObjectivesStudent.tsx (328 lines, live on Vercel)  
-**Integration:** `/students/class/[classId]/dashboard` (tabs: Progress + Standards & Objectives)  
-**Test Page:** `/students/standards-objectives-test` (mock data verification)  
-**Test Student:** student1@riverside.edu / TestPassword123!
+### 🎯 **YOUR TASK (DO THIS NOW):**
 
-### Testing Procedure
+**Step 1: Open your browser**
+- Go to: https://viridian.vercel.app/auth/login
 
-**Login & Navigation:**
-1. Go to: https://viridian.vercel.app/auth/login
-2. Email: `student1@riverside.edu`
-3. Password: `TestPassword123!`
-4. After login: https://viridian.vercel.app/students/class/cmsjazbw0000augct6nyutf9e/dashboard
-5. Click "Standards & Objectives" tab
+**Step 2: Log in**
+- Email: `student1@riverside.edu`
+- Password: `TestPassword123!`
+- Click "Sign In"
 
-**Test Standard Card (Expandable):**
-- [ ] Page loads without errors (F12 → Console check)
-- [ ] At least 2 standards display
-- [ ] Each standard shows: code, name, unit, your mastery %, status badge (✓/⏳/⚠️/❌)
-- [ ] Click standard → expands to show objectives
-- [ ] Click again → collapses
+**Step 3: Navigate to the Standards & Objectives page**
+- After login, go to: https://viridian.vercel.app/students/class/cmsjazbw0000augct6nyutf9e/dashboard
+- You should see a "Standards & Objectives" tab
+- Click that tab
 
-**Test Objective Details:**
-- [ ] Each objective shows: label, text, your mastery %, grade
-- [ ] Status badges color-coded: green (proficient), yellow (developing), orange (approaching), gray (not started)
-- [ ] Teacher notes visible and readable
-- [ ] Materials display with links/download buttons
+**Step 4: Verify the page works**
+- [ ] Page loads (no blank screen)
+- [ ] You can see at least 2 standards displayed
+- [ ] Click on a standard → it expands to show objectives below it
+- [ ] Click on the standard again → it collapses
+- [ ] Each objective shows: a label, description, YOUR mastery %, your grade
+- [ ] You can see teacher notes (gray text below each objective)
+- [ ] You can see materials/downloads (if any)
 
-**Test Overall Standard Mastery:**
-- [ ] Standard shows your personal mastery % and status
-- [ ] Mastery summary message displays (e.g., "You've mastered this objective!")
+**Step 5: Check for errors**
+- Open your browser's developer tools: Press F12
+- Click the "Console" tab
+- Look for red error messages
+- If you see red errors, take a screenshot and note them
 
-**Test Materials:**
-- [ ] All materials have titles and are clickable/downloadable
-- [ ] Icons display correctly (📄 material, 🎥 video, 🔗 link)
+**Step 6: Test on mobile (optional but helpful)**
+- If you have a phone, view the same page at narrow width (375px or smaller)
+- Make sure text is readable and you can still click things
 
-**Performance & Quality:**
-- [ ] Page loads in < 3 seconds
-- [ ] No console errors (F12 → Console)
-- [ ] Responsive on mobile (375px width)
-- [ ] Text legible (16px+)
+### ✅ **Report Back:**
 
-### Success Criteria
-✅ Standards expand/collapse  
-✅ Personal mastery status displays  
-✅ Teacher notes visible  
-✅ Materials downloadable  
-✅ Color coding correct  
-✅ No console errors  
-✅ Performance < 3s  
+Reply in this WORK_LOG with:
+```
+T2 TESTING REPORT:
+- Page loads: YES / NO
+- Standards expand/collapse: YES / NO
+- Mastery % shows: YES / NO
+- Teacher notes visible: YES / NO
+- Materials visible: YES / NO
+- Console errors: NONE / [describe errors]
+- Mobile responsive: YES / NO / NOT TESTED
+- Load time: __ seconds
+- Any issues: [describe any problems or visual bugs]
+```
 
-### Report to T1
-After testing, reply in WORK_LOG with:
-- **Status:** PASS or FAIL
-- **Issues Found:** (list any bugs/visual issues)
-- **Performance:** (actual load time)
-- **Mobile Testing:** Y/N, any issues?
+**That's it. Simple.** 🎉
 
 ---
 
 ## T3: Parent-Teacher Messaging E2E Testing
 
-**Components:** ParentMessagesView + ParentTeacherMessaging  
-**Integration:** `/app/parents/messages` (full page) + Parent Dashboard widget  
-**Test Parent:** parent0@example.com / TestPassword123!
+### 🎯 **YOUR TASK (DO THIS NOW):**
 
-### Testing Procedure
+**Step 1: Open your browser**
+- Go to: https://viridian.vercel.app/auth/login
 
-**Login & Navigate to Messages:**
-1. Go to: https://viridian.vercel.app/auth/login
-2. Email: `parent0@example.com`
-3. Password: `TestPassword123!`
-4. After login: https://viridian.vercel.app/parents/messages
+**Step 2: Log in**
+- Email: `parent0@example.com`
+- Password: `TestPassword123!`
+- Click "Sign In"
 
-**Test Child Selector:**
-- [ ] "Select child" dropdown shows your enrolled children
-- [ ] Selecting a child loads their teacher list
+**Step 3: Navigate to Messages**
+- After login, go to: https://viridian.vercel.app/parents/messages
+- You should see a messages page with a list of teachers
 
-**Test Teacher List:**
-- [ ] Teachers for selected child display with names
-- [ ] Unread count badges show (if any unread messages)
-- [ ] Teacher avatars load
-- [ ] Clicking a teacher opens message thread
+**Step 4: Verify basic functionality**
+- [ ] Page loads (no blank screen)
+- [ ] You can see at least 1 teacher listed
+- [ ] Each teacher shows a name
+- [ ] Click on a teacher → a message thread opens below or to the side
+- [ ] You can see previous messages from that teacher (if any)
 
-**Test Message Thread:**
-- [ ] Previous messages load and display chronologically
-- [ ] Message author (you vs teacher) is clear
-- [ ] Timestamps display correctly
+**Step 5: Send a test message**
+- [ ] Type a message in the text box (e.g., "Test message")
+- [ ] Click "Send"
+- [ ] Your message appears in the thread immediately
+- [ ] Message doesn't disappear after page reload
 
-**Test Sending Messages:**
-- [ ] Type a test message and click "Send"
-- [ ] Message appears in thread immediately (optimistic update)
-- [ ] Message persists after page reload
-- [ ] No console errors
+**Step 6: Check the Dashboard Widget (optional)**
+- Navigate to: https://viridian.vercel.app/parents/dashboard
+- Scroll down and look for "Recent Messages" widget
+- [ ] Widget shows teachers you've messaged
+- [ ] Widget shows unread message counts (if any)
 
-**Test Dashboard Widget:**
-1. Navigate to: `/parents/dashboard`
-2. Scroll down to "Recent Messages" widget
-- [ ] Widget shows 3 most recent teacher conversations
-- [ ] "View All" link goes to full messages page
-- [ ] Widget updates after sending a message
+**Step 7: Check for errors**
+- Open developer tools: Press F12
+- Click "Console" tab
+- Look for red error messages
+- If you see red errors, take a screenshot
 
-**Performance & Quality:**
-- [ ] Messages page loads in < 3 seconds
-- [ ] No console errors (F12 → Console)
-- [ ] Responsive on mobile (375px width)
-- [ ] Text legible (16px+)
+### ✅ **Report Back:**
 
-### Success Criteria
-✅ Teacher list loads  
-✅ Can send messages  
-✅ Messages persist  
-✅ Unread counts accurate  
-✅ Widget shows recent messages  
-✅ No console errors  
-✅ Performance < 3s  
+Reply in this WORK_LOG with:
+```
+T3 TESTING REPORT:
+- Page loads: YES / NO
+- Teacher list shows: YES / NO
+- Can open message thread: YES / NO
+- Can send message: YES / NO
+- Message persists after reload: YES / NO
+- Console errors: NONE / [describe errors]
+- Dashboard widget visible: YES / NO / NOT TESTED
+- Load time: __ seconds
+- Any issues: [describe any problems]
+```
 
-### Report to T1
-After testing, reply in WORK_LOG with:
-- **Status:** PASS or FAIL
-- **Issues Found:** (list any bugs/interaction issues)
-- **Performance:** (actual load time)
-- **Mobile Testing:** Y/N, any issues?
+**That's it.** 🎉
 
 ---
 
 ## T4: Teacher Standards & Objectives E2E Testing
 
-**Component:** StandardsObjectivesTeacher.tsx (328 lines, live on Vercel)  
-**Route:** `/teachers/class/[classId]/standards-objectives`  
-**Test Class:** American Literature, Period 3 (`cmsjazbw0000augct6nyutf9e`)  
-**Test Teacher:** teacher1@riverside.edu / TestPassword123!
+### 🎯 **YOUR TASK (DO THIS NOW):**
 
-### Testing Procedure
+**Step 1: Open your browser**
+- Go to: https://viridian.vercel.app/auth/login
 
-**Login:**
-1. Go to https://viridian.vercel.app/auth/login
-2. Email: `teacher1@riverside.edu`
-3. Password: `TestPassword123!`
-4. Click "Sign In"
+**Step 2: Log in**
+- Email: `teacher1@riverside.edu`
+- Password: `TestPassword123!`
+- Click "Sign In"
 
-**Navigate to Standards & Objectives:**
-1. After login, go to: `https://viridian.vercel.app/teachers/class/cmsjazbw0000augct6nyutf9e/standards-objectives`
-2. Should see "📚 Standards & Objectives" header
+**Step 3: Navigate to Standards & Objectives**
+- After login, go to: https://viridian.vercel.app/teachers/class/cmsjazbw0000augct6nyutf9e/standards-objectives
+- You should see "Standards & Objectives" with standards listed
 
-**Test Standard Card (Expandable):**
-- [ ] Page loads without errors (check browser console)
-- [ ] At least 1 standard displays
-- [ ] Standard shows: code, name, unit name, required count, total count, pass %
-- [ ] Click standard → expands to show objectives
-- [ ] Click again → collapses
+**Step 4: Test expanding standards**
+- [ ] Page loads (no blank screen)
+- [ ] You can see at least 2 standards displayed
+- [ ] Each standard shows: code (e.g., "2.1"), name, unit, # of required objectives, # of total objectives
+- [ ] Click on a standard → it expands to show all objectives below it
+- [ ] Click on the standard again → it collapses
+- [ ] Repeat with another standard (should work smoothly)
 
-**Test Objective Details:**
-- [ ] Each objective shows: label, text, required/optional badge
-- [ ] Required badges are RED, optional are gray
-- [ ] Assessment frequency warning displays (yellow badge) if needed
-- [ ] "⚠️ Needs Assessment (X days ago)" message visible
+**Step 5: Verify objective details**
+- [ ] Each objective shows: label, description, required/optional badge
+- [ ] Required objectives have RED badges, optional have gray badges
+- [ ] Below each objective, you see your students listed with their names
+- [ ] Each student shows: name, mastery %, colored status icon (✓ green / ⏳ yellow / ⚠️ orange / gray)
+- [ ] You can see teacher notes (text below the objective)
+- [ ] You can see any materials/attachments listed
 
-**Test Student Progress Grid:**
-- [ ] Grid shows all students from American Literature class
-- [ ] Each student card shows: name, mastery %, icon (✓/⏳/⚠️), grade
-- [ ] Color coding: ✓ green (proficient), ⏳ yellow (developing), ⚠️ orange (approaching)
-- [ ] Grid is responsive (wraps on mobile)
+**Step 6: Test assessment frequency warnings (if applicable)**
+- [ ] Some objectives may show a yellow warning: "⚠️ Needs Assessment (X days ago)"
+- [ ] This means an objective hasn't been assessed in 14+ days
+- [ ] If you don't see this warning, that's OK (depends on your test data)
 
-**Test Materials Section:**
-- [ ] Materials display with icons (📄 material, 📝 assessment, 🎥 video, 🔗 link)
-- [ ] Each material has title and [View] button
+**Step 7: Check for errors**
+- Open developer tools: Press F12
+- Click "Console" tab
+- Look for red error messages
+- If you see red errors, take a screenshot
 
-**Test Teacher Notes:**
-- [ ] Teacher notes section visible and readable
-- [ ] Italic formatting applied correctly
+**Step 8: Test on mobile (optional but helpful)**
+- View the page on a phone or narrow browser (600px width)
+- Make sure standards still expand/collapse
+- Make sure text is readable
 
-**Performance Check:**
-- [ ] Page loads in < 3 seconds
-- [ ] No console errors (F12 → Console)
-- [ ] No TypeScript errors in build
+### ✅ **Report Back:**
 
-**Mobile Responsive (if testing on mobile):**
-- [ ] Page readable at 600px+ width
-- [ ] Expandable sections work on touch
-- [ ] Text is legible (16px+ font)
+Reply in this WORK_LOG with:
+```
+T4 TESTING REPORT:
+- Page loads: YES / NO
+- Standards expand/collapse: YES / NO
+- Objectives show: YES / NO
+- Student progress grid shows: YES / NO
+- Required/optional badges show: YES / NO
+- Teacher notes visible: YES / NO
+- Materials visible: YES / NO
+- Console errors: NONE / [describe errors]
+- Mobile responsive: YES / NO / NOT TESTED
+- Load time: __ seconds
+- Any issues: [describe any visual bugs or weird behavior]
+```
 
-### Success Criteria
-✅ Page loads without errors  
-✅ Standards expand/collapse  
-✅ All objectives display with mastery data  
-✅ Student progress grid shows all students  
-✅ Required/optional badges display correctly  
-✅ Assessment frequency warning shows (if applicable)  
-✅ Materials and teacher notes visible  
-✅ Responsive on all breakpoints  
-✅ Performance < 3s load time  
-✅ No console errors  
-
-### Report Results
-After testing, update this WORK_LOG with:
-- **Passing Criteria Met:** Y/N for each item above
-- **Issues Found:** (if any)
-- **Performance Metrics:** (actual load time, etc.)
-- **Mobile Testing:** Y/N, any issues?
-- **Next Steps:** (integration into tabs, etc.)
+**That's it.** 🎉
 
 ---
 
