@@ -69,7 +69,8 @@ export function StandardsObjectivesTeacher({ classId }: StandardsObjectivesTeach
       );
 
       if (!response.ok) {
-        throw new Error('Failed to add material');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add material');
       }
 
       setMaterialForm({ title: '', type: 'guide', url: '' });
