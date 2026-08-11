@@ -47,6 +47,12 @@ export default function ClassDetailPage() {
           const data = await res.json();
           setClassData(data.classData);
           setUserRole(data.userRole);
+
+          // Redirect students to new dashboard
+          if (data.userRole === 'Student') {
+            router.push(`/students/class/${classId}/dashboard`);
+            return;
+          }
         } else {
           setLoading(false);
         }
