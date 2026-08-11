@@ -12,6 +12,9 @@ export function StandardsObjectivesTeacher({ classId }: StandardsObjectivesTeach
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedStandards, setExpandedStandards] = useState<Set<string>>(new Set());
+  const [addingMaterialTo, setAddingMaterialTo] = useState<string | null>(null);
+  const [materialForm, setMaterialForm] = useState({ title: '', type: 'guide', url: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +49,86 @@ export function StandardsObjectivesTeacher({ classId }: StandardsObjectivesTeach
       newExpanded.add(standardId);
     }
     setExpandedStandards(newExpanded);
+  };
+
+  const handleAddMaterial = async (standardId: string, objectiveId: string) => {
+    if (!materialForm.title.trim()) {
+      alert('Please enter a material title');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(
+        `/api/k12-classes/${classId}/objectives/${objectiveId}/materials`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(materialForm),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to add material');
+      }
+
+      setMaterialForm({ title: '', type: 'guide', url: '' });
+      setAddingMaterialTo(null);
+
+      const result = await response.json();
+      setData((prev: any) => ({
+        ...prev,
+        standards: prev.standards.map((s: any) =>
+          s.standardId === standardId
+            ? {
+                ...s,
+                objectives: s.objectives.map((o: any) =>
+                  o.id === objectiveId
+                    ? { ...o, materials: [...(o.materials || []), result] }
+                    : o
+                ),
+              }
+            : s
+        ),
+      }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to add material');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteMaterial = async (standardId: string, objectiveId: string, materialId: string) => {
+    if (!confirm('Delete this material?')) return;
+
+    try {
+      const response = await fetch(
+        `/api/k12-classes/${classId}/objectives/${objectiveId}/materials?materialId=${materialId}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete material');
+      }
+
+      setData((prev: any) => ({
+        ...prev,
+        standards: prev.standards.map((s: any) =>
+          s.standardId === standardId
+            ? {
+                ...s,
+                objectives: s.objectives.map((o: any) =>
+                  o.id === objectiveId
+                    ? { ...o, materials: o.materials.filter((m: any) => m.id !== materialId) }
+                    : o
+                ),
+              }
+            : s
+        ),
+      }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete material');
+    }
   };
 
   const getMasteryColor = (status: string) => {
@@ -227,49 +310,179 @@ export function StandardsObjectivesTeacher({ classId }: StandardsObjectivesTeach
                     </div>
 
                     {/* Materials */}
-                    {objective.materials && objective.materials.length > 0 && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text2, marginBottom: '6px' }}>
-                          📎 Materials:
-                        </div>
-                        {objective.materials.map((material: any) => (
-                          <div
-                            key={material.id}
+                    {/* Materials Section */}
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text2, marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        📎 Materials ({objective.materials?.length || 0})
+                        {addingMaterialTo !== objective.id && (
+                          <button
+                            onClick={() => {
+                              setAddingMaterialTo(objective.id);
+                              setMaterialForm({ title: '', type: 'guide', url: '' });
+                            }}
                             style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              backgroundColor: colors.bg,
-                              border: `1px solid ${colors.border}`,
-                              borderRadius: '4px',
-                              padding: '8px',
-                              marginBottom: '4px',
-                              fontSize: '12px',
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              backgroundColor: '#10b981',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
                             }}
                           >
-                            <span>
-                              {material.type === 'material' && '📄'}
-                              {material.type === 'assessment' && '📝'}
-                              {material.type === 'video' && '🎥'}
-                              {material.type === 'link' && '🔗'} {material.title}
-                            </span>
-                            <button
+                            + Add
+                          </button>
+                        )}
+                      </div>
+
+                      {objective.materials && objective.materials.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                          {objective.materials.map((material: any) => (
+                            <div
+                              key={material.id}
                               style={{
-                                padding: '4px 8px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                backgroundColor: colors.bg,
+                                border: `1px solid ${colors.border}`,
+                                borderRadius: '4px',
+                                padding: '8px',
+                                fontSize: '12px',
+                              }}
+                            >
+                              <span>
+                                {material.type === 'material' && '📄'}
+                                {material.type === 'assessment' && '📝'}
+                                {material.type === 'video' && '🎥'}
+                                {material.type === 'guide' && '📋'}
+                                {material.type === 'link' && '🔗'} {material.title}
+                              </span>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {material.url && (
+                                  <a href={material.url} target="_blank" rel="noopener noreferrer"
+                                    style={{
+                                      padding: '3px 6px',
+                                      fontSize: '10px',
+                                      backgroundColor: '#3b82f6',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '3px',
+                                      cursor: 'pointer',
+                                      textDecoration: 'none',
+                                    }}
+                                  >
+                                    View
+                                  </a>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteMaterial(standard.standardId, objective.id, material.id)}
+                                  style={{
+                                    padding: '3px 6px',
+                                    fontSize: '10px',
+                                    backgroundColor: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '3px',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {addingMaterialTo === objective.id && (
+                        <div style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '4px', padding: '8px', marginBottom: '8px' }}>
+                          <input
+                            type="text"
+                            placeholder="Material title"
+                            value={materialForm.title}
+                            onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })}
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              marginBottom: '6px',
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '3px',
+                              fontSize: '12px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                          <select
+                            value={materialForm.type}
+                            onChange={(e) => setMaterialForm({ ...materialForm, type: e.target.value })}
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              marginBottom: '6px',
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '3px',
+                              fontSize: '12px',
+                              boxSizing: 'border-box',
+                            }}
+                          >
+                            <option value="guide">Study Guide</option>
+                            <option value="video">Video</option>
+                            <option value="assessment">Assessment</option>
+                            <option value="material">Document</option>
+                            <option value="link">Link</option>
+                          </select>
+                          <input
+                            type="url"
+                            placeholder="URL (optional)"
+                            value={materialForm.url}
+                            onChange={(e) => setMaterialForm({ ...materialForm, url: e.target.value })}
+                            style={{
+                              width: '100%',
+                              padding: '6px',
+                              marginBottom: '6px',
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '3px',
+                              fontSize: '12px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                              onClick={() => handleAddMaterial(standard.standardId, objective.id)}
+                              disabled={submitting}
+                              style={{
+                                flex: 1,
+                                padding: '6px',
                                 fontSize: '11px',
-                                backgroundColor: '#3b82f6',
+                                backgroundColor: '#10b981',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '3px',
+                                cursor: submitting ? 'not-allowed' : 'pointer',
+                                opacity: submitting ? 0.5 : 1,
+                              }}
+                            >
+                              {submitting ? 'Adding...' : 'Add Material'}
+                            </button>
+                            <button
+                              onClick={() => setAddingMaterialTo(null)}
+                              style={{
+                                flex: 1,
+                                padding: '6px',
+                                fontSize: '11px',
+                                backgroundColor: colors.border,
+                                color: colors.text2,
+                                border: 'none',
+                                borderRadius: '3px',
                                 cursor: 'pointer',
                               }}
                             >
-                              View
+                              Cancel
                             </button>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Teacher Notes */}
                     {objective.teacherNotes && (
