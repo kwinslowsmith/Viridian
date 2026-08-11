@@ -46,23 +46,14 @@ export async function POST(
       );
     }
 
-    // Verify objective exists and belongs to this class
-    const classStandard = await prisma.classStandard.findFirst({
-      where: {
-        classId,
-        standard: {
-          exampleObjectives: {
-            some: {
-              id: objectiveId,
-            },
-          },
-        },
-      },
+    // Verify objective exists
+    const objective = await prisma.exampleObjective.findUnique({
+      where: { id: objectiveId },
     });
 
-    if (!classStandard) {
+    if (!objective) {
       return NextResponse.json(
-        { error: 'Objective not found in this class' },
+        { error: 'Objective not found' },
         { status: 404 }
       );
     }
@@ -128,12 +119,12 @@ export async function DELETE(
       );
     }
 
-    // Verify material exists and belongs to this class/objective
+    // Verify material exists and belongs to this objective
     const material = await prisma.objectiveMaterial.findUnique({
       where: { id: materialId },
     });
 
-    if (!material || material.classId !== classId || material.objectiveId !== objectiveId) {
+    if (!material || material.objectiveId !== objectiveId) {
       return NextResponse.json({ error: 'Material not found' }, { status: 404 });
     }
 
