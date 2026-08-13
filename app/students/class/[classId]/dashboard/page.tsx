@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { K12StudentProgressDashboard } from '@/app/components/K12StudentProgressDashboard';
 import { StandardsObjectivesStudent } from '@/app/components/StandardsObjectivesStudent';
 
@@ -11,13 +12,24 @@ export default function StudentClassDashboardPage({
 }: {
   params: Promise<{ classId: string }>;
 }) {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('progress');
   const [classId, setClassId] = useState<string | null>(null);
 
   // Handle async params
-  Promise.resolve(params).then((resolved) => {
-    setClassId(resolved.classId);
-  });
+  useEffect(() => {
+    Promise.resolve(params).then((resolved) => {
+      setClassId(resolved.classId);
+    });
+  }, [params]);
+
+  // Handle tab from URL parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'standards' || tab === 'progress') {
+      setActiveTab(tab as TabType);
+    }
+  }, [searchParams]);
 
   if (!classId) {
     return <div style={{ padding: '20px', color: '#666' }}>Loading...</div>;
