@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ParentDashboardK12.module.css';
 import ParentDashboardMessagingWidget from './ParentDashboardMessagingWidget';
+import ParentAtRiskWidget from './ParentAtRiskWidget';
 
 interface ExpandedStandard {
   [key: string]: boolean;
@@ -347,6 +348,14 @@ export default function ParentDashboardK12({ childId }: { childId: string }) {
             ))}
           </div>
         </section>
+
+        {/* At-Risk Widget */}
+        <ParentAtRiskWidget
+          childId={childId}
+          classId={data.classId}
+          childName={data.childName}
+          passThreshold={80}
+        />
 
         {/* Messages Widget */}
         <section className={styles.section}>
