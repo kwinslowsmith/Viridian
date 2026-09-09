@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             k12Enrollments: {
-              select: { class: { select: { gradeLevel: true } } },
+              select: { class: { select: { id: true, gradeLevel: true } } },
               take: 1,
               orderBy: { enrolledAt: 'desc' },
             },
@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       gradeLevel: pc.child.k12Enrollments[0]
         ? parseInt(pc.child.k12Enrollments[0].class.gradeLevel)
         : undefined,
+      classId: pc.child.k12Enrollments[0]?.class.id,
     }));
 
     return NextResponse.json({ children });

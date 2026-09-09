@@ -1,0 +1,327 @@
+.alert {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.alert.unread {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.alert.read {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  opacity: 0.85;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.groupName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unreadDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3b82f6;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.content {
+  padding: 12px 0;
+}
+
+.message {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.section {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+.section:last-of-type {
+  margin-bottom: 0;
+}
+
+.section h4 {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.section p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.section strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.objectiveText {
+  font-style: italic;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.standard {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.emailLink {
+  display: inline-block;
+  margin-top: 4px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+  transition: color 0.2s ease;
+}
+
+.emailLink:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+.supportText {
+  margin: 12px 0 0 0;
+  padding: 10px;
+  background: #f0f9ff;
+  border-left: 3px solid #3b82f6;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.acknowledgeBtn {
+  flex: 1;
+  padding: 10px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.acknowledgeBtn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.acknowledgeBtn:active {
+  transform: translateY(0);
+}
+
+.acknowledgedText {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  background: #d1fae5;
+  color: #047857;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .alert {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .header {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  .title {
+    gap: 6px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .groupName {
+    font-size: 13px;
+  }
+
+  .message {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .section {
+    margin-bottom: 10px;
+    padding: 8px;
+  }
+
+  .section h4 {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .section p {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .supportText {
+    margin-top: 10px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .actions {
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .acknowledgeBtn,
+  .acknowledgedText {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .alert {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+  }
+
+  .header {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .title {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .groupName {
+    font-size: 12px;
+  }
+
+  .unreadDot {
+    width: 8px;
+    height: 8px;
+    margin-left: 0;
+    order: -1;
+  }
+
+  .message {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .section {
+    margin-bottom: 8px;
+    padding: 6px;
+  }
+
+  .section h4 {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .section p {
+    font-size: 11px;
+    margin-top: 1px;
+  }
+
+  .supportText {
+    margin-top: 8px;
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .actions {
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .acknowledgeBtn,
+  .acknowledgedText {
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+}

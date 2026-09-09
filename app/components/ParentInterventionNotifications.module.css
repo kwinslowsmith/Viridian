@@ -1,0 +1,161 @@
+.container {
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #ef4444;
+  color: white;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.toggleBtn {
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.toggleBtn:active {
+  transform: scale(0.98);
+}
+
+.notificationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.loading {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.error {
+  margin: 0;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 14px;
+}
+
+.empty {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  .header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .title {
+    font-size: 15px;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    font-size: 11px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+  }
+
+  .toggleBtn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+
+  .header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .badge {
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+  }
+
+  .toggleBtn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .loading,
+  .error,
+  .empty {
+    font-size: 12px;
+    padding: 10px;
+  }
+}

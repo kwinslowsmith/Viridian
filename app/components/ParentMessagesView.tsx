@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ParentMessagesView.module.css';
 import ParentTeacherMessaging from './ParentTeacherMessaging';
+import ParentInterventionNotifications from './ParentInterventionNotifications';
 
 interface Child {
   id: string;
   name: string;
   gradeLevel?: number;
+  classId?: string;
 }
 
 interface Props {
@@ -114,6 +116,15 @@ export default function ParentMessagesView({ parentId }: Props) {
             ))}
           </div>
         </div>
+
+        {/* Intervention Notifications */}
+        {selectedChild && selectedChild.classId && (
+          <ParentInterventionNotifications
+            childId={selectedChild.id}
+            childName={selectedChild.name}
+            classId={selectedChild.classId}
+          />
+        )}
 
         {/* Messaging Panel */}
         {selectedChild && (
