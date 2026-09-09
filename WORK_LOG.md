@@ -592,3 +592,238 @@ T4 TESTING REPORT:
 
 ---
 
+
+---
+
+# 🚀 PHASE 3 MARCHING ORDERS (Sept 9 - Oct 1, 2026)
+
+**STATUS:** T1 Backend COMPLETE ✅ | T2-T4 UI: START NOW
+
+---
+
+## T1 (Orchestrator) — Phase 3 Backend APIs ✅ COMPLETE
+
+**MISSION:** Build assessment, grading, mastery, and intervention backend APIs
+
+**DELIVERABLES (ALL DONE):**
+- ✅ 11 API endpoints built and tested
+  - Assessment CRUD (POST, GET, PATCH, DELETE)
+  - Submissions & Grading (POST submit, PATCH grade)
+  - Mastery Calculation (student mastery %, pass thresholds, mandatory objectives)
+  - Intervention Groups (CRUD + add/remove students)
+- ✅ Test data seeded (3 assessments, 12 submissions, 2 intervention groups per class)
+- ✅ TypeScript: 0 errors
+- ✅ Deployed to Vercel
+
+**FILES CREATED:**
+- `/app/api/k12-classes/[classId]/assessments/route.ts`
+- `/app/api/k12-classes/[classId]/assessments/[assessmentId]/route.ts`
+- `/app/api/k12-classes/[classId]/assessments/[assessmentId]/submissions/route.ts`
+- `/app/api/k12-classes/[classId]/assessments/[assessmentId]/submit/route.ts`
+- `/app/api/k12-classes/[classId]/submissions/[submissionId]/grade/route.ts`
+- `/app/api/k12-classes/[classId]/students/[studentId]/mastery/route.ts`
+- `/app/api/k12-classes/[classId]/intervention-groups/route.ts`
+- `/app/api/k12-classes/[classId]/intervention-groups/[groupId]/route.ts`
+- `/app/api/k12-classes/[classId]/intervention-groups/[groupId]/add-student/route.ts`
+- `/app/api/k12-classes/[classId]/intervention-groups/[groupId]/remove-student/route.ts`
+- `prisma/seed-phase3.ts` (test data)
+
+**API REFERENCE:** See `PHASE3_API_ENDPOINTS.md`
+
+**NEXT ROLE (Sept 9-22):**
+- Monitor T2-T4 integration (answer questions about API contracts)
+- Small bug fixes as needed (~2-3 hours/week)
+- Optimize queries if performance issues arise
+
+**CHECKPOINT:** Sept 22 — All T2-T4 teams should have integrated their UI with your APIs
+
+---
+
+## T2 (Student Experience) — Phase 3 UI: My Grades & Study Guides
+
+**MISSION:** Add grades and study guides to student dashboard
+
+**TIMELINE:** Sept 9-22 (2 weeks)
+
+**DELIVERABLES NEEDED:**
+
+1. **My Grades Tab** (1 week)
+   - New tab in `/students/class/[classId]/dashboard`
+   - List assessments: title, due date, grade, status
+   - Color-coded: gray (not submitted) | yellow (pending) | green (90+) | orange (70-89) | red (<70)
+   - Click to see full submission + feedback
+   - Integrate: `GET /api/k12-classes/[classId]/assessments` + `GET /api/k12-classes/[classId]/submissions?studentId=[userId]`
+
+2. **Study Guide Generator** (4 days)
+   - Component in Standards & Objectives tab
+   - "📚 Study Guide" button per objective
+   - Generates: learning target, key concepts, practice questions, related materials
+   - Can use mock data initially (real LLM integration later)
+
+3. **Mastery Progress Enhancement** (3 days)
+   - Show mastery % + pass threshold (80%)
+   - Progress bar toward mastery
+   - "Currently 65%. Need 80% to pass."
+   - Integrate: `GET /api/k12-classes/[classId]/students/[studentId]/mastery`
+
+**DETAILED SPEC:** T2_PHASE3_BRIEFING.md
+
+**SUCCESS CRITERIA:**
+- [ ] My Grades tab with color-coded grades
+- [ ] Study Guide component renders
+- [ ] Mastery Progress shows % + threshold
+- [ ] Mobile responsive (375px+)
+- [ ] TypeScript: 0 errors
+- [ ] Ready for browser verification Sept 22
+
+**CHECKPOINT:** Sept 22 — Demo My Grades + Study Guides working with live data
+
+---
+
+## T3 (Parent Experience) — Phase 3 UI: Alerts & Risk Indicators
+
+**MISSION:** Add risk indicators and intervention alerts to parent dashboard
+
+**TIMELINE:** Sept 9-22 (2 weeks)
+
+**DELIVERABLES NEEDED:**
+
+1. **At-Risk Widget** (1 week)
+   - New widget on `/parents/dashboard`
+   - Shows: child's mastery %, pass threshold, intervention groups, timeline to mastery
+   - Color-coded: green (on track) | yellow (needs help) | red (critical)
+   - Click to expand → see specific at-risk objectives + scores
+   - Integrate: `GET /api/k12-classes/[classId]/students/[studentId]/mastery` + `GET /api/k12-classes/[classId]/intervention-groups`
+
+2. **Intervention Alerts** (5 days)
+   - When child added to intervention group → parent notification
+   - Show in `/parents/messages` inbox + email via Resend
+   - Display: objective name, meeting schedule, teacher contact
+   - "Acknowledge" button to mark read
+
+3. **Progress Benchmarking** (3 days)
+   - Add to each standard: mastery %, pass threshold, gap analysis
+   - Encouragement message ("Good news: improved 5% this week!")
+   - Estimated time to mastery
+
+**DETAILED SPEC:** T3_PHASE3_BRIEFING.md
+
+**SUCCESS CRITERIA:**
+- [ ] At-Risk Widget displays on dashboard
+- [ ] Shows mastery %, threshold, intervention groups
+- [ ] Intervention alerts in messaging + email
+- [ ] Color-coding works (green/yellow/red)
+- [ ] Mobile responsive (375px+)
+- [ ] TypeScript: 0 errors
+- [ ] Plain language throughout
+- [ ] Ready for browser verification Sept 22
+
+**CHECKPOINT:** Sept 22 — Demo At-Risk Widget + Alerts working with live data
+
+---
+
+## T4 (Teacher Experience) — Phase 3 UI: Grading & Interventions
+
+**MISSION:** Add assessment creation, grading, and intervention tools to teacher dashboard
+
+**TIMELINE:** Sept 9-22 (2 weeks)
+
+**DELIVERABLES NEEDED:**
+
+1. **Assessment Creator** (3 days)
+   - New page/tab: `/teachers/class/[classId]/assessments`
+   - List existing assessments: title, type, due date, submission count
+   - "New Assessment" form: title, description, type (formative/summative), link objectives, due date
+   - Edit/delete existing assessments
+   - Integrate: `POST/GET/PATCH/DELETE /api/k12-classes/[classId]/assessments`
+
+2. **Grading Inbox** (4 days)
+   - Show all pending submissions
+   - Table: Student | Assessment | Submitted | Grade | [Action]
+   - Filter by assessment, by status
+   - Sort by date, student, assessment
+   - Click [Grade] → open grading interface
+   - Integrate: `GET /api/k12-classes/[classId]/assessments/[assessmentId]/submissions`
+
+3. **Grading Interface** (4 days)
+   - Modal/drawer to grade individual submissions
+   - Show submission content (text, files, attachments)
+   - Input grade (0-100) + feedback textarea
+   - Quick actions: "Excellent" (90), "Good" (80), "Needs Revision" (65)
+   - [Save Grade] [Next Submission] buttons
+   - Integrate: `PATCH /api/k12-classes/[classId]/submissions/[submissionId]/grade`
+
+4. **Intervention Manager** (3 days)
+   - List all intervention groups for this class
+   - "Create Intervention Group" form: name, objective, students, meeting schedule
+   - Edit/delete groups, add/remove students
+   - "Quick Create" button from Struggling Skills (pre-fill objective)
+   - Integrate: `POST/GET/PATCH/DELETE /api/k12-classes/[classId]/intervention-groups`
+
+5. **Enhanced Mastery Dashboard** (2 days)
+   - Group struggling skills: Critical > At Risk > Ready to Master
+   - Color-coded highlighting
+   - [Create Intervention] quick action per skill
+   - Show struggling students highlighted
+   - Integrate: `GET /api/k12-classes/[classId]/students/[studentId]/mastery`
+
+**DETAILED SPEC:** T4_PHASE3_BRIEFING.md
+
+**SUCCESS CRITERIA:**
+- [ ] Assessment Creator works (CRUD)
+- [ ] Grading Inbox shows submissions with filter/sort
+- [ ] Grading Interface opens, saves grades with feedback
+- [ ] Intervention Manager creates/manages groups
+- [ ] Can add/remove students from groups
+- [ ] Enhanced Mastery Dashboard with quick actions
+- [ ] Mobile responsive (600px+)
+- [ ] TypeScript: 0 errors
+- [ ] Grading workflow optimized for speed
+- [ ] Ready for browser verification Sept 22
+
+**CHECKPOINT:** Sept 22 — Demo Assessment Creator + Grading + Interventions working with live data
+
+---
+
+## COORDINATION & SUPPORT
+
+**Daily Standups:** Check GitHub commits (auto-deploy to Vercel)
+
+**If You Get Stuck:**
+- API issues → message T1 (Kyle reviewing logs)
+- Integration questions → check API reference docs
+- Component questions → check briefing docs
+
+**Weekly Sync:** Sept 22 (end of 2-week sprint)
+- T1-T4 demos of working features
+- Browser verification against live data
+- Bugs/blockers review
+- Ready for Oct 1 Phase 3 completion
+
+---
+
+## TIMELINE TO COMPLETION
+
+| Date | Milestone | Owner |
+|------|-----------|-------|
+| Sept 9 | T1 Backend Complete | ✅ T1 |
+| Sept 15 | Mid-sprint checkpoint (features 50% built) | T2-T4 |
+| Sept 22 | Phase 3 UI Complete (all features) | T2-T4 |
+| Sept 25 | Browser Verification (real data, no bugs) | T1 + T2-T4 |
+| Oct 1 | Phase 3 COMPLETE & SHIPPED | All Teams |
+
+---
+
+## SUCCESS = SHIP DATE
+
+**Oct 1, 2026:** Phase 3 complete, ready for pilot school
+
+**Next:** Phase 4 (Admin Panel) begins Oct 1 for 1-school pilot by Nov 1
+
+---
+
+**Let's go build it. T2-T4: Read your briefings, start building, push to GitHub daily. Kyle: Monitor and support.**
+
+🚀
+
+Last Updated: Sept 9, 2026 - Phase 3 Marching Orders issued to all teams
