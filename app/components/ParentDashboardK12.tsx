@@ -232,6 +232,13 @@ export default function ParentDashboardK12({ childId }: { childId: string }) {
                           }}
                         />
                       </div>
+                      <div className={styles.benchmarkLabel}>
+                        {standard.masteryPercent < 80 && (
+                          <span className={styles.gap}>
+                            {80 - standard.masteryPercent}% to goal
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className={styles.expandIcon}>
                       {expandedStandards[standard.id] ? '▼' : '▶'}
@@ -242,6 +249,35 @@ export default function ParentDashboardK12({ childId }: { childId: string }) {
                 {/* Expanded Details */}
                 {expandedStandards[standard.id] && (
                   <div className={styles.standardDetails}>
+                    {/* Progress Benchmarking */}
+                    {standard.masteryPercent < 80 && (
+                      <div className={styles.benchmarkingSection}>
+                        <div className={styles.benchmarkStat}>
+                          <span className={styles.currentLabel}>Current:</span>
+                          <span className={styles.currentValue}>{standard.masteryPercent}%</span>
+                          <span className={styles.targetLabel}>Target:</span>
+                          <span className={styles.targetValue}>80%</span>
+                        </div>
+                        <p className={styles.benchmarkText}>
+                          Your child is <strong>{80 - standard.masteryPercent}% below the mastery goal</strong>.
+                        </p>
+                        <p className={styles.encouragementText}>
+                          🎯 Keep going! Every step forward counts. Estimated <strong>
+                            {Math.ceil((80 - standard.masteryPercent) / 5)} weeks
+                          </strong> to reach the goal.
+                        </p>
+                      </div>
+                    )}
+
+                    {standard.masteryPercent >= 80 && (
+                      <div className={styles.benchmarkingSection + ' ' + styles.complete}>
+                        <p className={styles.completionText}>
+                          ✓ <strong>{data.childName} has mastered this standard!</strong> Great work!
+                          Keep practicing to maintain this level of skill.
+                        </p>
+                      </div>
+                    )}
+
                     {/* What Is This? */}
                     <div className={styles.detailSection}>
                       <h4 className={styles.detailTitle}>What is this?</h4>
