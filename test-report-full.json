@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-09-10T12:05:42.052Z",
+  "timestamp": "2026-09-10T12:20:23.788Z",
   "testName": "T2 E2E Full Dashboard Verification (with Login)",
   "url": "http://localhost:3001",
   "credentials": {
     "email": "student1@riverside.edu"
   },
   "results": {
-    "loginSuccess": true,
+    "loginSuccess": false,
     "progressTabWorks": true,
     "standardsTabWorks": true,
     "standardsDisplayed": true,
@@ -15,22 +15,23 @@
     "expandableItems": true,
     "consoleErrors": [],
     "performance": {
-      "loginPageLoad": 98,
-      "dashboardLoad": 106,
-      "tabSwitch": 26
+      "loginPageLoad": 30004,
+      "dashboardLoad": 7157,
+      "tabSwitch": 20
     }
   },
   "screenshots": [
     "01-login-page.png",
     "02-dashboard-progress-tab.png",
+    "02b-dashboard-progress-loaded.png",
     "03-dashboard-standards-tab.png",
+    "03b-dashboard-standards-loaded.png",
     "04-dashboard-expanded.png",
     "05-final-state.png"
   ],
   "testSteps": [
     "Login page loaded",
-    "Login form submitted",
-    "Login successful",
+    "Login form fill: Execution context was destroyed, most likely because of a navigation.",
     "Dashboard loaded",
     "Progress tab verified",
     "Standards tab clicked",

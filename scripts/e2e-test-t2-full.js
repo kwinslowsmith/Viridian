@@ -159,7 +159,19 @@ async function runFullTest() {
     report.screenshots.push('02-dashboard-progress-tab.png');
 
     // Step 4: Verify Progress tab
-    console.log('\n📍 Step 4: Verify Progress tab');
+    console.log('\n📍 Step 4: Verify Progress tab (waiting for data load)');
+    try {
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return text.length > 100; // Wait for meaningful content
+      }, { timeout: 5000 });
+    } catch (e) {
+      console.warn('⚠️  Progress data did not load fully');
+    }
+    await delay(1000);
+    await page.screenshot({ path: path.join(screenshotsDir, '02b-dashboard-progress-loaded.png') });
+    report.screenshots.push('02b-dashboard-progress-loaded.png');
+
     const progressContent = await page.content();
     if (progressContent.includes('Progress') || progressContent.includes('progress')) {
       report.results.progressTabWorks = true;
@@ -203,8 +215,25 @@ async function runFullTest() {
       report.testSteps.push(`Tab click: ${e.message}`);
     }
 
-    // Step 6: Check Standards content
-    console.log('\n📍 Step 6: Check Standards & Objectives content');
+    // Step 6: Wait for Standards content to load
+    console.log('\n📍 Step 6: Waiting for Standards & Objectives data to load...');
+    try {
+      // Wait up to 10 seconds for content that's not just "Loading..."
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return text.includes('Standard') && !text.includes('Loading standards');
+      }, { timeout: 10000 });
+      console.log('✓ Standards content loaded');
+    } catch (e) {
+      console.warn('⚠️  Standards content did not load, continuing with available data...');
+    }
+
+    await delay(2000); // Extra wait to ensure rendering
+    await page.screenshot({ path: path.join(screenshotsDir, '03b-dashboard-standards-loaded.png') });
+    report.screenshots.push('03b-dashboard-standards-loaded.png');
+
+    // Step 6b: Check Standards content
+    console.log('\n📍 Step 6b: Check Standards & Objectives content');
     const pageText = await page.evaluate(() => document.body.innerText);
     const standardsContent = await page.content();
 
