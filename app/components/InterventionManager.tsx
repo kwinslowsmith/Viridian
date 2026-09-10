@@ -28,13 +28,19 @@ interface Student {
 
 interface InterventionManagerProps {
   classId: string;
+  quickCreateObjective?: { id: string; text: string } | null;
+  onQuickCreateCanceled?: () => void;
 }
 
-export function InterventionManager({ classId }: InterventionManagerProps) {
+export function InterventionManager({ 
+  classId, 
+  quickCreateObjective,
+  onQuickCreateCanceled 
+}: InterventionManagerProps) {
   const [groups, setGroups] = useState<InterventionGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!quickCreateObjective);
   const [editingGroup, setEditingGroup] = useState<InterventionGroup | null>(null);
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -44,6 +50,12 @@ export function InterventionManager({ classId }: InterventionManagerProps) {
     fetchObjectives();
     fetchStudents();
   }, [classId]);
+
+  useEffect(() => {
+    if (quickCreateObjective) {
+      setShowForm(true);
+    }
+  }, [quickCreateObjective]);
 
   const fetchGroups = async () => {
     try {
@@ -95,6 +107,7 @@ export function InterventionManager({ classId }: InterventionManagerProps) {
       await fetchGroups();
       setShowForm(false);
       setError(null);
+      onQuickCreateCanceled?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create group');
     }
@@ -160,6 +173,7 @@ export function InterventionManager({ classId }: InterventionManagerProps) {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingGroup(null);
+    onQuickCreateCanceled?.();
   };
 
   if (loading) {
@@ -217,6 +231,7 @@ export function InterventionManager({ classId }: InterventionManagerProps) {
           <InterventionGroupForm
             objectives={objectives}
             students={students}
+            preSelectedObjectiveId={quickCreateObjective?.id}
             onSubmit={handleCreateGroup}
             onCancel={handleCloseForm}
           />

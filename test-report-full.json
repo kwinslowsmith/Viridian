@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-09-10T12:05:42.052Z",
+  "testName": "T2 E2E Full Dashboard Verification (with Login)",
+  "url": "http://localhost:3001",
+  "credentials": {
+    "email": "student1@riverside.edu"
+  },
+  "results": {
+    "loginSuccess": true,
+    "progressTabWorks": true,
+    "standardsTabWorks": true,
+    "standardsDisplayed": true,
+    "materialsVisible": false,
+    "teacherNotesVisible": false,
+    "expandableItems": true,
+    "consoleErrors": [],
+    "performance": {
+      "loginPageLoad": 98,
+      "dashboardLoad": 106,
+      "tabSwitch": 26
+    }
+  },
+  "screenshots": [
+    "01-login-page.png",
+    "02-dashboard-progress-tab.png",
+    "03-dashboard-standards-tab.png",
+    "04-dashboard-expanded.png",
+    "05-final-state.png"
+  ],
+  "testSteps": [
+    "Login page loaded",
+    "Login form submitted",
+    "Login successful",
+    "Dashboard loaded",
+    "Progress tab verified",
+    "Standards tab clicked",
+    "Standards content found",
+    "Expandable items found: 2"
+  ]
+}

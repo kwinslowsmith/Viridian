@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors } from '@/app/design/colors';
 
 interface Objective {
@@ -17,6 +17,7 @@ interface Student {
 interface InterventionGroupFormProps {
   objectives: Objective[];
   students: Student[];
+  preSelectedObjectiveId?: string;
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
@@ -24,14 +25,25 @@ interface InterventionGroupFormProps {
 export function InterventionGroupForm({
   objectives,
   students,
+  preSelectedObjectiveId,
   onSubmit,
   onCancel,
 }: InterventionGroupFormProps) {
   const [name, setName] = useState('');
-  const [objectiveId, setObjectiveId] = useState('');
+  const [objectiveId, setObjectiveId] = useState(preSelectedObjectiveId || '');
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [meetingSchedule, setMeetingSchedule] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (preSelectedObjectiveId && objectives.length > 0) {
+      const objective = objectives.find((o) => o.id === preSelectedObjectiveId);
+      if (objective) {
+        setName(`${objective.label} Support Group`);
+        setObjectiveId(preSelectedObjectiveId);
+      }
+    }
+  }, [preSelectedObjectiveId, objectives]);
 
   const handleStudentToggle = (studentId: string) => {
     const newSet = new Set(selectedStudents);

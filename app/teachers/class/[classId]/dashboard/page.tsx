@@ -1,4 +1,4 @@
-import { TeacherClassDashboard } from '@/app/components/TeacherClassDashboard';
+import { TeacherDashboardWithIntervention } from '@/app/components/TeacherDashboardWithIntervention';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -18,7 +18,7 @@ export default async function ClassDashboardPage({
 
   return (
     <div style={{ padding: '2rem' }}>
-      <TeacherClassDashboard classId={classId} />
+      <TeacherDashboardWithIntervention classId={classId} />
     </div>
   );
 }
