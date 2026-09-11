@@ -134,19 +134,54 @@
 **Status**: in_progress  
 **Timeline**: Weeks 2-4 (after T1/T2 have initial components)
 
-**Week 2 (Sep 18-25):**
-- [ ] Wire T2 frontend → T1 backend (useEffect + fetch patterns)
+**Week 1 PREP (Sep 11): ✅ COMPLETE**
+- [x] Create `lib/polymath-api.ts` — 20+ API wrapper functions, full TypeScript types (~600 lines)
+  - Functions: fetchCommunities, fetchCommunity, createCommunity, updateCommunity
+  - Functions: fetchCommunityMembers, joinCommunity
+  - Functions: fetchCommunityResources, createResource, deleteResource
+  - Functions: fetchCommunityDiscussions, createDiscussion, fetchDiscussionMessages, postDiscussionMessage
+  - Functions: fetchCommunityMeetings, createMeeting, updateMeeting, deleteMeeting
+  - Functions: fetchCuratorStats, fetchMyProfile, updateMyProfile, fetchMyDashboard
+
+- [x] Create `hooks/usePolymath.ts` — 15+ custom React hooks (~550 lines)
+  - Hooks: useCommunities, useMyCommunities, useCommunity, useCreateCommunity
+  - Hooks: useCommunityMembers, useJoinCommunity
+  - Hooks: useCommunityResources, useCreateResource, useDeleteResource
+  - Hooks: useCommunityDiscussions, useCreateDiscussion, useDiscussion, useDiscussionMessages, usePostMessage
+  - Hooks: useCommunityMeetings, useCreateMeeting
+  - Hooks: useCuratorStats, useMyProfile, useUpdateProfile, useMyDashboard
+  - All hooks: loading/error/data state management, proper cleanup
+
+- [x] Create `hooks/useRealtimeSubscription.ts` — 6 real-time sync hooks (~300 lines)
+  - Hooks: useResourcesRealtime, useDiscussionMessagesRealtime, useDiscussionsRealtime
+  - Hooks: useCommunityMembersRealtime, useMeetingsRealtime
+  - Hooks: usePresenceTracking (who's online)
+  - All hooks: proper channel cleanup, INSERT/UPDATE/DELETE event handling
+
+- [x] Create `T3_INTEGRATION_GUIDE.md` — Complete integration reference & quick-start
+  - Integration pattern (5 steps: mock → API → loading states → actions → real-time)
+  - Priority 1 (5 pages), Priority 2 (5 pages), Priority 3 (5 pages) wiring checklist
+  - Common patterns (loading, error handling, refetching, disabling)
+  - Testing checklist, quick-start template
+  - Week 2-4 deliverables timeline
+
+**Week 2 (Sep 11-18): NOW STARTING**
+- [ ] Wire Priority 1 pages: Communities list, Community dashboard, Resources, Create community, Join community
 - [ ] Test API responses, debug mismatches
 - [ ] Implement loading/error/empty states
+- [ ] Test TypeScript compilation (0 errors required)
 
 **Week 3 (Sep 25-Oct 2):**
-- [ ] Supabase realtime: live discussions, messages, resources
+- [ ] Wire Priority 2 pages: Discussions, Discussion thread, Meetings
+- [ ] Supabase realtime: live discussions, messages, resources, members
 - [ ] Real-time sync: when someone posts a resource, others see it instantly
 - [ ] Presence tracking (who's online in community)
-- [ ] Notification system (new message, new resource, meeting reminder)
+- [ ] Test all real-time features
 
 **Week 4 (Oct 2-9):**
+- [ ] Wire Priority 3 pages: Member profiles, Curator dashboard, User profile edit, Search
 - [ ] End-to-end testing (full user flows)
+- [ ] Performance optimization
 - [ ] Bug fixes
 - [ ] Performance optimization
 

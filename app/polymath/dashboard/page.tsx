@@ -1,149 +1,156 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, Button, Badge, EmptyState, Spinner } from '@/app/components/polymath/ComponentLibrary';
-import { PolymathLayout } from '../layout-main';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { Card, CardBody, Button, LoadingState, EmptyState } from '@/app/components/polymath';
+import { CommunityCard } from '@/app/components/polymath/CommunityCard';
+
+interface Community {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  memberCount?: number;
+  role?: 'curator' | 'member';
+}
+
+interface Activity {
+  id: string;
+  type: 'resource' | 'discussion' | 'meeting';
+  title: string;
+  community: string;
+  timestamp: string;
+}
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample data
-  const communities = [
-    {
-      id: 1,
-      name: 'Boston K-8 Curriculum',
-      members: 24,
-      resources: 18,
-      discussions: 12,
-      lastActivity: '2 hours ago',
-    },
-    {
-      id: 2,
-      name: 'STEM Educators Network',
-      members: 31,
-      resources: 42,
-      discussions: 28,
-      lastActivity: '30 minutes ago',
-    },
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const recentActivity = [
-    { type: 'resource', user: 'Sarah Chen', action: 'shared a resource', community: 'Boston K-8', time: '1h ago' },
-    { type: 'discussion', user: 'Marcus Johnson', action: 'started a discussion', community: 'STEM Network', time: '2h ago' },
-    { type: 'meeting', user: 'Elena Rodriguez', action: 'scheduled a meeting', community: 'Boston K-8', time: '4h ago' },
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const communitiesRes = await fetch('/api/communities/my');
+      if (communitiesRes.ok) {
+        const data = await communitiesRes.json();
+        setCommunities(data.communities || []);
+      }
+      setActivities([]);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <LoadingState message="Loading your dashboard..." />;
+  }
 
   return (
-    <PolymathLayout>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 8px 0', color: '#1c1917' }}>
-            Welcome to Polymath
-          </h1>
-          <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-            Collaborate with educators to build equitable curricula
-          </p>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-[#3C3C3C] mb-2">
+          Welcome, {session?.user?.name || 'Educator'}
+        </h1>
+        <p className="text-[#666666]">
+          Collaborate with educators and build equitable curricula
+        </p>
+      </div>
+
+      <div className="mb-8 flex gap-4 flex-wrap">
+        <Link href="/polymath/communities/create">
+          <Button>+ Create Community</Button>
+        </Link>
+        <Link href="/polymath/communities">
+          <Button variant="secondary">Browse Communities</Button>
+        </Link>
+      </div>
+
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-[#3C3C3C]">My Communities</h2>
+          {communities.length > 0 && (
+            <Link href="/polymath/communities" className="text-[#20B2AA] hover:underline text-sm">
+              View all
+            </Link>
+          )}
         </div>
 
-        {/* Quick Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '40px' }}>
-          <Card hoverable onClick={() => console.log('Create community')}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>👥</div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: '#1c1917' }}>
-                Create Community
-              </h3>
-              <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Start a new learning community</p>
-            </div>
-          </Card>
-
-          <Card hoverable onClick={() => console.log('Upload resource')}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>📚</div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: '#1c1917' }}>
-                Share Resource
-              </h3>
-              <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Upload curriculum material</p>
-            </div>
-          </Card>
-
-          <Card hoverable onClick={() => console.log('Start discussion')}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>💬</div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0', color: '#1c1917' }}>
-                Start Discussion
-              </h3>
-              <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Engage with your community</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Communities Section */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: '#1c1917' }}>
-              Your Communities
-            </h2>
-            <Button variant="primary" size="sm">
-              View All
-            </Button>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-            {communities.map((community) => (
-              <Card key={community.id} hoverable>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 12px 0', color: '#1c1917' }}>
-                  {community.name}
-                </h3>
-
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                  <Badge variant="primary">{community.members} members</Badge>
-                  <Badge variant="secondary">{community.resources} resources</Badge>
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-                    💬 {community.discussions} discussions
-                  </p>
-                  <p style={{ fontSize: '12px', color: '#999', margin: '4px 0 0 0' }}>
-                    Last activity {community.lastActivity}
-                  </p>
-                </div>
-
-                <Button variant="outline" size="sm" style={{ width: '100%' }}>
-                  View Community
-                </Button>
-              </Card>
+        {communities.length === 0 ? (
+          <EmptyState
+            icon="👥"
+            title="No communities yet"
+            description="Join a community to start collaborating with other educators"
+            actionLabel="Browse Communities"
+            onAction={() => (window.location.href = '/polymath/communities')}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {communities.slice(0, 6).map((community) => (
+              <CommunityCard
+                key={community.id}
+                id={community.id}
+                slug={community.slug}
+                name={community.name}
+                description={community.description}
+                memberCount={community.memberCount}
+                role={community.role}
+              />
             ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Recent Activity Section */}
-        <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 20px 0', color: '#1c1917' }}>
-            Recent Activity
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {recentActivity.map((activity, i) => (
-              <Card key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {activities.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-[#3C3C3C] mb-6">Recent Activity</h2>
+          <div className="space-y-4">
+            {activities.map((activity) => (
+              <Card key={activity.id}>
+                <CardBody className="flex justify-between items-center">
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', margin: '0 0 4px 0', color: '#1c1917' }}>
-                      <strong>{activity.user}</strong> {activity.action}
-                    </p>
-                    <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-                      in <strong>{activity.community}</strong>
+                    <h3 className="font-semibold text-[#3C3C3C]">{activity.title}</h3>
+                    <p className="text-sm text-[#666666]">
+                      {activity.type} in {activity.community}
                     </p>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#999' }}>{activity.time}</span>
-                </div>
+                  <p className="text-xs text-[#999999]">
+                    {new Date(activity.timestamp).toLocaleDateString()}
+                  </p>
+                </CardBody>
               </Card>
             ))}
           </div>
         </div>
-      </div>
-    </PolymathLayout>
+      )}
+
+      {communities.length === 0 && activities.length === 0 && (
+        <Card className="bg-gradient-to-r from-[#20B2AA]/10 to-[#0d9488]/10">
+          <CardBody className="text-center py-12">
+            <h3 className="text-xl font-bold text-[#3C3C3C] mb-2">
+              Get Started with Polymath
+            </h3>
+            <p className="text-[#666666] mb-6 max-w-md mx-auto">
+              Join a community of educators collaborating to build equitable curricula
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Link href="/polymath/communities">
+                <Button>Explore Communities</Button>
+              </Link>
+              <Link href="/polymath/communities/create">
+                <Button variant="secondary">Start a Community</Button>
+              </Link>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+    </div>
   );
 }
