@@ -185,3 +185,19 @@ select:focus-visible {
   outline: 2px solid var(--color-burgundy);
   outline-offset: 2px;
 }
+
+/* Component Library Animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

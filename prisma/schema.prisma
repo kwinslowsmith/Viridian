@@ -60,6 +60,7 @@ model User {
   studyGuidesCreated        StudyGuide[] @relation("StudyGuidesCreated")
   k12AssessmentsCreated     K12Assessment[] @relation("K12AssessmentsCreated")
   teacherRatings            TeacherRating[]
+  polymathMeetingsHosted    PolymathMeeting[] // Meetings hosted by this user
 
   // For NextAuth
   accounts                  Account[]
@@ -1021,6 +1022,8 @@ model LearningCommunity {
   resources               Resource[]
   projects                Project[]
   polymathPosts           PolymathPost[] @relation("PolymathPosts")
+  conversations           Conversation[] // Community discussions and threads
+  meetings                PolymathMeeting[] // Community meetings
 
   @@unique([organizationId, slug])
   @@index([scope])
@@ -1274,7 +1277,7 @@ model Conversation {
   id                String   @id @default(cuid())
 
   // Type of conversation
-  type              String   // "direct" | "class" | "event" | "organization"
+  type              String   // "direct" | "class" | "event" | "organization" | "community"
 
   // Context (optional)
   k12ClassId        String?  // For class-level conversations
@@ -1286,6 +1289,9 @@ model Conversation {
   organizationId    String?  // For org-wide announcements
   organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
+  communityId       String?  // For community discussions (Polymath)
+  community         LearningCommunity? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
   // Display info
   title             String?  // Custom title or auto-generated for groups
   lastMessageAt     DateTime?
@@ -1294,6 +1300,7 @@ model Conversation {
   isMail            Boolean  @default(false)  // True for announcements, false for chat
   allowReplies      Boolean  @default(true)  // Can participants reply?
   isArchived        Boolean  @default(false) // Is this conversation archived?
+  isPinned          Boolean  @default(false) // For community discussions
 
   createdById       String
   createdBy         User     @relation("ConversationsCreated", fields: [createdById], references: [id], onDelete: Cascade)
@@ -1309,6 +1316,7 @@ model Conversation {
   @@index([k12ClassId])
   @@index([eventId])
   @@index([organizationId])
+  @@index([communityId])
   @@index([createdById])
 }
 
@@ -1945,4 +1953,37 @@ model SentNotification {
   @@index([type])
   @@index([sentAt])
   @@index([status])
+}
+
+// ============================================
+// POLYMATH MEETINGS
+// ============================================
+
+model PolymathMeeting {
+  id                String   @id @default(cuid())
+  communityId       String
+  community         LearningCommunity @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title             String   // "October 2026 Curriculum Review"
+  description       String?
+  scheduledAt       DateTime // When the meeting is scheduled
+
+  // Meeting details
+  zoomUrl           String?  // Zoom link for virtual meetings
+  location          String?  // Physical location if in-person
+
+  // Host info
+  hostId            String
+  host              User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  // Post-meeting
+  notes             String?  // Meeting notes/summary
+  recordingUrl      String?  // Video recording URL
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([communityId])
+  @@index([hostId])
+  @@index([scheduledAt])
 }

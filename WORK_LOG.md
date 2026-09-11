@@ -18,10 +18,10 @@
 
 ## Window Naming Conventions
 
-- **T1: Orchestrator** — Coordinates all work, fixes build errors, builds Phase 1 LMS foundation
-- **T2: Student Experience** — Builds student progress dashboard & student-facing features
-- **T3: Parent Experience** — Builds parent dashboard & parent engagement features
-- **T4: Teacher Experience** — Builds teacher class dashboard & teacher support features
+- **T1: Backend** — Builds Polymath database schema, authentication, REST APIs (9 endpoints), Supabase realtime
+- **T2: Frontend** — Builds Polymath UI components, pages, and editor interfaces for educator communities
+- **T3: Integration** — Wires frontend to backend, implements real-time sync with Supabase, end-to-end flows
+- **T4: Features** — Builds meeting coordination system and curator dashboard features
 
 ---
 
@@ -95,11 +95,19 @@
 **Status**: in_progress  
 **Timeline**: Weeks 1-4 (overlapping with T1)
 
-**Week 1 (Sep 11-18):**
-- [ ] Set up `/app/polymath/` folder structure
-- [ ] Create layout: navbar (communities dropdown, profile, logout), sidebar (navigation)
-- [ ] Build component library: buttons, cards, forms, modals, loading states
-- [ ] Reuse Viridian design tokens (colors, fonts, spacing)
+**Week 1 (Sep 11-18): ✅ COMPLETE**
+- [x] Set up `/app/polymath/` folder structure
+- [x] Create layout: navbar (communities dropdown, profile, logout), sidebar (navigation)
+- [x] Build component library: buttons, cards, forms, modals, loading states
+- [x] Reuse Viridian design tokens (colors, fonts, spacing)
+
+**Files Created:**
+- `app/polymath/layout-main.tsx` — Main layout with navbar + sidebar (responsive, collapsible)
+- `app/components/polymath/ComponentLibrary.tsx` — Complete component library (Button, Card, TextInput, TextArea, Modal, Spinner, Badge, EmptyState, LoadingCard)
+- `app/polymath/dashboard/page.tsx` — Main dashboard page with quick actions, communities grid, recent activity
+- Updated `app/polymath/globals-polymath.css` — Added animation styles
+
+**Status**: Dashboard loads, components tested, design tokens applied. Ready for Week 2-3 integration.
 
 **Week 2-3 (Sep 18-Oct 2):**
 - [ ] Build community views:
@@ -1202,6 +1210,25 @@ Last Updated: Sept 10, 2026 - T4 Phase 3: 4 of 5 Features Complete Last Updated:
 All 5 major features complete, tested, deployed, and ready for classroom use.
 
 Last Updated: Sept 10, 2026 - T4 PHASE 3 COMPLETE & DEPLOYED
+
+---
+
+## 🚀 T3: INTEGRATION PHASE - INITIATED (Sept 11, 2026)
+
+**Status**: Starting Week 2 work (Wiring Frontend → Backend)  
+**Started**: 2026-09-11 14:00 UTC  
+**Mission**: Wire T2 UI → T1 APIs, establish data fetching patterns, build real-time sync layer
+
+### Week 2 Deliverables (Sept 11-18)
+
+**Phase 1: API Wrapper & Hooks** (In Progress)
+- [ ] Create `lib/polymath-api.ts` — All API wrapper functions (communities, resources, discussions, meetings)
+- [ ] Create `hooks/usePolymath.ts` — Data fetching hooks with loading/error/empty states
+- [ ] Create `hooks/useRealtimeSubscription.ts` — Supabase real-time subscription logic
+- [ ] Wire Priority 1 pages: Communities list, Community dashboard, Resources, Create community form
+
+**Expected Completion**: Sept 15-18, 2026  
+**Success Criteria**: All Priority 1 pages rendering live data, zero TypeScript errors, loading/error states working
 
 ---
 
