@@ -111,8 +111,13 @@ export async function GET(
     }
 
     // Get all submissions for this class with student info
+    // Query through assessment -> class relationship
     const submissions = await prisma.k12Submission.findMany({
-      where: { classId },
+      where: {
+        assessment: {
+          classId: classId,
+        },
+      },
       select: {
         id: true,
         studentId: true,
