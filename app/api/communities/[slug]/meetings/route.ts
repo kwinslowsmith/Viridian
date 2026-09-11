@@ -33,9 +33,9 @@ export async function GET(
     }
 
     // Build order by
-    const orderBy = sort === 'past'
-      ? { scheduledAt: 'desc' }
-      : { scheduledAt: 'asc' };
+    const orderBy: any = sort === 'past'
+      ? { scheduledAt: 'desc' as const }
+      : { scheduledAt: 'asc' as const };
 
     // Build where clause
     const where: any = {

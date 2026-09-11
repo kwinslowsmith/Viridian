@@ -86,14 +86,22 @@
 - Pagination support on all list endpoints
 - See `POLYMATH_T1_WEEK1_COMPLETION.md` for full details
 
-**Week 2 (Sep 12-18): IN PROGRESS 🔄**
+**Week 2 (Sep 12-18): 🔴 BLOCKED - VERCEL ENV VARS ISSUE**
 - [x] Created T1_WEEK2_ACTION_PLAN.md — Comprehensive testing & verification plan
 - [x] Created T1_API_CONTRACT.md — Complete API specification for T3 integration
-- [ ] Complete production build verification (Next.js compilation)
-- [ ] Manual API testing (all 9 endpoints)
-- [ ] Performance profiling (response times, query optimization)
-- [ ] Supabase realtime setup documentation
-- [ ] Ready for T3 wiring (by Sep 19)
+- [x] Production build: ✅ Compiled successfully (4.5 min, 0 TypeScript errors)
+- [x] Vercel endpoints: ❌ FUNCTION_INVOCATION_FAILED - Runtime error
+- [x] Root cause identified: NEXTAUTH_URL = localhost in Vercel env (should be https://viridian.vercel.app)
+- [x] Created T1_DEPLOYMENT_ISSUE.md with recovery steps
+- **URGENT FIX NEEDED**: Update Vercel environment variables:
+  - [ ] Set NEXTAUTH_URL = https://viridian.vercel.app
+  - [ ] Verify DATABASE_URL points to Supabase
+  - [ ] Verify NEXTAUTH_SECRET is set
+  - [ ] Re-deploy
+  - [ ] Verify GET /api/communities returns 200 OK
+- [ ] Manual API testing (all 9 endpoints) — blocked until env fix
+- [ ] Performance profiling (blocked on env fix)
+- [ ] Ready for T3 wiring (ETA: Sep 12 evening after env fix)
 
 **Week 3-4 (Sep 25-Oct 9):**
 - [ ] Bug fixes from T2/T3 testing
