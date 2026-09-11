@@ -34,7 +34,7 @@ export function GradingInbox({ classId }: GradingInboxProps) {
   const [error, setError] = useState<string | null>(null);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('pending');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortBy, setSortBy] = useState<SortBy>('date');
 
   useEffect(() => {
