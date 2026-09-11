@@ -2,9 +2,9 @@
 
 **Purpose**: Track active work across parallel Claude instances to prevent duplicate effort and maintain project awareness.
 
-**Current Focus:** Phase 1 K12 LMS Dashboard — End-to-End Testing (T1-T4 Verification)  
-**Phase 1 Status:** ✅ Component Build Complete, ✅ Vercel Deployment Successful, 🚀 E2E Testing Initiated  
-**Test Credentials:** Ready (password: TestPassword123! for all roles)
+**Current Focus:** POLYMATH MVP BUILD — 4-Week Sprint (Sep 11 - Oct 9, 2026)
+**Polymath Status:** 🚀 PROJECT KICKOFF - Fresh Supabase DB, Fresh Codebase, 10-Person Pilot Ready  
+**Viridian Status:** ✅ ARCHIVED - Keep code in `/app/viridian/`, not actively developed
 **Live URL:** https://viridian.vercel.app (auto-deployed on main branch push)
 
 **Format**: 
@@ -35,6 +35,168 @@
 | Teacher Class Dashboard (Using K12 API) | 2026-08-07 | T4: Teacher Experience | ✅ Completed | **FULLY TESTED & VERIFIED.** ✅ All 6 sections render with live data. ✅ Health score color-coded (red for 0%). ✅ Struggling skills sorted descending. ✅ Intervention groups display schedule. ✅ Master calendar shows 3 events. ✅ Responsive tablet layout (800px+). ✅ Scannable in <5 seconds (3-4s actual). ✅ Zero data mismatches. See T4_MARCHING_ORDERS_VERIFICATION.md for full report. Production ready. |
 | Phase 2: Parent-Teacher Messaging | 2026-08-10 | T3: Parent Experience | ✅ Completed | **PHASE 2 COMPLETE.** ✅ ParentTeacherMessaging.tsx (direct 1-on-1 messaging, teacher list with unread counts, message thread). ✅ ParentMessagesView.tsx (multi-child hub with child selector, full-page layout). ✅ ParentDashboardMessagingWidget.tsx (quick access widget showing 3 most recent teachers, integrated into parent dashboard). ✅ API endpoints: `/api/parents/children`, `/api/k12/parents/children/[childId]/teachers`. ✅ Full messaging flow: conversation creation, message sending, unread tracking, read status. ✅ Responsive design (mobile layout <480px, desktop side-by-side). ✅ Uses existing conversation API infrastructure. Production ready. |
 | Phase 2: Consolidated Standards & Objectives Dashboard | 2026-08-10 | T1/T2/T4 Coordinated | ✅ Completed | **UNIFIED TEACHER-STUDENT VIEW - PRODUCTION READY.** ✅ T1 APIs deployed (both endpoints live). ✅ T4 teacher component DONE. ✅ T2 student component DONE + integrated with live APIs. Component: StandardsObjectivesStudent.tsx. Route: `/students/class/[classId]/dashboard` (tabbed with Progress). Test: American Literature class, real live data. Status: All three dashboards (teacher/student/parent) now live on Vercel with real data. |
+
+---
+
+## 🚀 POLYMATH PROJECT KICKOFF (Sep 11 - Oct 9, 2026)
+
+**THE MISSION**: Build a cooperative platform for educators to collectively author equitable curricula. Start with 10 Directors of Curriculum in Boston as curators. Communities → Resources → Discussions → Meetings → Curator Dashboard.
+
+**KEY DECISIONS:**
+- ✅ Separate Supabase database (clean separation from Viridian)
+- ✅ Keep Viridian code in `/app/viridian/` (archived, not deployed)
+- ✅ New code in `/app/polymath/` (fresh build, MVP scope)
+- ✅ Same Vercel deployment (polymath routes default)
+- ✅ 4-week timeline, ruthless scope, parallel teams
+
+**PILOT GROUP**: 10 Directors of Curriculum (Boston area), ~50 teachers across their communities
+
+---
+
+## 📋 PARALLEL ASSIGNMENTS (Week 1-4)
+
+### **T1: Backend / Database / API**
+**Owner**: T1 Backend Agent  
+**Status**: in_progress  
+**Timeline**: Weeks 1-4 (overlapping)
+
+**Week 1 (Sep 11-18):**
+- [ ] Create new Supabase database for Polymath (separate project)
+- [ ] Design schema: communities, community_members, resources, discussions, discussion_messages, meetings, user_profiles, curator_dashboard
+- [ ] Set up NextAuth with Supabase
+- [ ] Create Supabase connection in project
+- [ ] Scaffold API folder structure
+
+**Week 2-3 (Sep 18-Oct 2):**
+- [ ] Build API endpoints:
+  - [ ] `GET/POST /api/polymath/communities` (list, create)
+  - [ ] `GET/PATCH /api/polymath/communities/[id]` (details, update)
+  - [ ] `GET/POST /api/polymath/communities/[id]/members` (list, add)
+  - [ ] `GET/POST /api/polymath/communities/[id]/resources` (list, upload)
+  - [ ] `GET/POST /api/polymath/communities/[id]/discussions` (list, create)
+  - [ ] `GET/POST /api/polymath/communities/[id]/discussions/[discussionId]/messages`
+  - [ ] `GET/POST /api/polymath/communities/[id]/meetings` (schedule, update notes)
+  - [ ] `GET/PATCH /api/me/profile` (user profile, expertise)
+  - [ ] `GET /api/me/dashboard` (my communities, activity)
+- [ ] Supabase realtime setup (discussions, messages, resources)
+- [ ] Authorization checks (curator-only operations)
+
+**Week 4 (Oct 2-9):**
+- [ ] Bug fixes, performance tuning
+- [ ] API documentation
+- [ ] Test with T2/T3 frontend
+
+**Deliverable**: All 9 API endpoints working, tested, deployed to Vercel.
+
+---
+
+### **T2: Frontend / UI Components**
+**Owner**: T2 Frontend Agent  
+**Status**: in_progress  
+**Timeline**: Weeks 1-4 (overlapping with T1)
+
+**Week 1 (Sep 11-18):**
+- [ ] Set up `/app/polymath/` folder structure
+- [ ] Create layout: navbar (communities dropdown, profile, logout), sidebar (navigation)
+- [ ] Build component library: buttons, cards, forms, modals, loading states
+- [ ] Reuse Viridian design tokens (colors, fonts, spacing)
+
+**Week 2-3 (Sep 18-Oct 2):**
+- [ ] Build community views:
+  - [ ] Community list / join / create community
+  - [ ] Community dashboard (members, stats, recent activity)
+  - [ ] Resources grid (upload, filter, download)
+  - [ ] Discussions (threaded, pinned, recent)
+  - [ ] Meetings (calendar, scheduling, details)
+  - [ ] Member profiles (expertise, affiliations)
+- [ ] Build curator dashboard (stats, pending actions, impact view)
+- [ ] Forms: create community, upload resource, start discussion, schedule meeting, edit profile
+
+**Week 4 (Oct 2-9):**
+- [ ] Polish UI, mobile responsiveness (375px+)
+- [ ] Integrate with T3 backend
+- [ ] Bug fixes, edge cases
+
+**Deliverable**: All pages/components built, styled, ready to wire to API.
+
+---
+
+### **T3: Integration / Real-Time / Wiring**
+**Owner**: T3 Integration Agent  
+**Status**: in_progress  
+**Timeline**: Weeks 2-4 (after T1/T2 have initial components)
+
+**Week 2 (Sep 18-25):**
+- [ ] Wire T2 frontend → T1 backend (useEffect + fetch patterns)
+- [ ] Test API responses, debug mismatches
+- [ ] Implement loading/error/empty states
+
+**Week 3 (Sep 25-Oct 2):**
+- [ ] Supabase realtime: live discussions, messages, resources
+- [ ] Real-time sync: when someone posts a resource, others see it instantly
+- [ ] Presence tracking (who's online in community)
+- [ ] Notification system (new message, new resource, meeting reminder)
+
+**Week 4 (Oct 2-9):**
+- [ ] End-to-end testing (full user flows)
+- [ ] Bug fixes
+- [ ] Performance optimization
+
+**Deliverable**: Fully integrated, real-time working product.
+
+---
+
+### **T4: Features / Meetings / Curator Dashboard**
+**Owner**: T4 Features Agent  
+**Status**: in_progress  
+**Timeline**: Weeks 3-4 (after core infrastructure ready)
+
+**Week 3 (Sep 25-Oct 2):**
+- [ ] Meeting coordination:
+  - [ ] Schedule meetings (date, time, title)
+  - [ ] Zoom embed (link stored in Supabase)
+  - [ ] Meeting notes capture (text + generated from transcript if possible)
+  - [ ] Calendar view
+- [ ] Curator dashboard:
+  - [ ] Community stats (member count, engagement, contributions)
+  - [ ] Resource contributions (count, types)
+  - [ ] Discussion activity (threads, participants, newest)
+  - [ ] Upcoming meetings
+  - [ ] Recognition/impact view (what this community has built)
+
+**Week 4 (Oct 2-9):**
+- [ ] Polish, bug fixes
+- [ ] Test with pilot group
+- [ ] Curator experience optimization
+
+**Deliverable**: Fully functional meetings + curator dashboard.
+
+---
+
+## 📊 WEEKLY SYNC CHECKPOINTS
+
+**Every Friday (Sep 13, 20, 27, Oct 4):**
+- T1: "APIs built: [endpoint list], testing status"
+- T2: "Components done: [page list], wired to backend: [yes/no]"
+- T3: "Integrated: [feature list], real-time working for: [features]"
+- T4: "Features complete: [meetings, curator dashboard], user feedback"
+- **Blocker resolution**: T1/T2 blockers → fix immediately, update log
+
+---
+
+## 🎯 SUCCESS CRITERIA (Week 4 End)
+
+- ✅ 10 Directors can log in
+- ✅ Create communities + invite teachers
+- ✅ Upload and share resources
+- ✅ Have threaded discussions
+- ✅ Schedule + attend meetings (with Zoom)
+- ✅ See curator dashboard (impact stats)
+- ✅ Real-time updates (new resources, discussions, messages)
+- ✅ Mobile responsive (375px+)
+- ✅ Zero TypeScript errors
+- ✅ Deployed on Vercel
+- ✅ Pilot group testing report: "Ready for real use"
 
 ---
 
