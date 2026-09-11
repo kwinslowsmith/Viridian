@@ -86,19 +86,24 @@
 - Pagination support on all list endpoints
 - See `POLYMATH_T1_WEEK1_COMPLETION.md` for full details
 
-**Week 2-3 (Sep 18-Oct 2):**
+**Week 2 (Sep 12-18): IN PROGRESS 🔄**
+- [x] Created T1_WEEK2_ACTION_PLAN.md — Comprehensive testing & verification plan
+- [x] Created T1_API_CONTRACT.md — Complete API specification for T3 integration
+- [ ] Complete production build verification (Next.js compilation)
+- [ ] Manual API testing (all 9 endpoints)
+- [ ] Performance profiling (response times, query optimization)
+- [ ] Supabase realtime setup documentation
+- [ ] Ready for T3 wiring (by Sep 19)
+
+**Week 3-4 (Sep 25-Oct 9):**
 - [ ] Bug fixes from T2/T3 testing
-- [ ] Performance optimization
-- [ ] Add Supabase realtime event handlers
+- [ ] Performance optimization for high-load scenarios
+- [ ] Add Supabase realtime event handlers (push updates)
 - [ ] Implement request validation middleware
-- [ ] Add more comprehensive error logging
+- [ ] Add monitoring & error logging (Sentry)
+- [ ] Final polish and deployment verification
 
-**Week 4 (Oct 2-9):**
-- [ ] Final polish and optimization
-- [ ] API documentation completion
-- [ ] Production deployment verification
-
-**Deliverable**: ✅ All 9 API endpoints working, tested, deployed to Vercel (ready for T2/T3 wiring).
+**Deliverable**: ✅ All 9 API endpoints working, tested, deployed to Vercel (ready for T2/T3 wiring by Sep 19).
 
 ---
 

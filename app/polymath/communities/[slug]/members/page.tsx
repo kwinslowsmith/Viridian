@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardBody, Button, LoadingState, EmptyState, Badge } from '@/app/components/polymath';
 
@@ -98,33 +99,35 @@ export default function MembersPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {curators.map((member) => (
-                  <Card key={member.id}>
-                    <CardBody>
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-[#3C3C3C]">
-                            {member.name}
-                          </h3>
-                          <p className="text-sm text-[#666666]">{member.email}</p>
+                  <Link key={member.id} href={`/polymath/communities/${slug}/members/${member.id}`}>
+                    <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+                      <CardBody>
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-[#3C3C3C]">
+                              {member.name}
+                            </h3>
+                            <p className="text-sm text-[#666666]">{member.email}</p>
+                          </div>
+                          <Badge variant="primary">Curator</Badge>
                         </div>
-                        <Badge variant="primary">Curator</Badge>
-                      </div>
-                      {member.expertise && member.expertise.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {member.expertise.map((exp, idx) => (
-                            <Badge key={idx} variant="default">
-                              {exp}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      {member.joinDate && (
-                        <p className="text-xs text-[#999999]">
-                          Joined {new Date(member.joinDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </CardBody>
-                  </Card>
+                        {member.expertise && member.expertise.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {member.expertise.map((exp, idx) => (
+                              <Badge key={idx} variant="default">
+                                {exp}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        {member.joinDate && (
+                          <p className="text-xs text-[#999999]">
+                            Joined {new Date(member.joinDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </CardBody>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -138,41 +141,48 @@ export default function MembersPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {regularMembers.map((member) => (
-                  <Card key={member.id}>
-                    <CardBody>
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-[#3C3C3C]">
-                            {member.name}
-                          </h3>
-                          <p className="text-sm text-[#666666]">{member.email}</p>
-                        </div>
-                        {userRole === 'curator' && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleRemoveMember(member.id)}
-                          >
-                            Remove
-                          </Button>
-                        )}
+                  <div key={member.id} className="group">
+                    <Link href={`/polymath/communities/${slug}/members/${member.id}`}>
+                      <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+                        <CardBody>
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-[#3C3C3C]">
+                                {member.name}
+                              </h3>
+                              <p className="text-sm text-[#666666]">{member.email}</p>
+                            </div>
+                          </div>
+                          {member.expertise && member.expertise.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {member.expertise.map((exp, idx) => (
+                                <Badge key={idx} variant="default">
+                                  {exp}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          {member.joinDate && (
+                            <p className="text-xs text-[#999999]">
+                              Joined {new Date(member.joinDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </CardBody>
+                      </Card>
+                    </Link>
+                    {userRole === 'curator' && (
+                      <div className="mt-2">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="w-full"
+                        >
+                          Remove Member
+                        </Button>
                       </div>
-                      {member.expertise && member.expertise.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {member.expertise.map((exp, idx) => (
-                            <Badge key={idx} variant="default">
-                              {exp}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      {member.joinDate && (
-                        <p className="text-xs text-[#999999]">
-                          Joined {new Date(member.joinDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </CardBody>
-                  </Card>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
