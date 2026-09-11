@@ -121,11 +121,15 @@ export async function GET(
       select: {
         id: true,
         studentId: true,
-        student: {
+        enrollment: {
           select: {
-            id: true,
-            name: true,
-            email: true,
+            student: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
           },
         },
         assessmentId: true,
@@ -150,7 +154,7 @@ export async function GET(
     const formattedSubmissions = submissions.map((sub) => ({
       submissionId: sub.id,
       studentId: sub.studentId,
-      studentName: sub.student.name,
+      studentName: sub.enrollment.student.name,
       assessmentId: sub.assessmentId,
       assessmentTitle: sub.assessment.title,
       assessmentType: sub.assessment.type,
