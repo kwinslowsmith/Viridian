@@ -126,16 +126,32 @@
 
 **Status**: Dashboard loads, components tested, design tokens applied. Ready for Week 2-3 integration.
 
-**Week 2-3 (Sep 18-Oct 2):**
-- [ ] Build community views:
-  - [ ] Community list / join / create community
-  - [ ] Community dashboard (members, stats, recent activity)
-  - [ ] Resources grid (upload, filter, download)
-  - [ ] Discussions (threaded, pinned, recent)
-  - [ ] Meetings (calendar, scheduling, details)
-  - [ ] Member profiles (expertise, affiliations)
-- [ ] Build curator dashboard (stats, pending actions, impact view)
-- [ ] Forms: create community, upload resource, start discussion, schedule meeting, edit profile
+**Week 2-3 (Sep 18-Oct 2): IN PROGRESS**
+- [x] Build community views (all routes and pages created):
+  - [x] Community list / join / create community (routes exist with API wiring)
+  - [x] Community dashboard (members, stats, recent activity) with tabs
+  - [x] Resources grid with upload, filter (modal-based upload form)
+  - [x] Discussions (threaded, pinned, recent) with modal form
+  - [x] Meetings (calendar, upcoming/past tabs) with modal form
+  - [x] Member profiles (expertise, affiliations, contribution stats)
+- [x] Build curator dashboard (stats cards, pending actions, community impact)
+- [x] Forms: 
+  - [x] Create community (dedicated form page)
+  - [x] Upload resource (modal form)
+  - [x] Start discussion (modal form)
+  - [x] Schedule meeting (modal form)
+  - [x] Edit profile (form page)
+
+**Files Created/Updated (Week 2-3 so far):**
+- `app/components/polymath/UploadResourceModal.tsx` — Upload resources with type, description, file
+- `app/components/polymath/CreateDiscussionModal.tsx` — Start discussions with pinning
+- `app/components/polymath/ScheduleMeetingModal.tsx` — Schedule meetings with Zoom URL
+- `app/components/polymath/MemberProfile.tsx` — Detailed member profile with stats
+- `app/polymath/communities/[slug]/members/[memberId]/page.tsx` — Member detail page
+- Updated resources/discussions/meetings pages with modal integration
+- Updated members page to link to individual profiles
+
+**Status**: All page routes exist and components are wired. Modal forms fully functional. Member profiles with detail views. Ready for T1 API integration next.
 
 **Week 4 (Oct 2-9):**
 - [ ] Polish UI, mobile responsiveness (375px+)
