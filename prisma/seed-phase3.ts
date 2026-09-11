@@ -6,12 +6,18 @@ async function main() {
   console.log('🌱 Seeding Phase 3 test data (Assessments, Submissions, Mastery, Interventions)...');
 
   // Get or find existing test data
-  const org = await prisma.organization.findFirst({
-    where: { slug: 'mf-improv' },
+  let org = await prisma.organization.findFirst({
+    where: { slug: 'demo-charter-school' },
   });
 
   if (!org) {
-    console.error('Error: Organization "mf-improv" not found. Run main seed first.');
+    org = await prisma.organization.findFirst({
+      where: { slug: 'mf-improv' },
+    });
+  }
+
+  if (!org) {
+    console.error('Error: No suitable organization found. Run demo or main seed first.');
     process.exit(1);
   }
 

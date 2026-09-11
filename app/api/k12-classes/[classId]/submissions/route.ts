@@ -26,14 +26,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
 
-    if (!studentId) {
-      return NextResponse.json(
-        { error: 'studentId query parameter is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify user is either the student or the instructor
+    // Verify user is instructor for this class
     const k12Class = await prisma.k12Class.findUnique({
       where: { id: classId },
       select: { instructorId: true },
@@ -43,31 +36,93 @@ export async function GET(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    // Allow access if user is instructor or the student themselves
-    if (k12Class.instructorId !== session.user.id && studentId !== session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    const isInstructor = k12Class.instructorId === session.user.id;
+    const isStudent = !isInstructor;
+
+    // If studentId is provided, verify access
+    if (studentId) {
+      // Allow access if user is instructor or the student themselves
+      if (!isInstructor && studentId !== session.user.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      // Get enrollment for specific student
+      const enrollment = await prisma.k12Enrollment.findUnique({
+        where: {
+          classId_studentId: { classId, studentId },
+        },
+        select: { id: true },
+      });
+
+      if (!enrollment) {
+        return NextResponse.json(
+          { error: 'Student not enrolled in this class' },
+          { status: 404 }
+        );
+      }
+
+      // Get all submissions for this specific student
+      const submissions = await prisma.k12Submission.findMany({
+        where: { enrollmentId: enrollment.id },
+        select: {
+          id: true,
+          assessmentId: true,
+          assessment: {
+            select: {
+              id: true,
+              title: true,
+              type: true,
+              dueDate: true,
+            },
+          },
+          submittedAt: true,
+          grade: true,
+          feedback: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const formattedSubmissions = submissions.map((sub) => ({
+        submissionId: sub.id,
+        assessmentId: sub.assessmentId,
+        assessmentTitle: sub.assessment.title,
+        assessmentType: sub.assessment.type,
+        dueDate: sub.assessment.dueDate,
+        submittedAt: sub.submittedAt,
+        grade: sub.grade,
+        feedback: sub.feedback,
+        status: sub.status,
+        createdAt: sub.createdAt,
+        updatedAt: sub.updatedAt,
+      }));
+
+      return NextResponse.json(formattedSubmissions);
     }
 
-    // Get enrollment
-    const enrollment = await prisma.k12Enrollment.findUnique({
-      where: {
-        classId_studentId: { classId, studentId },
-      },
-      select: { id: true },
-    });
-
-    if (!enrollment) {
+    // If no studentId, teacher can see all submissions for the class
+    if (!isInstructor) {
       return NextResponse.json(
-        { error: 'Student not enrolled in this class' },
-        { status: 404 }
+        { error: 'Only instructors can view all class submissions' },
+        { status: 403 }
       );
     }
 
-    // Get all submissions for this student
+    // Get all submissions for this class with student info
     const submissions = await prisma.k12Submission.findMany({
-      where: { enrollmentId: enrollment.id },
+      where: { classId },
       select: {
         id: true,
+        studentId: true,
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         assessmentId: true,
         assessment: {
           select: {
@@ -84,11 +139,13 @@ export async function GET(
         createdAt: true,
         updatedAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { submittedAt: 'desc' },
     });
 
     const formattedSubmissions = submissions.map((sub) => ({
       submissionId: sub.id,
+      studentId: sub.studentId,
+      studentName: sub.student.name,
       assessmentId: sub.assessmentId,
       assessmentTitle: sub.assessment.title,
       assessmentType: sub.assessment.type,
