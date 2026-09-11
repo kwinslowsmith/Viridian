@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button, LoadingState, EmptyState } from '@/app/components/polymath';
 import { DiscussionThread } from '@/app/components/polymath/DiscussionThread';
+import { CreateDiscussionModal } from '@/app/components/polymath/CreateDiscussionModal';
 
 interface Discussion {
   id: string;
@@ -19,6 +20,7 @@ export default function DiscussionsPage() {
   const slug = params.slug as string;
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -41,6 +43,26 @@ export default function DiscussionsPage() {
     }
   };
 
+  const handleCreateDiscussion = async (discussion: any) => {
+    try {
+      const res = await fetch(`/api/communities/${slug}/discussions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discussion),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to create discussion');
+      }
+
+      const data = await res.json();
+      setDiscussions((prev) => [data.discussion, ...prev]);
+    } catch (error) {
+      console.error('Failed to create discussion:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return <LoadingState message="Loading discussions..." />;
   }
@@ -54,7 +76,7 @@ export default function DiscussionsPage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-bold text-[#3C3C3C]">Discussions</h1>
-        <Button>+ Start Discussion</Button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>+ Start Discussion</Button>
       </div>
 
       {/* Pinned Discussions */}
@@ -112,6 +134,13 @@ export default function DiscussionsPage() {
           </div>
         </div>
       )}
+
+      <CreateDiscussionModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateDiscussion}
+        communitySlug={slug}
+      />
     </div>
   );
 }

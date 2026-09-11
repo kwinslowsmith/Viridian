@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button, LoadingState, EmptyState, Tabs } from '@/app/components/polymath';
 import { MeetingCard } from '@/app/components/polymath/MeetingCard';
+import { ScheduleMeetingModal } from '@/app/components/polymath/ScheduleMeetingModal';
 
 interface Meeting {
   id: string;
@@ -19,6 +20,7 @@ export default function MeetingsPage() {
   const slug = params.slug as string;
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -38,6 +40,26 @@ export default function MeetingsPage() {
       console.error('Failed to fetch meetings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleScheduleMeeting = async (meeting: any) => {
+    try {
+      const res = await fetch(`/api/communities/${slug}/meetings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meeting),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to schedule meeting');
+      }
+
+      const data = await res.json();
+      setMeetings((prev) => [data.meeting, ...prev]);
+    } catch (error) {
+      console.error('Failed to schedule meeting:', error);
+      throw error;
     }
   };
 
@@ -109,7 +131,7 @@ export default function MeetingsPage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-bold text-[#3C3C3C]">Meetings</h1>
-        <Button>+ Schedule Meeting</Button>
+        <Button onClick={() => setIsScheduleModalOpen(true)}>+ Schedule Meeting</Button>
       </div>
 
       {/* Tabs */}
@@ -124,6 +146,13 @@ export default function MeetingsPage() {
       ) : (
         <Tabs tabs={tabs} defaultTabId="upcoming" />
       )}
+
+      <ScheduleMeetingModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onSubmit={handleScheduleMeeting}
+        communitySlug={slug}
+      />
     </div>
   );
 }

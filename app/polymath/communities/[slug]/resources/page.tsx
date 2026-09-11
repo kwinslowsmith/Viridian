@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button, LoadingState, EmptyState, Select } from '@/app/components/polymath';
 import { ResourceCard } from '@/app/components/polymath/ResourceCard';
+import { UploadResourceModal } from '@/app/components/polymath/UploadResourceModal';
 
 interface Resource {
   id: string;
@@ -30,6 +31,7 @@ export default function ResourcesPage() {
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -59,6 +61,33 @@ export default function ResourcesPage() {
     }
   };
 
+  const handleResourceUpload = async (resource: any) => {
+    try {
+      const formData = new FormData();
+      formData.append('title', resource.title);
+      formData.append('type', resource.type);
+      formData.append('description', resource.description);
+      if (resource.file) {
+        formData.append('file', resource.file);
+      }
+
+      const res = await fetch(`/api/communities/${slug}/resources`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to upload resource');
+      }
+
+      const data = await res.json();
+      setResources((prev) => [data.resource, ...prev]);
+    } catch (error) {
+      console.error('Failed to upload resource:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return <LoadingState message="Loading resources..." />;
   }
@@ -68,7 +97,7 @@ export default function ResourcesPage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-bold text-[#3C3C3C]">Resources</h1>
-        <Button>+ Upload Resource</Button>
+        <Button onClick={() => setIsUploadModalOpen(true)}>+ Upload Resource</Button>
       </div>
 
       {/* Filters */}
@@ -111,6 +140,13 @@ export default function ResourcesPage() {
           </div>
         </>
       )}
+
+      <UploadResourceModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSubmit={handleResourceUpload}
+        communitySlug={slug}
+      />
     </div>
   );
 }

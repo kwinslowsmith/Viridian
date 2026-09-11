@@ -26,3 +26,8 @@ export { CurriculumLibrary } from './CurriculumLibrary';
 export { CurriculumDetail } from './CurriculumDetail';
 export { CurriculumSharing } from './CurriculumSharing';
 export { CurriculumComments } from './CurriculumComments';
+
+// Modal Forms
+export { UploadResourceModal } from './UploadResourceModal';
+export { CreateDiscussionModal } from './CreateDiscussionModal';
+export { ScheduleMeetingModal } from './ScheduleMeetingModal';
