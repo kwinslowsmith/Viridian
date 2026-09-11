@@ -24,6 +24,10 @@ export function TeacherDashboardWithIntervention({ classId }: TeacherDashboardWi
     { id: 'interventions', label: 'Interventions', icon: '🎯' },
   ];
 
+  if (!classId) {
+    return <div style={{ color: colors.text2, padding: '2rem' }}>Error: Class ID not provided</div>;
+  }
+
   return (
     <div>
       {/* Tab Navigation */}
