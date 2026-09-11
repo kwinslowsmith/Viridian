@@ -48,7 +48,7 @@ export function GradingInbox({ classId }: GradingInboxProps) {
       const response = await fetch(`/api/k12-classes/${classId}/submissions`);
       if (!response.ok) throw new Error('Failed to fetch submissions');
       const data = await response.json();
-      setSubmissions(data.submissions || []);
+      setSubmissions(Array.isArray(data) ? data : data.submissions || []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load submissions');
@@ -63,7 +63,7 @@ export function GradingInbox({ classId }: GradingInboxProps) {
       const response = await fetch(`/api/k12-classes/${classId}/assessments`);
       if (!response.ok) throw new Error('Failed to fetch assessments');
       const data = await response.json();
-      setAssessments(data.assessments || []);
+      setAssessments(Array.isArray(data) ? data : data.assessments || []);
     } catch (err) {
       console.error('Failed to fetch assessments:', err);
     }
