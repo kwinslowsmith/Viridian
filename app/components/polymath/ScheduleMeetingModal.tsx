@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Button, TextInput, TextArea, Select } from './index';
+import { Modal } from './Modal';
+import { Button } from './Button';
+import { TextInput, TextArea } from './TextInput';
+import { Select } from './Select';
 
 interface ScheduleMeetingModalProps {
   isOpen: boolean;

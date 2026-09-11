@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Button, TextInput, TextArea } from './index';
+import { Modal } from './Modal';
+import { Button } from './Button';
+import { TextInput, TextArea } from './TextInput';
 
 interface CreateDiscussionModalProps {
   isOpen: boolean;
