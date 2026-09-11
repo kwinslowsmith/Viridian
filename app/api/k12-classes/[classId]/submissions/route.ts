@@ -169,9 +169,16 @@ export async function GET(
 
     return NextResponse.json(formattedSubmissions);
   } catch (error) {
-    console.error('Error fetching submissions:', error);
+    console.error('Error fetching submissions:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error instanceof Error ? error.constructor.name : typeof error,
+    });
     return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
+      {
+        error: 'Failed to fetch submissions',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
