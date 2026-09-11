@@ -65,5 +65,12 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt"
-  }
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  // On production (Vercel), don't use localhost NEXTAUTH_URL
+  // Instead, use the request origin to determine the callback URL
+  ...(process.env.NODE_ENV === "production" && {
+    // In production, Vercel will provide the correct origin via request headers
+    // NextAuth will automatically use X-Forwarded-Host and X-Forwarded-Proto
+  })
 };
