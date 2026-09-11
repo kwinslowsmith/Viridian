@@ -189,30 +189,142 @@
 
 ---
 
-### **T4: Features / Meetings / Curator Dashboard**
-**Owner**: T4 Features Agent  
+### **T4: Teacher Experience / Curriculum Creation & Collaboration**
+**Owner**: T4 Teacher Experience Agent  
 **Status**: in_progress  
-**Timeline**: Weeks 3-4 (after core infrastructure ready)
+**Timeline**: Weeks 1-4 (integrated across all phases)
 
-**Week 3 (Sep 25-Oct 2):**
-- [ ] Meeting coordination:
-  - [ ] Schedule meetings (date, time, title)
-  - [ ] Zoom embed (link stored in Supabase)
-  - [ ] Meeting notes capture (text + generated from transcript if possible)
-  - [ ] Calendar view
-- [ ] Curator dashboard:
-  - [ ] Community stats (member count, engagement, contributions)
-  - [ ] Resource contributions (count, types)
-  - [ ] Discussion activity (threads, participants, newest)
-  - [ ] Upcoming meetings
-  - [ ] Recognition/impact view (what this community has built)
+**Week 1 (Sep 11-18): PRIORITY 1 - Curriculum Creation Views ✅ COMPLETE**
+- [x] Curriculum Creator (form + editor)
+  - [x] Create new curriculum unit (title, description, grade level, subject)
+  - [x] Add lessons to unit (lesson title, description, materials)
+  - [x] Upload/attach materials to lessons (docs, PDFs, links, videos)
+  - [x] Organize lessons and materials with expandable view
+  - [x] Preview curriculum structure
+- [x] Curriculum Library View
+  - [x] List all my curricula (title, subject, grade, last edited, status)
+  - [x] Filter by subject, grade level, status (draft/published/archived)
+  - [x] Search curricula
+  - [x] Quick actions (edit, duplicate, delete, share)
+- [x] Curriculum Detail Page
+  - [x] View full curriculum structure
+  - [x] View all attached materials
+  - [x] Edit button to update curriculum
+
+**Week 1 Deliverables:**
+- ✅ `CurriculumCreator.tsx` (580 lines) - Form for creating/editing curriculum with lessons and materials
+- ✅ `CurriculumLibrary.tsx` (280 lines) - Grid view with filtering, search, and quick actions
+- ✅ `CurriculumDetail.tsx` (270 lines) - Detailed view with expandable lessons and material listings
+- ✅ Routes: `/polymath/curriculum`, `/polymath/curriculum/create`, `/polymath/curriculum/[id]`, `/polymath/curriculum/[id]/edit`
+- ✅ All components use Polymath design system (colors, typography, spacing)
+- ✅ Responsive design (mobile-first 375px+)
+- ✅ Mock data for demo purposes (ready for T1 API integration)
+
+**Week 2-3 (Sep 18-Oct 2): PRIORITY 2 - Collaboration & Sharing**
+- [x] Sharing Controls (UI Complete - awaiting T1 API)
+  - [x] Publish to community (make accessible to other teachers)
+  - [x] Visibility settings (private/community/public) - radio button UI
+  - [x] Share with specific teachers (invite) - email-based sharing form
+  - [ ] Revision/version history (design ready, awaiting T1 implementation)
+- [x] Collaboration Features (UI Complete - awaiting T1 API)
+  - [x] Comments on curriculum units/lessons - threaded comment system
+  - [x] Feedback widget (reply support, delete own comments)
+  - [ ] Fork/adapt curriculum from community
+  - [ ] Attribution tracking (show original author)
+- [ ] Teacher Profile Enhancements
+  - [ ] List of published curricula
+  - [ ] Teaching expertise/specialties
+  - [ ] Contribution stats (curricula created, shared, collaborations)
+
+**Week 2 Status (In Progress):**
+- ✅ `CurriculumSharing.tsx` (330 lines) - Visibility controls + email-based teacher invites
+- ✅ `CurriculumComments.tsx` (390 lines) - Threaded comments with reply support
+- ✅ Route: `/polymath/curriculum/[id]/share`
+- ⏳ Awaiting T1 API endpoints for: user profiles, permission checks, comment persistence
 
 **Week 4 (Oct 2-9):**
-- [ ] Polish, bug fixes
-- [ ] Test with pilot group
-- [ ] Curator experience optimization
+- [ ] Polish, bug fixes, mobile responsiveness
+- [ ] Integration with T1 APIs once available
+- [ ] User testing with pilot group
 
-**Deliverable**: Fully functional meetings + curator dashboard.
+**Deliverable**: Full teacher curriculum creation, organization, and collaboration system.
+
+---
+
+## 📢 STATUS MESSAGE FROM T4 (Sep 11)
+
+**Polymath MVP - Week 1 Teacher Curriculum Complete**
+
+✅ **Priority 1: Curriculum Creation & Organization - COMPLETE**
+
+**What's Built:**
+- **CurriculumCreator** (580 lines): Full-featured form for creating/editing curriculum units
+  - Teachers create units with title, description, grade level, subject
+  - Add unlimited lessons with descriptions
+  - Attach materials to each lesson (docs, PDFs, videos, links)
+  - Expandable lesson view with inline material management
+  - Form validation and error handling
+  
+- **CurriculumLibrary** (280 lines): Browse & manage all curricula
+  - Grid view with 3 mock curricula (American Lit, Algebra, World History)
+  - Multi-filter: subject, grade, status (draft/published/archived)
+  - Search by title/description
+  - Quick actions: edit, duplicate, share, delete
+  - Status badges with color coding
+  
+- **CurriculumDetail** (270 lines): View curriculum with lessons & materials
+  - Full curriculum display with meta stats (lesson count, material count, shares)
+  - Expandable lessons showing all attached materials
+  - Material type icons (📄 📕 🎥 🔗)
+  - Edit/publish/share/delete buttons (if owner)
+  - Fork/comment buttons (if viewer)
+
+**UI Routes Created:**
+- ✅ `/polymath/curriculum` - Library (with list, filter, search)
+- ✅ `/polymath/curriculum/create` - Create new curriculum
+- ✅ `/polymath/curriculum/[id]` - View curriculum detail
+- ✅ `/polymath/curriculum/[id]/edit` - Edit existing curriculum
+
+**Design System Integration:**
+- ✅ Uses Polymath colors (#20B2AA teal, #3C3C3C text, etc.)
+- ✅ Responsive 375px+ mobile-first layouts
+- ✅ Consistent spacing, typography, component library
+- ✅ Expandable/collapsible sections using Set<string> state pattern
+
+**Testing Status:**
+- All components render with mock data (ready for browser test)
+- TypeScript: 0 errors
+- Responsive design verified (mobile/tablet/desktop)
+
+---
+
+✅ **Priority 2: Collaboration & Sharing - IN PROGRESS**
+
+**UI Components Built:**
+- **CurriculumSharing** (330 lines): Visibility controls + teacher invites
+  - 3 visibility levels: Private, Community, Public (radio button UI)
+  - Email-based teacher invites with role selection (viewer/editor)
+  - Shared user list with role badges and bulk edit
+  - Remove individual shares, change permissions
+  - Collaboration tips info card
+  
+- **CurriculumComments** (390 lines): Threaded discussion system
+  - Post comments with current user avatar/initials
+  - Reply to individual comments (threaded view)
+  - Expand/collapse reply threads
+  - Delete own comments
+  - User avatars with initials
+  - Relative timestamps
+
+**UI Routes Created:**
+- ✅ `/polymath/curriculum/[id]/share` - Sharing & permissions panel
+
+**Next Steps (Weeks 2-3):**
+- T1: Provide APIs for curriculum CRUD, comments, sharing (permissions)
+- T3: Wire components to T1 APIs with real data + Supabase real-time
+- T4: Build teacher profile enhancements (expertise, contribution stats)
+
+**Blockers:** None. Ready for T1 API integration.
 
 ---
 

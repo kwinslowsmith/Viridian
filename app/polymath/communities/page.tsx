@@ -4,50 +4,34 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button, LoadingState, EmptyState, TextInput } from '@/app/components/polymath';
 import { CommunityCard } from '@/app/components/polymath/CommunityCard';
-
-interface Community {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  memberCount?: number;
-  role?: 'curator' | 'member';
-}
+import { useCommunities } from '@/hooks/usePolymath';
 
 export default function CommunitiesPage() {
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [filteredCommunities, setFilteredCommunities] = useState<Community[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { communities, loading, error } = useCommunities({ scope: 'all' });
+  const [filteredCommunities, setFilteredCommunities] = useState<typeof communities>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchCommunities();
-  }, []);
-
-  useEffect(() => {
     const filtered = communities.filter((c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase())
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.description && c.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredCommunities(filtered);
   }, [searchTerm, communities]);
 
-  const fetchCommunities = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/communities');
-      if (res.ok) {
-        const data = await res.json();
-        setCommunities(data.communities || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch communities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) {
     return <LoadingState message="Loading communities..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-800 font-medium">Error loading communities</p>
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (

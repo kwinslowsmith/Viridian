@@ -19,3 +19,10 @@ export { CommunityCard } from './CommunityCard';
 export { ResourceCard } from './ResourceCard';
 export { DiscussionThread } from './DiscussionThread';
 export { MeetingCard } from './MeetingCard';
+
+// Curriculum Components
+export { CurriculumCreator } from './CurriculumCreator';
+export { CurriculumLibrary } from './CurriculumLibrary';
+export { CurriculumDetail } from './CurriculumDetail';
+export { CurriculumSharing } from './CurriculumSharing';
+export { CurriculumComments } from './CurriculumComments';
