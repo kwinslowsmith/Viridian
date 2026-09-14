@@ -91,8 +91,7 @@ export default function CommunitiesPage() {
                 slug={community.slug}
                 name={community.name}
                 description={community.description}
-                memberCount={community.memberCount}
-                role={community.role}
+                memberCount={community._count?.members || 0}
               />
             ))}
           </div>

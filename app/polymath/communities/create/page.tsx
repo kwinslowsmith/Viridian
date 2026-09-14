@@ -3,54 +3,52 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, Button, TextInput, TextArea } from '@/app/components/polymath';
+import { useCreateCommunity } from '@/hooks/usePolymath';
 
 export default function CreateCommunityPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { create, loading: isLoading, error: apiError } = useCreateCommunity();
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
-    slug: '',
     description: '',
+    scope: 'global' as const,
+    isPublic: true,
+    requiresApprovalToJoin: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, type } = e.target;
 
-    if (name === 'name') {
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({
         ...prev,
-        slug: value.toLowerCase().replace(/\s+/g, '-').slice(0, 50),
+        [name]: checked,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
       }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
     try {
-      const res = await fetch('/api/communities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const community = await create({
+        name: formData.name,
+        description: formData.description,
+        scope: formData.scope,
+        isPublic: formData.isPublic,
+        requiresApprovalToJoin: formData.requiresApprovalToJoin,
       });
-
-      if (!res.ok) {
-        throw new Error('Failed to create community');
-      }
-
-      const data = await res.json();
-      router.push(`/polymath/communities/${data.community.slug}`);
+      router.push(`/polymath/communities/${community.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -67,9 +65,9 @@ export default function CreateCommunityPage() {
           </h2>
         </CardHeader>
         <CardBody>
-          {error && (
+          {(error || apiError) && (
             <div className="mb-6 p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-lg text-[#7F1D1D]">
-              {error}
+              {error || apiError}
             </div>
           )}
 
@@ -83,18 +81,6 @@ export default function CreateCommunityPage() {
               required
             />
 
-            <div>
-              <label className="block text-sm font-medium text-[#3C3C3C] mb-2">
-                Community Slug
-              </label>
-              <div className="px-4 py-2 bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg text-[#666666]">
-                {formData.slug || 'auto-generated-from-name'}
-              </div>
-              <p className="text-xs text-[#666666] mt-1">
-                URL-friendly identifier (auto-generated)
-              </p>
-            </div>
-
             <TextArea
               label="Description"
               name="description"
@@ -103,6 +89,32 @@ export default function CreateCommunityPage() {
               placeholder="Describe your community and its purpose..."
               rows={4}
             />
+
+            <div className="space-y-3 p-4 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5]">
+              <h3 className="font-medium text-[#3C3C3C] text-sm">Visibility & Access</h3>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isPublic"
+                  checked={formData.isPublic}
+                  onChange={handleChange}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-[#3C3C3C]">Public (anyone can see)</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="requiresApprovalToJoin"
+                  checked={formData.requiresApprovalToJoin}
+                  onChange={handleChange}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-[#3C3C3C]">Require approval to join</span>
+              </label>
+            </div>
 
             <div className="flex gap-4 pt-6 border-t border-[#E5E5E5]">
               <Button
@@ -117,7 +129,7 @@ export default function CreateCommunityPage() {
                 disabled={!formData.name || isLoading}
                 isLoading={isLoading}
               >
-                Create Community
+                {isLoading ? 'Creating...' : 'Create Community'}
               </Button>
             </div>
           </form>

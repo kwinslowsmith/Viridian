@@ -1,70 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Button, LoadingState, EmptyState } from '@/app/components/polymath';
-import { DiscussionThread } from '@/app/components/polymath/DiscussionThread';
+import Link from 'next/link';
+import { Button, LoadingState, EmptyState, Card, CardBody } from '@/app/components/polymath';
+import { useCommunityDiscussions, useCreateDiscussion } from '@/hooks/usePolymath';
 import { CreateDiscussionModal } from '@/app/components/polymath/CreateDiscussionModal';
-
-interface Discussion {
-  id: string;
-  title: string;
-  startedBy?: string;
-  replyCount?: number;
-  isPinned?: boolean;
-  lastActivityDate?: string;
-}
 
 export default function DiscussionsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [discussions, setDiscussions] = useState<Discussion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { discussions, loading, error, refetch } = useCommunityDiscussions(slug);
+  const { create: createDiscussion, loading: creatingDiscussion, error: createError } = useCreateDiscussion(slug);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (slug) {
-      fetchDiscussions();
-    }
-  }, [slug]);
-
-  const fetchDiscussions = async () => {
+  const handleCreateDiscussion = async (data: { title: string; description?: string }) => {
     try {
-      setLoading(true);
-      const res = await fetch(`/api/communities/${slug}/discussions`);
-      if (res.ok) {
-        const data = await res.json();
-        setDiscussions(data.discussions || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch discussions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateDiscussion = async (discussion: any) => {
-    try {
-      const res = await fetch(`/api/communities/${slug}/discussions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(discussion),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to create discussion');
-      }
-
-      const data = await res.json();
-      setDiscussions((prev) => [data.discussion, ...prev]);
+      await createDiscussion(data);
+      setIsCreateModalOpen(false);
+      refetch();
     } catch (error) {
       console.error('Failed to create discussion:', error);
-      throw error;
     }
   };
 
   if (loading) {
     return <LoadingState message="Loading discussions..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-800 font-medium">Error loading discussions</p>
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+        <Link href={`/polymath/communities/${slug}`}>
+          <Button>Back to Community</Button>
+        </Link>
+      </div>
+    );
   }
 
   // Separate pinned and regular discussions
@@ -75,7 +50,10 @@ export default function DiscussionsPage() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-[#3C3C3C]">Discussions</h1>
+        <div>
+          <h1 className="text-4xl font-bold text-[#3C3C3C] mb-2">Discussions</h1>
+          <p className="text-[#666666]">{discussions.length} total discussions</p>
+        </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>+ Start Discussion</Button>
       </div>
 
@@ -83,20 +61,28 @@ export default function DiscussionsPage() {
       {pinnedDiscussions.length > 0 && (
         <div className="mb-12">
           <h2 className="text-xl font-semibold text-[#3C3C3C] mb-4">
-            📌 Pinned
+            📌 Pinned ({pinnedDiscussions.length})
           </h2>
           <div className="space-y-4">
             {pinnedDiscussions.map((discussion) => (
-              <DiscussionThread
-                key={discussion.id}
-                id={discussion.id}
-                communitySlug={slug}
-                title={discussion.title}
-                startedBy={discussion.startedBy}
-                replyCount={discussion.replyCount}
-                isPinned={discussion.isPinned}
-                lastActivityDate={discussion.lastActivityDate}
-              />
+              <Link key={discussion.id} href={`/polymath/communities/${slug}/discussions/${discussion.id}`}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardBody>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-[#3C3C3C] text-lg">{discussion.title}</h3>
+                        <p className="text-xs text-[#999999] mt-2">
+                          By {discussion.createdBy?.name || 'Unknown'} • {discussion._count?.messages || 0} messages
+                          {discussion.updatedAt && ` • Updated ${new Date(discussion.updatedAt).toLocaleDateString()}`}
+                        </p>
+                      </div>
+                      <span className="text-xs font-medium bg-[#FFE5B4] text-[#8B4513] px-2 py-1 rounded whitespace-nowrap">
+                        📌 Pinned
+                      </span>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
@@ -109,27 +95,28 @@ export default function DiscussionsPage() {
           title="No discussions yet"
           description="Start a discussion to engage with your community"
           actionLabel="Start Discussion"
-          onAction={() => (window.location.href = '#')}
+          onAction={() => setIsCreateModalOpen(true)}
         />
       ) : (
         <div>
           {regularDiscussions.length > 0 && (
             <h2 className="text-xl font-semibold text-[#3C3C3C] mb-4">
-              Recent Discussions
+              Recent Discussions ({regularDiscussions.length})
             </h2>
           )}
           <div className="space-y-4">
             {regularDiscussions.map((discussion) => (
-              <DiscussionThread
-                key={discussion.id}
-                id={discussion.id}
-                communitySlug={slug}
-                title={discussion.title}
-                startedBy={discussion.startedBy}
-                replyCount={discussion.replyCount}
-                isPinned={discussion.isPinned}
-                lastActivityDate={discussion.lastActivityDate}
-              />
+              <Link key={discussion.id} href={`/polymath/communities/${slug}/discussions/${discussion.id}`}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardBody>
+                    <h3 className="font-semibold text-[#3C3C3C] text-lg">{discussion.title}</h3>
+                    <p className="text-xs text-[#999999] mt-2">
+                      By {discussion.createdBy?.name || 'Unknown'} • {discussion._count?.messages || 0} messages
+                      {discussion.updatedAt && ` • Updated ${new Date(discussion.updatedAt).toLocaleDateString()}`}
+                    </p>
+                  </CardBody>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
