@@ -74,7 +74,7 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
       }
     });
 
-    return [
+    const skillGroups: SkillGroup[] = [
       {
         group: 'critical',
         label: 'Critical Support',
@@ -111,7 +111,8 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
         skills: groups.proficient,
         icon: '✓',
       },
-    ].filter((g) => g.skills.length > 0);
+    ];
+    return skillGroups.filter((g) => g.skills.length > 0);
   };
 
   const skillGroups = groupSkills();
