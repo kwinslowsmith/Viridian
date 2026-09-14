@@ -72,7 +72,7 @@ export default function DiscussionsPage() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-[#3C3C3C] text-lg">{discussion.title}</h3>
                         <p className="text-xs text-[#999999] mt-2">
-                          By {discussion.createdBy?.name || 'Unknown'} • {discussion._count?.messages || 0} messages
+                          By {discussion.createdBy?.name || 'Unknown'}
                           {discussion.updatedAt && ` • Updated ${new Date(discussion.updatedAt).toLocaleDateString()}`}
                         </p>
                       </div>
@@ -111,7 +111,7 @@ export default function DiscussionsPage() {
                   <CardBody>
                     <h3 className="font-semibold text-[#3C3C3C] text-lg">{discussion.title}</h3>
                     <p className="text-xs text-[#999999] mt-2">
-                      By {discussion.createdBy?.name || 'Unknown'} • {discussion._count?.messages || 0} messages
+                      By {discussion.createdBy?.name || 'Unknown'}
                       {discussion.updatedAt && ` • Updated ${new Date(discussion.updatedAt).toLocaleDateString()}`}
                     </p>
                   </CardBody>
