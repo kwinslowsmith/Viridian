@@ -1,65 +1,33 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Button, LoadingState, EmptyState, Tabs } from '@/app/components/polymath';
-import { MeetingCard } from '@/app/components/polymath/MeetingCard';
+import Link from 'next/link';
+import { Button, LoadingState, EmptyState, Tabs, Card, CardBody } from '@/app/components/polymath';
+import { useCommunityMeetings, useCreateMeeting } from '@/hooks/usePolymath';
 import { ScheduleMeetingModal } from '@/app/components/polymath/ScheduleMeetingModal';
-
-interface Meeting {
-  id: string;
-  title: string;
-  dateTime: string;
-  host?: string;
-  status?: 'upcoming' | 'past' | 'ongoing';
-  zoomUrl?: string;
-}
 
 export default function MeetingsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { meetings, loading, error, refetch } = useCommunityMeetings(slug);
+  const { create: createMeeting, loading: creatingMeeting, error: createError } = useCreateMeeting(slug);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (slug) {
-      fetchMeetings();
-    }
-  }, [slug]);
-
-  const fetchMeetings = async () => {
+  const handleScheduleMeeting = async (data: any) => {
     try {
-      setLoading(true);
-      const res = await fetch(`/api/communities/${slug}/meetings`);
-      if (res.ok) {
-        const data = await res.json();
-        setMeetings(data.meetings || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch meetings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleScheduleMeeting = async (meeting: any) => {
-    try {
-      const res = await fetch(`/api/communities/${slug}/meetings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(meeting),
+      await createMeeting({
+        title: data.title,
+        description: data.description,
+        scheduledAt: data.scheduledAt,
+        duration: data.duration,
+        zoomUrl: data.zoomUrl,
+        location: data.location,
       });
-
-      if (!res.ok) {
-        throw new Error('Failed to schedule meeting');
-      }
-
-      const data = await res.json();
-      setMeetings((prev) => [data.meeting, ...prev]);
+      setIsScheduleModalOpen(false);
+      refetch();
     } catch (error) {
       console.error('Failed to schedule meeting:', error);
-      throw error;
     }
   };
 
@@ -67,9 +35,24 @@ export default function MeetingsPage() {
     return <LoadingState message="Loading meetings..." />;
   }
 
-  // Separate meetings by status
-  const upcomingMeetings = meetings.filter((m) => m.status === 'upcoming');
-  const pastMeetings = meetings.filter((m) => m.status === 'past');
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-800 font-medium">Error loading meetings</p>
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+        <Link href={`/polymath/communities/${slug}`}>
+          <Button>Back to Community</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // Separate meetings by date (upcoming vs past)
+  const now = new Date();
+  const upcomingMeetings = meetings.filter((m) => new Date(m.scheduledAt) > now);
+  const pastMeetings = meetings.filter((m) => new Date(m.scheduledAt) <= now);
 
   const tabs = [
     {
@@ -82,21 +65,42 @@ export default function MeetingsPage() {
             title="No upcoming meetings"
             description="Schedule a meeting to bring your community together"
             actionLabel="Schedule Meeting"
-            onAction={() => (window.location.href = '#')}
+            onAction={() => setIsScheduleModalOpen(true)}
           />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {upcomingMeetings.map((meeting) => (
-              <MeetingCard
-                key={meeting.id}
-                id={meeting.id}
-                communitySlug={slug}
-                title={meeting.title}
-                dateTime={meeting.dateTime}
-                host={meeting.host}
-                status={meeting.status}
-                zoomUrl={meeting.zoomUrl}
-              />
+              <Card key={meeting.id}>
+                <CardBody>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-[#3C3C3C] text-lg">{meeting.title}</h3>
+                      {meeting.description && (
+                        <p className="text-sm text-[#666666] mt-1">{meeting.description}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-3 flex-wrap">
+                        <span className="text-sm font-medium text-[#3C3C3C]">
+                          📅 {new Date(meeting.scheduledAt).toLocaleDateString()} {new Date(meeting.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {meeting.location && (
+                          <span className="text-sm text-[#666666]">📍 {meeting.location}</span>
+                        )}
+                        {meeting.duration && (
+                          <span className="text-sm text-[#666666]">⏱️ {meeting.duration} min</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#999999] mt-2">
+                        Hosted by {meeting.createdBy?.name || 'Unknown'}
+                      </p>
+                    </div>
+                    {meeting.zoomUrl && (
+                      <a href={meeting.zoomUrl} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm">Join on Zoom</Button>
+                      </a>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
             ))}
           </div>
         ),
@@ -108,18 +112,29 @@ export default function MeetingsPage() {
         pastMeetings.length === 0 ? (
           <p className="text-[#666666]">No past meetings yet</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {pastMeetings.map((meeting) => (
-              <MeetingCard
-                key={meeting.id}
-                id={meeting.id}
-                communitySlug={slug}
-                title={meeting.title}
-                dateTime={meeting.dateTime}
-                host={meeting.host}
-                status={meeting.status}
-                zoomUrl={meeting.zoomUrl}
-              />
+              <Card key={meeting.id} className="opacity-75">
+                <CardBody>
+                  <div>
+                    <h3 className="font-semibold text-[#3C3C3C]">{meeting.title}</h3>
+                    {meeting.description && (
+                      <p className="text-sm text-[#666666] mt-1">{meeting.description}</p>
+                    )}
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      <span className="text-sm text-[#666666]">
+                        📅 {new Date(meeting.scheduledAt).toLocaleDateString()}
+                      </span>
+                      {meeting.location && (
+                        <span className="text-sm text-[#666666]">📍 {meeting.location}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#999999] mt-2">
+                      Hosted by {meeting.createdBy?.name || 'Unknown'}
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
             ))}
           </div>
         ),
@@ -130,9 +145,18 @@ export default function MeetingsPage() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-[#3C3C3C]">Meetings</h1>
+        <div>
+          <h1 className="text-4xl font-bold text-[#3C3C3C] mb-2">Meetings</h1>
+          <p className="text-[#666666]">{meetings.length} total meetings</p>
+        </div>
         <Button onClick={() => setIsScheduleModalOpen(true)}>+ Schedule Meeting</Button>
       </div>
+
+      {createError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {createError}
+        </div>
+      )}
 
       {/* Tabs */}
       {meetings.length === 0 ? (
@@ -141,7 +165,7 @@ export default function MeetingsPage() {
           title="No meetings yet"
           description="Schedule a meeting to bring your community together"
           actionLabel="Schedule Meeting"
-          onAction={() => (window.location.href = '#')}
+          onAction={() => setIsScheduleModalOpen(true)}
         />
       ) : (
         <Tabs tabs={tabs} defaultTabId="upcoming" />

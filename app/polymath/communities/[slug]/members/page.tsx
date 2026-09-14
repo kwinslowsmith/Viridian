@@ -1,66 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardBody, Button, LoadingState, EmptyState, Badge } from '@/app/components/polymath';
-
-interface Member {
-  id: string;
-  name: string;
-  email?: string;
-  role: 'curator' | 'member';
-  joinDate?: string;
-  expertise?: string[];
-}
+import { useCommunityMembers } from '@/hooks/usePolymath';
 
 export default function MembersPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'curator' | 'member'>('member');
-
-  useEffect(() => {
-    if (slug) {
-      fetchMembers();
-    }
-  }, [slug]);
-
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/communities/${slug}/members`);
-      if (res.ok) {
-        const data = await res.json();
-        setMembers(data.members || []);
-        // Set user role based on response
-        setUserRole(data.userRole || 'member');
-      }
-    } catch (error) {
-      console.error('Failed to fetch members:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { members, loading, error } = useCommunityMembers(slug);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
 
   const handleRemoveMember = async (memberId: string) => {
     if (!confirm('Are you sure you want to remove this member?')) return;
 
     try {
+      setRemovingMemberId(memberId);
       const res = await fetch(`/api/communities/${slug}/members/${memberId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
-        setMembers((prev) => prev.filter((m) => m.id !== memberId));
+        // Reload page to reflect changes
+        window.location.reload();
       }
     } catch (error) {
       console.error('Failed to remove member:', error);
+      setRemovingMemberId(null);
     }
   };
 
   if (loading) {
     return <LoadingState message="Loading members..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-800 font-medium">Error loading members</p>
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+        <Link href={`/polymath/communities/${slug}`}>
+          <Button>Back to Community</Button>
+        </Link>
+      </div>
+    );
   }
 
   // Separate curators and members
@@ -71,10 +56,11 @@ export default function MembersPage() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-[#3C3C3C]">Members</h1>
-        {userRole === 'curator' && (
-          <Button>+ Invite Member</Button>
-        )}
+        <div>
+          <h1 className="text-4xl font-bold text-[#3C3C3C] mb-2">Members</h1>
+          <p className="text-[#666666]">{members.length} members</p>
+        </div>
+        <Button>+ Invite Member</Button>
       </div>
 
       {members.length === 0 ? (
@@ -82,12 +68,8 @@ export default function MembersPage() {
           icon="👥"
           title="No members yet"
           description="Invite members to join this community"
-          actionLabel={userRole === 'curator' ? 'Invite Member' : undefined}
-          onAction={
-            userRole === 'curator'
-              ? () => (window.location.href = '#')
-              : undefined
-          }
+          actionLabel="Invite Member"
+          onAction={() => (window.location.href = '#')}
         />
       ) : (
         <>
@@ -105,26 +87,15 @@ export default function MembersPage() {
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-[#3C3C3C]">
-                              {member.name}
+                              {member.user?.name || 'Unknown'}
                             </h3>
-                            <p className="text-sm text-[#666666]">{member.email}</p>
+                            <p className="text-sm text-[#666666]">{member.user?.email}</p>
                           </div>
                           <Badge variant="primary">Curator</Badge>
                         </div>
-                        {member.expertise && member.expertise.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {member.expertise.map((exp, idx) => (
-                              <Badge key={idx} variant="default">
-                                {exp}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                        {member.joinDate && (
-                          <p className="text-xs text-[#999999]">
-                            Joined {new Date(member.joinDate).toLocaleDateString()}
-                          </p>
-                        )}
+                        <p className="text-xs text-[#999999]">
+                          Joined {new Date(member.joinedAt).toLocaleDateString()}
+                        </p>
                       </CardBody>
                     </Card>
                   </Link>
@@ -148,40 +119,28 @@ export default function MembersPage() {
                           <div className="flex items-start justify-between mb-3">
                             <div>
                               <h3 className="font-semibold text-[#3C3C3C]">
-                                {member.name}
+                                {member.user?.name || 'Unknown'}
                               </h3>
-                              <p className="text-sm text-[#666666]">{member.email}</p>
+                              <p className="text-sm text-[#666666]">{member.user?.email}</p>
                             </div>
                           </div>
-                          {member.expertise && member.expertise.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {member.expertise.map((exp, idx) => (
-                                <Badge key={idx} variant="default">
-                                  {exp}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                          {member.joinDate && (
-                            <p className="text-xs text-[#999999]">
-                              Joined {new Date(member.joinDate).toLocaleDateString()}
-                            </p>
-                          )}
+                          <p className="text-xs text-[#999999]">
+                            Joined {new Date(member.joinedAt).toLocaleDateString()}
+                          </p>
                         </CardBody>
                       </Card>
                     </Link>
-                    {userRole === 'curator' && (
-                      <div className="mt-2">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleRemoveMember(member.id)}
-                          className="w-full"
-                        >
-                          Remove Member
-                        </Button>
-                      </div>
-                    )}
+                    <div className="mt-2">
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleRemoveMember(member.id)}
+                        disabled={removingMemberId === member.id}
+                        className="w-full"
+                      >
+                        {removingMemberId === member.id ? 'Removing...' : 'Remove Member'}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
