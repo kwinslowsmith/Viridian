@@ -76,7 +76,7 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
 
     return [
       {
-        group: 'critical',
+        group: 'critical' as const,
         label: 'Critical Support',
         description: 'Less than 50% mastery - immediate action needed',
         color: '#fee2e2',
@@ -85,7 +85,7 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
         icon: '🔴',
       },
       {
-        group: 'atRisk',
+        group: 'atRisk' as const,
         label: 'At Risk',
         description: '50-70% mastery - intervention recommended',
         color: '#fef3c7',
@@ -94,7 +94,7 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
         icon: '🟡',
       },
       {
-        group: 'readyToMaster',
+        group: 'readyToMaster' as const,
         label: 'Ready to Master',
         description: '70-80% mastery - additional practice recommended',
         color: '#dbeafe',
@@ -103,7 +103,7 @@ export function EnhancedMasteryDashboard({ classId, onCreateIntervention }: Enha
         icon: '🟦',
       },
       {
-        group: 'proficient',
+        group: 'proficient' as const,
         label: 'Proficient',
         description: '80%+ mastery - students have achieved mastery',
         color: '#dcfce7',
