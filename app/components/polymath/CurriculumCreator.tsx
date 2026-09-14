@@ -426,7 +426,11 @@ export function CurriculumCreator({
 
       {/* Material Modal */}
       {showMaterialModal && currentLessonId && (
-        <Modal onClose={() => setShowMaterialModal(false)}>
+        <Modal
+          isOpen={showMaterialModal}
+          title="Add Material to Lesson"
+          onClose={() => setShowMaterialModal(false)}
+        >
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-[#3C3C3C] mb-4">
               Add Material to Lesson
