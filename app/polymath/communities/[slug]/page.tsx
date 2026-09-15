@@ -189,7 +189,7 @@ export default function CommunityPage() {
                     <div>
                       <h3 className="font-semibold text-[#3C3C3C]">{discussion.title}</h3>
                       <p className="text-xs text-[#999999] mt-2">
-                        By {discussion.createdBy?.name || 'Unknown'} • {discussion._count?.messages || 0} messages
+                        By {discussion.createdBy?.name || 'Unknown'}
                       </p>
                     </div>
                   </CardBody>
