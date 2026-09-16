@@ -184,16 +184,18 @@ export default function CommunityPage() {
           ) : (
             <div className="space-y-3">
               {discussions.slice(0, 5).map((discussion) => (
-                <Card key={discussion.id}>
-                  <CardBody>
-                    <div>
-                      <h3 className="font-semibold text-[#3C3C3C]">{discussion.title}</h3>
-                      <p className="text-xs text-[#999999] mt-2">
-                        By {discussion.createdBy?.name || 'Unknown'}
-                      </p>
-                    </div>
-                  </CardBody>
-                </Card>
+                <Link key={discussion.id} href={`/polymath/communities/${slug}/discussions/${discussion.id}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardBody>
+                      <div>
+                        <h3 className="font-semibold text-[#3C3C3C]">{discussion.title}</h3>
+                        <p className="text-xs text-[#999999] mt-2">
+                          By {discussion.createdBy?.name || 'Unknown'}
+                        </p>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Link>
               ))}
               {discussions.length > 5 && (
                 <Link href={`/polymath/communities/${slug}/discussions`}>
