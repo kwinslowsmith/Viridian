@@ -124,11 +124,11 @@
 - [ ] Test all 3 pages load real data (no mock data)
 - [ ] Commit with test screenshots
 
-**Priority 2 - ENGAGEMENT (Do Next):**
-- [ ] Wire Join Community: POST to `/api/communities/[slug]/join`
-- [ ] Wire Discussions List: Fetch `GET /api/communities/[slug]/discussions`
-- [ ] Wire Discussions Messages: Fetch messages, show thread
-- [ ] Mobile responsiveness check (375px+)
+**Priority 2 - ENGAGEMENT (✅ COMPLETE):**
+- [x] Wire Join Community: POST to `/api/communities/[slug]/join` ✅
+- [x] Wire Discussions List: Fetch `GET /api/communities/[slug]/discussions` ✅
+- [x] Wire Discussions Messages: Fetch messages, show thread ✅ (ee5ce0b)
+- [x] Mobile responsiveness check (375px+) ✅ (5145ab4)
 
 **Priority 3 - POLISH (If Time):**
 - [ ] Empty state designs for all pages
@@ -206,9 +206,9 @@
 
 ---
 
-### **T2: Frontend / UI Components**
+### **T2: Frontend / UI Components & API Integration**
 **Owner**: T2 Frontend Agent  
-**Status**: in_progress  
+**Status**: in_progress (Priorities 1-2 Complete, Week 2-3 content complete, moving to Priority 3)  
 **Timeline**: Weeks 1-4 (overlapping with T1)
 
 **Week 1 (Sep 11-18): ✅ COMPLETE**
