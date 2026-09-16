@@ -89,7 +89,7 @@ export default function CommunityPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E5E5E5]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-[#E5E5E5]">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-[#20B2AA]">
                     {community._count?.members || 0}
