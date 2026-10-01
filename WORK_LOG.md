@@ -194,15 +194,157 @@
 
 ---
 
-**Week 3-4 (Sep 25-Oct 9):**
-- [ ] Bug fixes from T2/T3 testing
-- [ ] Performance optimization for high-load scenarios
-- [ ] Add Supabase realtime event handlers (push updates)
-- [ ] Implement request validation middleware
-- [ ] Add monitoring & error logging (Sentry)
-- [ ] Final polish and deployment verification
+**Week 4 (Oct 1-9): FINAL SPRINT - MARCHING ORDERS**
 
-**Deliverable**: ✅ All 9 API endpoints working, tested, deployed to Vercel (ready for T2/T3 wiring by Sep 19).
+---
+
+## 🚨 T1: Backend - Fix Deployment + Test (Oct 1-5)
+
+**CRITICAL BLOCKER**: All Vercel APIs returning 500 errors (DATABASE_URL connectivity issue)
+
+**Priority 1 - EMERGENCY FIX (Do Today):**
+- [ ] Verify DATABASE_URL on Vercel dashboard matches local config:
+  - Should be: `postgresql://postgres.fqazpffxwrbiumkflxgi:S1c1GePmdYif2mFG@aws-1-us-west-2.pooler.supabase.com:5432/postgres`
+  - If missing or different → UPDATE and redeploy
+- [ ] After fix, test: `curl https://viridian.vercel.app/api/communities`
+- [ ] Verify 200 OK response (not 500)
+- [ ] Commit `T1_DEPLOYMENT_FIX.md` with what was changed
+
+**Priority 2 - VERIFY ALL ENDPOINTS (Oct 2-3):**
+- [ ] Manual test all 9 endpoints:
+  - GET /api/communities (public) → 200
+  - GET /api/communities/[slug] (public) → 200 or 404
+  - GET /api/communities/[slug]/discussions (auth) → 401 (no auth) or 200 (with auth)
+  - POST /api/communities/[slug]/discussions → 401 or 201
+  - GET/POST messages, meetings, profile, stats → all working
+- [ ] Verify auth enforcement: 401 for unauthorized, 403 for non-curator
+- [ ] Create `T1_TESTING_REPORT.md` with all test results
+
+**Priority 3 - PERFORMANCE (Oct 4-5):**
+- [ ] Performance test: Stats endpoint < 2s response
+- [ ] Check for N+1 queries
+- [ ] Verify pagination works (limit/offset)
+- [ ] Create `T1_PERFORMANCE_REPORT.md`
+
+**Deliverable**: All 9 APIs working on Vercel, fully tested, production-ready for T2/T3.
+
+---
+
+## 🎨 T2: Frontend - Verify Real Data Flow (Oct 2-6)
+
+**STATUS**: 🟡 BLOCKED - Waiting for T1 to fix DATABASE_URL  
+**READY**: Complete test plan prepared in `T2_VERIFICATION_STRATEGY.md`  
+**NEXT**: Execute tests immediately once Vercel APIs return 200
+
+**Priority 1 - VERIFY DATA LOADING (Oct 2-3):**
+Once T1 fixes backend:
+- [ ] Communities List page: Fetch real data from `GET /api/communities`
+- [ ] Community Detail page: Fetch real data from `GET /api/communities/[slug]`
+- [ ] Discussions page: Show real discussions from API
+- [ ] Discussion thread page: Show messages and allow replies
+- [ ] Test all pages load actual API data (not mock)
+- [ ] Verify error states work (404, 401, 500 handling)
+- [ ] Create `T2_VERIFICATION_REPORT.md` with screenshots
+
+**Priority 2 - EDGE CASES (Oct 4-5):**
+- [ ] Test empty states (no communities, no discussions, etc.)
+- [ ] Test error states (invalid slug, unauthorized access, etc.)
+- [ ] Test loading states on slow network
+- [ ] Verify responsive design at 375px, 768px, 1200px
+
+**Priority 3 - FINAL POLISH (Oct 6):**
+- [ ] Fix any UI bugs found during testing
+- [ ] Optimize performance (lazy load images, etc.)
+- [ ] Accessibility check (color contrast, alt text, ARIA labels)
+
+**Deliverable**: All pages verified working with real APIs, responsive design confirmed, edge cases handled.
+
+---
+
+## ⚡ T3: Integration - Real-Time + Performance (Oct 2-7)
+
+**Priority 1 - REAL-TIME TESTING (Oct 2-4):**
+- [ ] Test Supabase subscriptions:
+  - Create message → See it appear instantly on another page
+  - New member joins → Count updates instantly
+  - New discussion created → Appears in list instantly
+- [ ] Verify subscription cleanup (no memory leaks)
+- [ ] Create `T3_REALTIME_TEST_REPORT.md`
+
+**Priority 2 - INTEGRATION TESTING (Oct 5-6):**
+- [ ] Full end-to-end flow:
+  - Create community → Fetch it → Update → Delete
+  - Create discussion → Post message → Read message → Delete
+  - Schedule meeting → List meetings → Update meeting
+- [ ] Test error scenarios (401, 403, 404 handling)
+- [ ] Test pagination on all list endpoints
+- [ ] Create `T3_INTEGRATION_TEST_REPORT.md`
+
+**Priority 3 - PERFORMANCE (Oct 7):**
+- [ ] Performance testing: All API calls < 2s
+- [ ] Load testing: Handle 10+ simultaneous requests
+- [ ] Network analysis: Verify optimal payload sizes
+- [ ] Create `T3_PERFORMANCE_REPORT.md`
+
+**Deliverable**: Real-time sync verified working, all integrations tested end-to-end, performance validated.
+
+---
+
+## 🎯 T4: Features - Build Meetings + Dashboard (Oct 2-9)
+
+**Priority 1 - MEETINGS UI (Oct 2-6):**
+- [ ] Build ScheduleMeetingForm:
+  - Fields: title, description, scheduledAt (date/time), zoomUrl, location
+  - Wire to POST `/api/communities/[slug]/meetings`
+  - Handle validation, loading, success/error states
+- [ ] Build MeetingCard:
+  - Show meeting title, date/time, host, attendee count
+  - Include action buttons (join/edit/delete)
+- [ ] Build MeetingList page:
+  - Fetch from GET `/api/communities/[slug]/meetings`
+  - Filter by upcoming/past
+  - Test with real data
+- [ ] Test end-to-end: Create meeting → See in list → Update → Delete
+
+**Priority 2 - CURATOR DASHBOARD (Oct 5-8):**
+- [ ] Build CuratorDashboard component showing:
+  - Stats cards: member count, discussion count, message count, meetings count
+  - Engagement chart: messages over time (this month vs last month)
+  - Top contributors: list of most active members
+  - Recent members: new members joined
+- [ ] Wire to GET `/api/communities/[slug]/stats`
+- [ ] Handle loading/error states
+- [ ] Test with real data
+
+**Priority 3 - POLISH (Oct 9):**
+- [ ] Add meeting calendar view (optional, nice-to-have)
+- [ ] Add meeting notes/recording capture (optional)
+- [ ] Mobile responsiveness for all features
+- [ ] Final bug fixes and edge case handling
+
+**Deliverable**: Fully functional meetings UI + curator dashboard, all wired to APIs, tested end-to-end.
+
+---
+
+## 📊 OVERALL WEEK 4 SUCCESS CRITERIA
+
+By Oct 9, 2026:
+- ✅ T1: All 9 APIs working on Vercel, fully tested
+- ✅ T2: All pages verified with real API data
+- ✅ T3: Real-time sync working, all integrations tested
+- ✅ T4: Meetings UI + curator dashboard built and working
+- ✅ **READY FOR PILOT**: 10 Directors of Curriculum can test on Monday, Oct 12
+
+---
+
+## 🎬 START NOW
+
+Each team has clear priorities. Begin with Priority 1, move to Priority 2 if time permits.
+
+**T1 START**: Check Vercel DATABASE_URL immediately (BLOCKER)
+**T2 START**: Wait for T1 to fix backend, then verify data flows
+**T3 START**: Begin real-time testing once backend fixed
+**T4 START**: Start building meetings UI immediately (doesn't depend on backend fix)
 
 ---
 
