@@ -211,12 +211,12 @@
 **CRITICAL BLOCKER**: All Vercel APIs returning 500 errors (DATABASE_URL connectivity issue)
 
 **Priority 1 - EMERGENCY FIX (Do Today):**
-- [ ] Verify DATABASE_URL on Vercel dashboard matches local config:
-  - Should be: `postgresql://postgres.fqazpffxwrbiumkflxgi:S1c1GePmdYif2mFG@aws-1-us-west-2.pooler.supabase.com:5432/postgres`
-  - If missing or different → UPDATE and redeploy
-- [ ] After fix, test: `curl https://viridian.vercel.app/api/communities`
-- [ ] Verify 200 OK response (not 500)
-- [ ] Commit `T1_DEPLOYMENT_FIX.md` with what was changed
+- [x] Fixed DATABASE_URL on Vercel: Updated to use connection pooler (port 6543)
+- [x] Fixed Prisma caching: Ensure client reused across serverless requests
+- [x] Fixed Prisma migrations: Added `prisma migrate deploy` to build script
+- [x] Fixed schema conflicts: Removed conflicting @unique constraint on slug
+- [x] Fixed empty migration: Generated complete 0_init migration with full schema (2294 lines)
+- [ ] Test: `curl https://viridian.vercel.app/api/communities` (awaiting deployment completion)
 
 **Priority 2 - VERIFY ALL ENDPOINTS (Oct 2-3):**
 - [ ] Manual test all 9 endpoints:
