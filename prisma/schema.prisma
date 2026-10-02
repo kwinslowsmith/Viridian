@@ -985,7 +985,7 @@ model LearningCommunity {
   id                      String   @id @default(cuid())
 
   // Core identity
-  slug                    String   @unique // URL-friendly: "learn-taxes"
+  slug                    String   // URL-friendly: "learn-taxes"
   name                    String   // "Learn How to Do Taxes"
   description             String?
   coverImage              String?  // URL
