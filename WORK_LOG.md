@@ -254,16 +254,18 @@
 
 **CRITICAL BLOCKER**: All Vercel APIs returning 500 errors (DATABASE_URL connectivity issue)
 
-**Priority 1 - EMERGENCY FIX (Do Today): ✅ PARTIAL FIX DEPLOYED**
+**Priority 1 - EMERGENCY FIX (Oct 6): 🟡 PARTIAL SUCCESS - DEPLOYMENT LIVE, API NEEDS DEBUG**
 - [x] Fixed DATABASE_URL on Vercel: Updated to use connection pooler (port 6543)
-- [x] Fixed Prisma caching: Ensure client reused across serverless requests
-- [x] Fixed Prisma migrations: Added `prisma migrate deploy` to build script
-- [x] Fixed schema conflicts: Removed conflicting @unique constraint on slug
-- [x] Fixed empty migration: Generated complete 0_init migration with full schema (2294 lines)
-- [x] **T2 Fix**: Fixed TypeScript build error: Excluded test files (*.test.ts, *.test.tsx) from tsconfig.json
-- [x] **T2 Fix**: Removed `prisma db push` from build script (was causing 45-min timeout hangs)
-- [x] **Build Status**: Fresh deployment building now (viridian-2jc2hcztw) - awaiting completion
-- [ ] Test: `curl https://viridian.vercel.app/api/communities` (awaiting deployment completion)
+- [x] Fixed NEXTAUTH_URL on Vercel: Set to https://viridian.vercel.app
+- [x] Fixed Prisma caching & schema conflicts
+- [x] Frontend deployed ✅ (app loads, navigation works)
+- [x] Authentication system live ✅ (users can log in)
+- [x] Test user created ✅ (kyle@example.com / password123)
+- ❌ **API endpoints broken** - Returning FUNCTION_INVOCATION_FAILED (500 errors)
+  - Communities page errors when trying to load data
+  - Root cause: Unknown (env vars fixed, auth works, database accessible)
+  - Need deeper debugging (check Function Logs for error details)
+- **Impact**: T2/T3/T4 can build with mock data today, integration testing tomorrow
 
 **Priority 2 - VERIFY ALL ENDPOINTS (Oct 7):** 🟢 TESTING SUITE READY
 - [x] Created `T1_ENDPOINT_TESTING_SUITE.md` with comprehensive test cases for all 9 endpoints
