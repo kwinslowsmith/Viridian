@@ -348,10 +348,19 @@
 
 **Full Report**: See T2_VERIFICATION_REPORT.md (389 lines, comprehensive coverage)
 
-**Oct 7-9 Verification Plan - BLOCKED ON TEST DATA**: 
-- ⏳ **BLOCKER**: Database has no test communities (empty list = can't test data loading)
-- [ ] **ACTION REQUIRED**: Seed 2-3 test communities in Supabase (T1 or manual)
-- [ ] After seeding: Execute browser tests with real data
+**Oct 6 Test Data Created ✅**: 
+- ✅ Created seed script: `scripts/seed-polymath-test-data.ts`
+- ✅ Ran seed: 3 test communities created
+  - Boston K-8 Curriculum Collective (boston-k8-curriculum)
+  - High School STEM Educators Network (hs-stem-network)
+  - ELA Teachers Cooperative (ela-teachers-coop)
+- ✅ Created test curator user (curator@example.com)
+- ✅ Communities added as community members
+
+**Oct 7-9 Verification Plan - DATA READY**: 
+- [x] ✅ Seed test communities (done - script created & run)
+- [ ] Deploy seed to Vercel (run seed script on prod DB if needed)
+- [ ] Execute browser tests with real data via UI
 - [ ] Test all 8 pages at 3+ screen sizes (375px, 768px, 1200px)
 - [ ] Verify data loading, pagination, filtering, sorting
 - [ ] Document results in T2_BROWSER_TESTING_RESULTS.md
