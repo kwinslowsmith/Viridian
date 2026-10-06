@@ -32,3 +32,8 @@ export { CurriculumComments } from './CurriculumComments';
 export { UploadResourceModal } from './UploadResourceModal';
 export { CreateDiscussionModal } from './CreateDiscussionModal';
 export { ScheduleMeetingModal } from './ScheduleMeetingModal';
+
+// Meetings & Dashboard
+export { ScheduleMeetingForm } from './ScheduleMeetingForm';
+export { MeetingList } from './MeetingList';
+export { CuratorDashboard } from './CuratorDashboard';
