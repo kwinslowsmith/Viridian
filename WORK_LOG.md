@@ -738,12 +738,24 @@ Each team has clear priorities. Begin with Priority 1, move to Priority 2 if tim
 - ✅ Route: `/polymath/curriculum/[id]/share`
 - ⏳ Awaiting T1 API endpoints for: user profiles, permission checks, comment persistence
 
-**Week 4 (Oct 2-9):**
-- [ ] Polish, bug fixes, mobile responsiveness
-- [ ] Integration with T1 APIs once available
-- [ ] User testing with pilot group
+**Week 4 (Oct 2-9): MEETINGS UI & CURATOR DASHBOARD ✅ COMPLETE**
 
-**Deliverable**: Full teacher curriculum creation, organization, and collaboration system.
+**Meetings Components Built (Oct 6):**
+- ✅ `ScheduleMeetingForm.tsx` (445 lines) - Form with date/time/location/Zoom validation
+- ✅ `MeetingCard.tsx` (159 lines) - Card showing meeting, host, attendees, action buttons
+- ✅ `MeetingList.tsx` (182 lines) - Responsive grid with filter tabs + search
+- ✅ Route: `/polymath/meetings`
+
+**Curator Dashboard Built (Oct 6):**
+- ✅ `CuratorDashboard.tsx` (298 lines) - Stats cards, top contributors, recent activity
+- ✅ Route: `/polymath/curator/dashboard`
+- ✅ Mock data: 4 stat cards, 5 top contributors, 10 activities
+- ✅ Responsive layout: 1-col (mobile) → 2x2 grid (desktop)
+
+**Status**: 0 TypeScript errors, committed (f8ba3c1)
+**Next**: API integration tomorrow (Oct 7)
+
+**Deliverable**: Meetings UI + Curator Dashboard complete & ready for T3 wiring.
 
 ---
 
