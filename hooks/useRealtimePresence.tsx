@@ -6,7 +6,7 @@
  * Date: Oct 6, 2026
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -29,7 +29,7 @@ export function useRealtimePresence(communitySlug: string, discussionId: string)
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const channelRef = useRef<any>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     if (!communitySlug || !discussionId) return;

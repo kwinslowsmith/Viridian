@@ -114,7 +114,7 @@ export function TeacherProfile({
             </h2>
             <div className="flex flex-wrap gap-2">
               {teacher.expertise.map((exp) => (
-                <Badge key={exp} variant="teal">
+                <Badge key={exp} variant="primary">
                   {exp}
                 </Badge>
               ))}

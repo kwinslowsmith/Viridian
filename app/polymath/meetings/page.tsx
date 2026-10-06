@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MeetingList, ScheduleMeetingForm, LoadingState } from '@/app/components/polymath';
 
@@ -16,7 +16,7 @@ interface Meeting {
   status: 'upcoming' | 'today' | 'past';
 }
 
-export default function MeetingsPage() {
+function MeetingsContent() {
   const searchParams = useSearchParams();
   const communitySlug = searchParams.get('community') || 'default-community';
 
@@ -137,5 +137,13 @@ export default function MeetingsPage() {
         onDeleteMeeting={handleDeleteMeeting}
       />
     </div>
+  );
+}
+
+export default function MeetingsPage() {
+  return (
+    <Suspense fallback={<LoadingState message="Loading meetings..." />}>
+      <MeetingsContent />
+    </Suspense>
   );
 }

@@ -326,7 +326,8 @@ export class APIClient {
         const startTime = Date.now();
 
         const response = await fetch(url, {
-          ...options,
+          method: options.method,
+          body: options.body ? JSON.stringify(options.body) : undefined,
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',

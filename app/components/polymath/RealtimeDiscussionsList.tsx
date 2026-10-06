@@ -95,9 +95,6 @@ function DiscussionItem({
           borderBottom: '1px solid #e5e7eb',
           cursor: 'pointer',
           transition: 'background-color 0.2s',
-          ':hover': {
-            backgroundColor: '#f9fafb',
-          },
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.backgroundColor = '#f9fafb';

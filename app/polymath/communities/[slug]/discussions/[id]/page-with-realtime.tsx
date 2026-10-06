@@ -128,19 +128,22 @@ export default function DiscussionDetailPage({ params }: DiscussionPageProps) {
 
           {/* Messages Section */}
           <div style={{ padding: '20px' }}>
-            <RealtimeMessageList
-              communitySlug={slug}
-              discussionId={id}
-              onNewMessage={(msg) => {
-                console.log('💬 New message:', msg.content.substring(0, 50));
-                setMessageCount((prev) => prev + 1);
-              }}
+            <div
               style={{
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
                 backgroundColor: 'white',
               }}
-            />
+            >
+              <RealtimeMessageList
+                communitySlug={slug}
+                discussionId={id}
+                onNewMessage={(msg) => {
+                  console.log('💬 New message:', msg.content.substring(0, 50));
+                  setMessageCount((prev) => prev + 1);
+                }}
+              />
+            </div>
 
             {/* Message Input */}
             <div style={{ marginTop: '16px' }}>

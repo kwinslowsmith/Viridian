@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CuratorDashboard, LoadingState } from '@/app/components/polymath';
 
-export default function CuratorDashboardPage() {
+function CuratorDashboardContent() {
   const searchParams = useSearchParams();
   const communitySlug = searchParams.get('community') || 'default-community';
 
@@ -81,5 +81,13 @@ export default function CuratorDashboardPage() {
         recentActivity={stats?.recentActivity}
       />
     </div>
+  );
+}
+
+export default function CuratorDashboardPage() {
+  return (
+    <Suspense fallback={<LoadingState message="Loading curator dashboard..." />}>
+      <CuratorDashboardContent />
+    </Suspense>
   );
 }

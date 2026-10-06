@@ -53,18 +53,21 @@ export default function RealtimeDiscussionPage({ params }: DiscussionPageProps) 
             </p>
           </div>
 
-          <RealtimeMessageList
-            communitySlug={communitySlug}
-            discussionId={selectedDiscussionId || discussionId}
-            onNewMessage={(msg) => {
-              console.log('New message arrived:', msg);
-            }}
+          <div
             style={{
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
               backgroundColor: '#fafafa',
             }}
-          />
+          >
+            <RealtimeMessageList
+              communitySlug={communitySlug}
+              discussionId={selectedDiscussionId || discussionId}
+              onNewMessage={(msg) => {
+                console.log('New message arrived:', msg);
+              }}
+            />
+          </div>
 
           {/* Message Input (example) */}
           <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>

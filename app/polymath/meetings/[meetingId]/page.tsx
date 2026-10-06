@@ -71,14 +71,14 @@ const getStatusLabel = (status: string) => {
 
 const formatDateTime = (date: string, time: string) => {
   const dateObj = new Date(`${date}T${time}`);
-  return dateObj.toLocaleDateString('en-US', {
+  return dateObj.toLocaleString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    meridiem: 'short',
+    hour12: true,
   });
 };
 

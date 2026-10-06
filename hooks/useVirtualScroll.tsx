@@ -38,7 +38,7 @@ export function useVirtualScroll<T>(
   offsetY: number;
   totalHeight: number;
   handleScroll: (scrollTop: number) => void;
-  virtualScrollRef: React.RefObject<HTMLDivElement>;
+  virtualScrollRef: React.RefObject<HTMLDivElement | null>;
 } {
   const { itemHeight, containerHeight, bufferSize = 5, overscan = 100 } = config;
   const [state, setState] = useState<VirtualScrollState>({
@@ -295,7 +295,7 @@ export function useDynamicVirtualScroll<T>(
 
 export function useDebounceScroll(delay = 150) {
   const [isScrolling, setIsScrolling] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const handleScrollStart = useCallback(() => {
     setIsScrolling(true);
