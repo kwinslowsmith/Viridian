@@ -1,77 +1,158 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { Card, CardBody } from './Card';
-import { Badge } from './Badge';
+import { Card, CardBody } from './index';
 
-interface MeetingCardProps {
-  id: string;
-  communitySlug: string;
-  title: string;
-  dateTime: string;
-  host?: string;
-  status?: 'upcoming' | 'past' | 'ongoing';
-  zoomUrl?: string;
+interface Host {
+  name: string;
+  avatar?: string;
 }
 
-export const MeetingCard: React.FC<MeetingCardProps> = ({
-  id,
-  communitySlug,
-  title,
-  dateTime,
-  host,
-  status = 'upcoming',
-  zoomUrl,
-}) => {
-  const statusColors: Record<string, 'info' | 'success' | 'warning'> = {
-    upcoming: 'info',
-    past: 'warning',
-    ongoing: 'success',
+interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location?: string;
+  zoomUrl?: string;
+  host: Host;
+  attendeeCount: number;
+  status: 'upcoming' | 'today' | 'past';
+}
+
+interface MeetingCardProps {
+  meeting: Meeting;
+  onJoin?: (meetingId: string) => void;
+  onEdit?: (meetingId: string) => void;
+  onDelete?: (meetingId: string) => void;
+}
+
+export function MeetingCard({
+  meeting,
+  onJoin,
+  onEdit,
+  onDelete,
+}: MeetingCardProps) {
+  const formatDateTime = (date: string, time: string) => {
+    const dateObj = new Date(`${date}T${time}`);
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      meridiem: 'short',
+    });
   };
 
-  const date = new Date(dateTime);
-  const formattedDate = date.toLocaleDateString();
-  const formattedTime = date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'upcoming':
+        return 'bg-[#DBEAFE] text-[#1E40AF]';
+      case 'today':
+        return 'bg-[#FEF3C7] text-[#92400E]';
+      case 'past':
+        return 'bg-[#F3F4F6] text-[#4B5563]';
+      default:
+        return 'bg-[#F3F4F6] text-[#4B5563]';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  const getHostInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase();
+  };
+
+  const location = meeting.location || (meeting.zoomUrl ? 'Zoom' : 'TBD');
+  const locationDisplay = meeting.zoomUrl
+    ? meeting.zoomUrl.replace('https://', '').substring(0, 30) + '...'
+    : meeting.location;
 
   return (
-    <Link href={`/polymath/communities/${communitySlug}/meetings/${id}`}>
-      <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow">
-        <CardBody className="flex flex-col gap-3">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-base font-semibold text-[#3C3C3C] line-clamp-2">
-              {title}
-            </h3>
-            <Badge variant={statusColors[status]}>
-              {status === 'upcoming' && '📅 Upcoming'}
-              {status === 'past' && '✓ Past'}
-              {status === 'ongoing' && '🔴 Live'}
-            </Badge>
+    <Card className="hover:shadow-md transition">
+      <CardBody>
+        {/* Header with date and status */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm text-[#666666]">
+            {formatDateTime(meeting.date, meeting.time)}
+          </div>
+          <span
+            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(meeting.status)}`}
+          >
+            {getStatusLabel(meeting.status)}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-lg font-bold text-[#3C3C3C] mb-2">
+          {meeting.title}
+        </h3>
+
+        {/* Location */}
+        <p className="text-sm text-[#666666] mb-4">
+          {location && (
+            <>
+              {location === 'Zoom' ? '🌐' : '📍'} {locationDisplay}
+            </>
+          )}
+        </p>
+
+        {/* Host and attendees */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#20B2AA] text-white flex items-center justify-center text-xs font-bold">
+              {getHostInitials(meeting.host.name)}
+            </div>
+            <div className="text-sm">
+              <div className="text-[#3C3C3C] font-medium">
+                {meeting.host.name}
+              </div>
+              <div className="text-xs text-[#999999]">Host</div>
+            </div>
           </div>
 
-          {/* Date & Time */}
-          <div className="flex items-center gap-2 text-sm text-[#666666]">
-            <span>🕐</span>
-            <span>
-              {formattedDate} at {formattedTime}
-            </span>
+          <div className="text-right">
+            <div className="text-sm font-medium text-[#3C3C3C]">
+              {meeting.attendeeCount}
+            </div>
+            <div className="text-xs text-[#999999]">attending</div>
           </div>
+        </div>
 
-          {/* Host & Zoom Link */}
-          <div className="text-xs text-[#999999] pt-2 border-t border-[#E5E5E5]">
-            {host && <p>Hosted by {host}</p>}
-            {zoomUrl && (
-              <p className="text-[#20B2AA] hover:underline">
-                Join via Zoom
-              </p>
-            )}
-          </div>
-        </CardBody>
-      </Card>
-    </Link>
+        {/* Action buttons */}
+        <div className="flex gap-2 pt-4 border-t border-[#E5E5E5]">
+          {meeting.status !== 'past' && (
+            <button
+              onClick={() => onJoin?.(meeting.id)}
+              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-[#20B2AA] rounded hover:bg-[#1a9490] transition"
+            >
+              Join Meeting
+            </button>
+          )}
+
+          {meeting.status !== 'past' && (
+            <button
+              onClick={() => onEdit?.(meeting.id)}
+              className="px-3 py-2 text-sm font-medium text-[#20B2AA] border border-[#20B2AA] rounded hover:bg-[#20B2AA]/10 transition"
+            >
+              Edit
+            </button>
+          )}
+
+          <button
+            onClick={() => onDelete?.(meeting.id)}
+            className="px-3 py-2 text-sm font-medium text-red-500 border border-red-200 rounded hover:bg-red-50 transition"
+          >
+            Delete
+          </button>
+        </div>
+      </CardBody>
+    </Card>
   );
-};
+}
