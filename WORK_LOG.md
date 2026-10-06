@@ -221,23 +221,31 @@
 - [x] **Build Status**: Fresh deployment building now (viridian-2jc2hcztw) - awaiting completion
 - [ ] Test: `curl https://viridian.vercel.app/api/communities` (awaiting deployment completion)
 
-**Priority 2 - VERIFY ALL ENDPOINTS (Oct 2-3):**
-- [ ] Manual test all 9 endpoints:
-  - GET /api/communities (public) → 200
-  - GET /api/communities/[slug] (public) → 200 or 404
-  - GET /api/communities/[slug]/discussions (auth) → 401 (no auth) or 200 (with auth)
-  - POST /api/communities/[slug]/discussions → 401 or 201
-  - GET/POST messages, meetings, profile, stats → all working
-- [ ] Verify auth enforcement: 401 for unauthorized, 403 for non-curator
-- [ ] Create `T1_TESTING_REPORT.md` with all test results
+**Priority 2 - VERIFY ALL ENDPOINTS (Oct 7):** 🟢 TESTING SUITE READY
+- [x] Created `T1_ENDPOINT_TESTING_SUITE.md` with comprehensive test cases for all 9 endpoints
+- [x] Tests for public endpoints (no auth), protected endpoints (auth required)
+- [x] Auth enforcement verification (401/403 responses)
+- [x] Validation error handling (400 responses)  
+- [x] Automated test runner script `test_all_endpoints.sh`
+- [ ] Execute when backend is live → Estimated 15-20 minutes
+- [ ] Document results in `T1_TESTING_REPORT.md`
+- See: `T1_ENDPOINT_TESTING_SUITE.md` for full test cases and curl commands
 
-**Priority 3 - PERFORMANCE (Oct 4-5):**
-- [ ] Performance test: Stats endpoint < 2s response
-- [ ] Check for N+1 queries
-- [ ] Verify pagination works (limit/offset)
-- [ ] Create `T1_PERFORMANCE_REPORT.md`
+**Priority 3 - PERFORMANCE (Oct 7-8):** 🟢 TESTING PLAN READY  
+- [x] Created `T1_PERFORMANCE_TESTING_PLAN.md` with performance targets
+- [x] Response time benchmarking (single + average over 10 runs)
+- [x] N+1 query detection via Prisma logs
+- [x] Pagination performance testing (limit & offset scaling)
+- [x] Concurrent load testing (5, 20, 50 concurrent requests)
+- [x] Large payload handling (100+ messages, 1000+ members)
+- [x] Connection pooling verification
+- [x] Automated performance test script `perf_test.sh`
+- [ ] Execute after Priority 2 passes → Estimated 2-3 hours
+- [ ] Document results in `T1_PERFORMANCE_REPORT.md`
+- See: `T1_PERFORMANCE_TESTING_PLAN.md` for full performance test suite
 
 **Deliverable**: All 9 APIs working on Vercel, fully tested, production-ready for T2/T3.
+**Test Execution Timeline**: Priority 2 (Oct 7 morning) → Priority 3 (Oct 7-8 afternoon)
 
 ---
 
