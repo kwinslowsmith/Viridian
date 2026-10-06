@@ -35,13 +35,16 @@ export function MeetingCard({
 }: MeetingCardProps) {
   const formatDateTime = (date: string, time: string) => {
     const dateObj = new Date(`${date}T${time}`);
-    return dateObj.toLocaleDateString('en-US', {
+    const dateStr = dateObj.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
+    });
+    const timeStr = dateObj.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      meridiem: 'short',
+      hour12: true,
     });
+    return `${dateStr} at ${timeStr}`;
   };
 
   const getStatusColor = (status: string) => {
