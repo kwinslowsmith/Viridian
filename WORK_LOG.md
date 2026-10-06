@@ -238,105 +238,210 @@
 
 ---
 
-## 🎨 T2: Frontend - Verify Real Data Flow (Oct 2-6)
+## 🎨 T2: Frontend - Build Components & Design System (Oct 6-9)
 
-**STATUS**: 🔴 BLOCKED - Vercel Build Infrastructure Issue (Not T1/T2 Issue)
+**STATUS**: 🚀 BUILDING IN PARALLEL (Backend being fixed tonight)
 
-**ISSUE**: Build queue stuck - 5+ deployments queued for 20+ minutes, not executing  
-**ROOT CAUSE IDENTIFIED & FIXED**: `prisma db push` in build script was causing 45-min timeouts
-**FIX COMMITTED**: Oct 2 13:54 UTC - Removed db push dependency from build
+**Today's Work (Oct 6)**: Component library, forms, and UI patterns
+**Tomorrow (Oct 7)**: Integration testing once backend is live
 
-**What's Working**:
-- ✅ Vercel CLI authenticated (can check deployments/logs in real-time)
-- ✅ Code committed to GitHub and pushed to main
-- ✅ All frontend pages built and wired to APIs
-- ✅ TypeScript compilation passing (0 errors)
-- ✅ T2 verification strategy ready in T2_VERIFICATION_STRATEGY.md
+**Priority 1 - BUILD COMPONENT LIBRARY (Today):**
+- [ ] **Communities List Component**
+  - ✅ Mock data component exists, refine it
+  - [ ] Add loading skeleton (shimmer UI)
+  - [ ] Add empty state ("No communities yet")
+  - [ ] Add error state display
+  - [ ] Add search/filter inputs (wire up when backend ready)
+  - [ ] Responsive grid: 1-col mobile, 2-col tablet, 3-col desktop
+  
+- [ ] **Community Detail Page**
+  - ✅ Basic layout exists
+  - [ ] Add hero image section with blur
+  - [ ] Add member count badge (animated)
+  - [ ] Add member avatar stack
+  - [ ] Add "Join" and "Share" buttons with hover states
+  - [ ] Add tabs: Overview, Discussions, Resources, Members
 
-**What's Blocked**:
-- ❌ Vercel build system not processing deployments
-- ❌ No errors in logs, just stuck in "Building"/"Queued" state
-- ❌ 5 deployments in queue for 20+ minutes with 0ms build duration recorded
+- [ ] **Discussion Thread Component**
+  - ✅ Message list exists
+  - [ ] Add reply input form (wire up POST when backend ready)
+  - [ ] Add message editing UI (hover menu with edit/delete)
+  - [ ] Add timestamps with relative times ("2 min ago")
+  - [ ] Add user avatars and names
+  - [ ] Add thread collapse/expand for long threads
 
-**Waiting For**: Vercel infrastructure recovery (appears to be on Vercel's end, not code issue)
+- [ ] **Form Components**
+  - [ ] CreateDiscussionForm (title, description textarea, submit)
+  - [ ] CreateMessageForm (text input, send button, emoji picker)
+  - [ ] ScheduleMeetingForm (title, date/time picker, zoom URL, location)
+  - [ ] All with validation states (red error text, success checkmarks)
 
-**Priority 1 - VERIFY DATA LOADING (Oct 2-3):**
-Once T1 fixes backend:
-- [ ] Communities List page: Fetch real data from `GET /api/communities`
-- [ ] Community Detail page: Fetch real data from `GET /api/communities/[slug]`
-- [ ] Discussions page: Show real discussions from API
-- [ ] Discussion thread page: Show messages and allow replies
-- [ ] Test all pages load actual API data (not mock)
-- [ ] Verify error states work (404, 401, 500 handling)
-- [ ] Create `T2_VERIFICATION_REPORT.md` with screenshots
+**Priority 2 - DESIGN SYSTEM POLISH (Today):**
+- [ ] Button variants: primary, secondary, danger, disabled
+- [ ] Input field styles: default, focus, error, disabled, loading
+- [ ] Card components: uniform shadows, padding, borders
+- [ ] Typography scale: verify h1-h6, p, label, caption
+- [ ] Color palette: verify all brand colors + semantic colors (error, success, warning)
+- [ ] Spacing scale: verify margin/padding are consistent (4px, 8px, 16px, 24px, 32px)
 
-**Priority 2 - EDGE CASES (Oct 4-5):**
-- [ ] Test empty states (no communities, no discussions, etc.)
-- [ ] Test error states (invalid slug, unauthorized access, etc.)
-- [ ] Test loading states on slow network
-- [ ] Verify responsive design at 375px, 768px, 1200px
+**Priority 3 - ACCESSIBILITY (Today):**
+- [ ] All buttons have proper ARIA labels
+- [ ] All form inputs have associated labels
+- [ ] Color contrast: verify AA compliance (4.5:1 for text)
+- [ ] Focus states: keyboard navigation works on all interactive elements
+- [ ] Alt text: all images have descriptions
 
-**Priority 3 - FINAL POLISH (Oct 6):**
-- [ ] Fix any UI bugs found during testing
-- [ ] Optimize performance (lazy load images, etc.)
-- [ ] Accessibility check (color contrast, alt text, ARIA labels)
+**Testing**: Manual testing in browser at 3 breakpoints (375px, 768px, 1200px)
 
-**Deliverable**: All pages verified working with real APIs, responsive design confirmed, edge cases handled.
-
----
-
-## ⚡ T3: Integration - Real-Time + Performance (Oct 2-7)
-
-**Priority 1 - REAL-TIME TESTING (Oct 2-4):**
-- [ ] Test Supabase subscriptions:
-  - Create message → See it appear instantly on another page
-  - New member joins → Count updates instantly
-  - New discussion created → Appears in list instantly
-- [ ] Verify subscription cleanup (no memory leaks)
-- [ ] Create `T3_REALTIME_TEST_REPORT.md`
-
-**Priority 2 - INTEGRATION TESTING (Oct 5-6):**
-- [ ] Full end-to-end flow:
-  - Create community → Fetch it → Update → Delete
-  - Create discussion → Post message → Read message → Delete
-  - Schedule meeting → List meetings → Update meeting
-- [ ] Test error scenarios (401, 403, 404 handling)
-- [ ] Test pagination on all list endpoints
-- [ ] Create `T3_INTEGRATION_TEST_REPORT.md`
-
-**Priority 3 - PERFORMANCE (Oct 7):**
-- [ ] Performance testing: All API calls < 2s
-- [ ] Load testing: Handle 10+ simultaneous requests
-- [ ] Network analysis: Verify optimal payload sizes
-- [ ] Create `T3_PERFORMANCE_REPORT.md`
-
-**Deliverable**: Real-time sync verified working, all integrations tested end-to-end, performance validated.
+**Deliverable**: Component library complete, design system polished, ready for API integration tomorrow.
 
 ---
 
-## 🎯 T4: Features - Build Meetings + Dashboard (Oct 2-9)
+## ⚡ T3: Integration - Real-Time Sync & API Hooks (Oct 6-9)
 
-**Priority 1 - MEETINGS UI (Oct 2-6):**
-- [ ] Build ScheduleMeetingForm:
-  - Fields: title, description, scheduledAt (date/time), zoomUrl, location
-  - Wire to POST `/api/communities/[slug]/meetings`
-  - Handle validation, loading, success/error states
-- [ ] Build MeetingCard:
-  - Show meeting title, date/time, host, attendee count
-  - Include action buttons (join/edit/delete)
-- [ ] Build MeetingList page:
-  - Fetch from GET `/api/communities/[slug]/meetings`
-  - Filter by upcoming/past
-  - Test with real data
-- [ ] Test end-to-end: Create meeting → See in list → Update → Delete
+**STATUS**: 🚀 BUILDING IN PARALLEL (Backend being fixed tonight)
 
-**Priority 2 - CURATOR DASHBOARD (Oct 5-8):**
-- [ ] Build CuratorDashboard component showing:
-  - Stats cards: member count, discussion count, message count, meetings count
-  - Engagement chart: messages over time (this month vs last month)
-  - Top contributors: list of most active members
-  - Recent members: new members joined
-- [ ] Wire to GET `/api/communities/[slug]/stats`
+**Today's Work (Oct 6)**: Real-time infrastructure and custom hooks
+**Tomorrow (Oct 7+)**: Integration testing once backend is live
+
+**Priority 1 - BUILD REAL-TIME HOOKS (Today):**
+- [ ] **useMessages Hook**
+  - Subscribe to Supabase `messages` table with `communityId` AND `discussionId` filters
+  - Auto-unsubscribe on unmount (prevent memory leaks)
+  - Return: `{ messages, loading, error, addMessage, deleteMessage }`
+  - Test: Create message locally, verify hook updates instantly
+  - Test: Open component in 2 browser windows, post from one, see in other
+
+- [ ] **useDiscussions Hook**
+  - Subscribe to `discussions` table with `communityId` filter
+  - Auto-unsubscribe on unmount
+  - Return: `{ discussions, loading, error, addDiscussion, updateDiscussion }`
+  - Test: Create discussion in one window, see appear in other instantly
+
+- [ ] **useCommunityMembers Hook**
+  - Subscribe to `LearningCommunityMember` table with `communityId` filter
+  - Auto-unsubscribe on unmount
+  - Return: `{ members, count, loading, error }`
+  - Test: Add member in one window, count updates in another instantly
+
+- [ ] **useAuthenticatedUser Hook**
+  - Get current user from NextAuth session
+  - Return: `{ user, isLoading, isAuthenticated }`
+  - Test: Works with mock user from getSession()
+
+**Priority 2 - API INTEGRATION LAYER (Today):**
+- [ ] **useFetch Hook** (reusable wrapper)
+  - Accept: method (GET/POST/PATCH/DELETE), url, body, options
+  - Return: `{ data, loading, error }`
+  - Handle: auth headers, error responses, loading states
+  - Test locally: create mock API responses with Fetch mock
+
+- [ ] **API Client Service** (optional, but useful)
+  - Centralize all API calls: `api.communities.list()`, `api.discussions.create()`, etc.
+  - Handle auth headers automatically
+  - Provide type-safe responses
+
+- [ ] **Error Boundary Component**
+  - Catch all component errors (don't crash app)
+  - Show error UI with retry button
+  - Log errors to console/Sentry
+
+**Priority 3 - TEST SUITE SETUP (Today):**
+- [ ] Mock API responses using `fetch` mocking
+- [ ] Mock Supabase subscriptions using Jest mocks
+- [ ] Write unit tests for hooks: `useMessages.test.ts`, `useDiscussions.test.ts`
+- [ ] Write component tests: MessageList, DiscussionThread with mocked data
+- [ ] Verify tests run without backend
+
+**Testing**: All hooks tested locally with mock data before backend integration
+
+**Deliverable**: Real-time infrastructure complete, custom hooks tested, ready for backend integration tomorrow.
+
+---
+
+## 🎯 T4: Features - Build Meetings + Curator Dashboard (Oct 6-9)
+
+**STATUS**: 🚀 BUILDING IN PARALLEL (Backend being fixed tonight)
+
+**Today's Work (Oct 6)**: UI components for meetings and curator dashboard
+**Tomorrow (Oct 7+)**: Integration testing and real data wiring
+
+**Priority 1 - MEETINGS COMPONENTS (Today):**
+- [ ] **ScheduleMeetingForm Component**
+  - Fields: 
+    - Title input (required, max 100 chars)
+    - Description textarea (optional, rich text with markdown support)
+    - Date picker (date + time picker, no past dates)
+    - Time selector (HH:MM format, default now + 1 hour)
+    - Zoom URL input (optional, validate URL format)
+    - Location input (optional, text field)
+  - Validation: show error states (red text, icon)
+  - States: default, loading (spinner on button), success (checkmark), error (red border)
+  - Test: submit form → show success toast
+  
+- [ ] **MeetingCard Component**
+  - Display:
+    - Meeting title (bold, large)
+    - Date/time formatted nicely ("Oct 10 at 2:30 PM")
+    - Host name and avatar
+    - Attendee count badge (e.g., "12 attending")
+    - Location or Zoom link icon
+  - Actions (buttons in hover menu):
+    - Join/Leave button
+    - Edit (pencil icon, for curator only)
+    - Delete (trash icon, for curator only)
+  - Status badge: "Upcoming" (blue), "Today" (orange), "Past" (gray)
+
+- [ ] **MeetingList Component**
+  - Grid of MeetingCards
+  - Filter tabs: All, Upcoming, Today, Past
+  - Search box (filter by title)
+  - Empty state: "No meetings scheduled"
+  - Loading state: skeleton cards
+  - Sorting: by date (upcoming first)
+
+- [ ] **MeetingDetail Page** (optional, nice-to-have)
+  - Large card with all meeting info
+  - "Join Meeting" button (launches Zoom)
+  - Attendee list with avatars
+  - Meeting description (markdown rendered)
+  - Comments section (future feature)
+
+**Priority 2 - CURATOR DASHBOARD (Today):**
+- [ ] **CuratorDashboard Component**
+  - Layout: 2-column (left: stats, right: charts)
+  - Stats Cards (4 cards in 2x2 grid):
+    - Total Members (number + "↑ 5 this month" growth indicator)
+    - Total Discussions (number + trending indicator)
+    - Total Messages (number + trending indicator)
+    - Upcoming Meetings (number + "Next: Oct 10" preview)
+  - Metrics:
+    - Engagement Chart: Bar chart showing messages/day over last 30 days (use Chart.js or Recharts)
+    - Compare: This month vs last month (side-by-side bars)
+  - Top Contributors:
+    - List of 5 most active members by message count
+    - Show: avatar, name, message count, join date
+    - Rank badge (#1, #2, etc.)
+  - Recent Activity:
+    - Timeline of recent events (new member joined, discussion created, etc.)
+    - Show: timestamp ("2h ago"), event type (icon), description
+    - Limit to 10 most recent
+
+- [ ] **Stats Export** (nice-to-have)
+  - Button to download stats as CSV or PDF
+  - Includes: member count, discussion count, messages, meeting attendance
+
+**Priority 3 - DESIGN & POLISH (Today):**
+- [ ] Curator dashboard responsive: works at 1200px+ (desktop-first)
+- [ ] Meeting cards responsive: 1-col mobile, 2-col tablet, 3-col desktop
+- [ ] All form inputs have proper focus states (blue outline, shadow)
+- [ ] Loading states: use skeleton loaders (gray shimmer blocks)
+- [ ] Error states: show error toast/modal with clear message
+- [ ] Success states: show success toast with checkmark
+
+**Testing**: All components rendered with mock data, forms submit locally without backend
+
+**Deliverable**: Meetings and curator dashboard complete, UI polished, ready for backend integration tomorrow.
 - [ ] Handle loading/error states
 - [ ] Test with real data
 
