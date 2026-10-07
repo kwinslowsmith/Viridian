@@ -85,23 +85,19 @@ export function Button({
     primary: {
       backgroundColor: colors.primary,
       color: '#fff',
-      '&:hover': { backgroundColor: colors.primaryDark },
     },
     secondary: {
       backgroundColor: colors.secondary,
       color: '#fff',
-      '&:hover': { backgroundColor: colors.secondaryDark },
     },
     danger: {
       backgroundColor: colors.danger,
       color: '#fff',
-      '&:hover': { backgroundColor: '#b91c1c' },
     },
     outline: {
       backgroundColor: 'transparent',
       color: colors.text.primary,
       border: `1px solid ${colors.border}`,
-      '&:hover': { backgroundColor: colors.bg.lighter },
     },
   };
 
